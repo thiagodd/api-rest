@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 124 · **rascunho:** 0 · **revisão:** 4 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 123 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -60,7 +60,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 06.01 | DTOs com records e por que não expor entidades | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/06-01-dtos-com-records-e-por-que-nao-expor-entidades.mdx` | esqueleto |
+| 06.01 | DTOs com records e por que não expor entidades | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/06-01-dtos-com-records-e-por-que-nao-expor-entidades.mdx` | revisao |
 | 06.02 | Mapeamento: manual ou MapStruct | basico | importante | `src/content/03-construindo-apis-com-spring-boot/06-02-mapeamento-manual-ou-mapstruct.mdx` | esqueleto |
 | 06.03 | Jackson 3 no Spring Boot 4 | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/06-03-jackson-3-no-spring-boot-4.mdx` | esqueleto |
 
@@ -353,3 +353,6 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 | 02.05 | ✅ (05.04) `415` traz o header `Accept: application/json, application/*+json`. Falta: `406` devolvendo Problem Details mesmo com `Accept: application/json` | 08.02 / 22.02 |
 | 02.08 | ✅ Conferido em 05.04: `HTTP/2 200` e `[HTTP/2] [1] OPENED stream` com `--server.http2.enabled=true` | 05.04 |
 | 01.01 | ✅ Tags `pagina-MM.PP` criadas a partir de 05.02 (um commit e uma tag por página que altera o `projeto-final/`) | 05.02 |
+| 15.01 | `Instant.now()` sai com nove casas decimais no JSON (`2026-10-24T23:20:44.027372882Z`, visto em 06.01). Decidir a precisão (truncar?) e atualizar os exemplos de 06.01 | 15.01 |
+| 06.03 | Records saem na ordem dos componentes, não em ordem alfabética (visto em 05.03 e 06.01). Conferir `SORT_PROPERTIES_ALPHABETICALLY` × `SORT_CREATOR_PROPERTIES_FIRST` com uma classe comum | 06.03 |
+| 07.01 | `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |

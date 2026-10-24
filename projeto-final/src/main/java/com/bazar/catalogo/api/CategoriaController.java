@@ -3,7 +3,6 @@ package com.bazar.catalogo.api;
 import java.util.Locale;
 import java.util.UUID;
 
-import com.bazar.catalogo.dominio.Categoria;
 import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.compartilhado.Lista;
 import org.jspecify.annotations.Nullable;
@@ -33,39 +32,39 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public Lista<Categoria> listar(
+    public Lista<CategoriaResponse> listar(
             @RequestParam(required = false) @Nullable String q,
             @RequestParam(defaultValue = "false") boolean apenasRaizes) {
         var categorias = repository.findAll().stream()
                 .filter(c -> q == null || c.nome().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
                 .filter(c -> !apenasRaizes || c.categoriaPaiId() == null)
+                .map(CategoriaResponse::de)
                 .toList();
         return new Lista<>(categorias);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> detalhar(@PathVariable UUID id) {
-        return ResponseEntity.of(repository.findById(id));
+    public ResponseEntity<CategoriaResponse> detalhar(@PathVariable UUID id) {
+        return ResponseEntity.of(repository.findById(id).map(CategoriaResponse::de));
     }
 
     @PostMapping
-    public ResponseEntity<Categoria> criar(@RequestBody Categoria dados) {
+    public ResponseEntity<CategoriaResponse> criar(@RequestBody CategoriaRequest request) {
         // Ainda é UUID v4; o Bazar passa a gerar UUID v7 em 15.03.
-        var categoria = repository.save(
-                new Categoria(UUID.randomUUID(), dados.nome(), dados.slug(), dados.categoriaPaiId()));
+        var categoria = repository.save(request.paraCategoria(UUID.randomUUID()));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(categoria.id())
                 .toUri();
-        return ResponseEntity.created(location).body(categoria);
+        return ResponseEntity.created(location).body(CategoriaResponse.de(categoria));
     }
 
     @PutMapping("/{id}")
-    public Categoria substituir(@PathVariable UUID id, @RequestBody Categoria dados) {
+    public CategoriaResponse substituir(@PathVariable UUID id, @RequestBody CategoriaRequest request) {
         if (!repository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada");
         }
-        return repository.save(new Categoria(id, dados.nome(), dados.slug(), dados.categoriaPaiId()));
+        return CategoriaResponse.de(repository.save(request.paraCategoria(id)));
     }
 
     @DeleteMapping("/{id}")
