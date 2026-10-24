@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 126 · **rascunho:** 0 · **revisão:** 2 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 125 · **rascunho:** 0 · **revisão:** 3 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -53,7 +53,7 @@
 |---|---|---|---|---|---|
 | 05.01 | Spring Boot 4 em uma página | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-01-spring-boot-4-em-uma-pagina.mdx` | revisao |
 | 05.02 | Criando o projeto Bazar | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-02-criando-o-projeto-bazar.mdx` | revisao |
-| 05.03 | Primeiro endpoint | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-03-primeiro-endpoint.mdx` | esqueleto |
+| 05.03 | Primeiro endpoint | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-03-primeiro-endpoint.mdx` | revisao |
 | 05.04 | Um CRUD com status corretos | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-04-um-crud-com-status-corretos.mdx` | esqueleto |
 
 ### M06: Modelando entrada e saída

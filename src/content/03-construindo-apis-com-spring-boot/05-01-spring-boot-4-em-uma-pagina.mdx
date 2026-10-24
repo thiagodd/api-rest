@@ -80,7 +80,7 @@ No Spring Boot, isso traz renomeações:
 | `@JsonComponent` / `@JsonMixin` | `@JacksonComponent` / `@JacksonMixin` |
 | `spring.jackson.serialization.*` e afins | `spring.jackson.json.read.*` / `spring.jackson.json.write.*` (e outras, ver 06.03) |
 
-Os **padrões** também mudaram: por exemplo, as propriedades do JSON passam a sair em **ordem alfabética**. Se a sua API ainda precisa se comportar como no Boot 3, `spring.jackson.use-jackson2-defaults=true` aproxima os padrões antigos. O Jackson 2 ainda funciona como alternativa depreciada (`spring-boot-jackson2`), para migrações graduais. Os detalhes estão em 06.03.
+Os **padrões** também mudaram: datas saem como texto ISO 8601, propriedades desconhecidas na entrada são ignoradas e a ordem das propriedades na saída pode mudar. Se a sua API ainda precisa se comportar como no Boot 3, `spring.jackson.use-jackson2-defaults=true` aproxima os padrões antigos. O Jackson 2 ainda funciona como alternativa depreciada (`spring-boot-jackson2`), para migrações graduais. Os detalhes estão em 06.03.
 
 ### JSpecify: *null safety* padronizada
 
