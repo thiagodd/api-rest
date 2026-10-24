@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.StatusProduto;
 import org.jspecify.annotations.Nullable;
 
@@ -22,18 +21,4 @@ public record ProdutoResponse(
         Map<String, String> atributos,
         Instant criadoEm,
         Instant atualizadoEm) {
-
-    static ProdutoResponse de(Produto produto) {
-        return new ProdutoResponse(
-                produto.getId(),
-                produto.getSku(),
-                produto.getNome(),
-                produto.getDescricao(),
-                produto.getPreco().emCentavos(),
-                produto.getCategoriaId(),
-                produto.getStatus(),
-                produto.getAtributos(),
-                produto.getCriadoEm(),
-                produto.getAtualizadoEm());
-    }
 }

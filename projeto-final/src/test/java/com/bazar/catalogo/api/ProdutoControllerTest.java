@@ -3,6 +3,7 @@ package com.bazar.catalogo.api;
 import java.util.Map;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.compartilhado.DinheiroMapperImpl;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @WebMvcTest(ProdutoController.class)
-@Import(ProdutoRepository.class)
+@Import({ProdutoRepository.class, ProdutoMapperImpl.class, DinheiroMapperImpl.class})
 class ProdutoControllerTest {
 
     @Autowired

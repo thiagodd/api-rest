@@ -22,24 +22,26 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class ProdutoController {
 
     private final ProdutoRepository repository;
+    private final ProdutoMapper mapper;
 
-    public ProdutoController(ProdutoRepository repository) {
+    public ProdutoController(ProdutoRepository repository, ProdutoMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity<ProdutoResponse> criar(@RequestBody CriarProdutoRequest request) {
-        var produto = repository.save(request.paraProduto());
+        var produto = repository.save(mapper.paraProduto(request));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(produto.getId())
                 .toUri();
-        return ResponseEntity.created(location).body(ProdutoResponse.de(produto));
+        return ResponseEntity.created(location).body(mapper.paraResponse(produto));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponse> detalhar(@PathVariable UUID id) {
-        return ResponseEntity.of(repository.findById(id).map(ProdutoResponse::de));
+        return ResponseEntity.of(repository.findById(id).map(mapper::paraResponse));
     }
 
     @PutMapping("/{id}")
@@ -48,6 +50,6 @@ public class ProdutoController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         produto.atualizar(request.nome(), request.descricao(), Dinheiro.deCentavos(request.precoEmCentavos(), "BRL"),
                 request.categoriaId(), request.atributos());
-        return ProdutoResponse.de(repository.save(produto));
+        return mapper.paraResponse(repository.save(produto));
     }
 }

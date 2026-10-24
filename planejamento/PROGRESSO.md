@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 123 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 122 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -61,7 +61,7 @@
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
 | 06.01 | DTOs com records e por que não expor entidades | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/06-01-dtos-com-records-e-por-que-nao-expor-entidades.mdx` | revisao |
-| 06.02 | Mapeamento: manual ou MapStruct | basico | importante | `src/content/03-construindo-apis-com-spring-boot/06-02-mapeamento-manual-ou-mapstruct.mdx` | esqueleto |
+| 06.02 | Mapeamento: manual ou MapStruct | basico | importante | `src/content/03-construindo-apis-com-spring-boot/06-02-mapeamento-manual-ou-mapstruct.mdx` | revisao |
 | 06.03 | Jackson 3 no Spring Boot 4 | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/06-03-jackson-3-no-spring-boot-4.mdx` | esqueleto |
 
 ### M07: Validação

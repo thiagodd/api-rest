@@ -3,8 +3,6 @@ package com.bazar.catalogo.api;
 import java.util.Map;
 import java.util.UUID;
 
-import com.bazar.catalogo.dominio.Produto;
-import com.bazar.compartilhado.Dinheiro;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -21,9 +19,5 @@ public record CriarProdutoRequest(
 
     public CriarProdutoRequest {
         atributos = atributos == null ? Map.of() : Map.copyOf(atributos); // ausente no JSON → vazio
-    }
-
-    Produto paraProduto() {
-        return new Produto(sku, nome, descricao, Dinheiro.deCentavos(precoEmCentavos, "BRL"), categoriaId, atributos);
     }
 }
