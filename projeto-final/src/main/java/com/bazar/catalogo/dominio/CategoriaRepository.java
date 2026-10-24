@@ -36,4 +36,17 @@ public class CategoriaRepository {
     public Optional<Categoria> findById(UUID id) {
         return Optional.ofNullable(categorias.get(id));
     }
+
+    public boolean existsById(UUID id) {
+        return categorias.containsKey(id);
+    }
+
+    public Categoria save(Categoria categoria) {
+        categorias.put(categoria.id(), categoria);
+        return categoria;
+    }
+
+    public void deleteById(UUID id) {
+        categorias.remove(id);
+    }
 }

@@ -60,4 +60,52 @@ class CategoriaControllerTest {
     void responde400ParaUmIdQueNaoEUuid() {
         assertThat(mvc.get().uri("/v1/categorias/abc")).hasStatus(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    void criaSubstituiERemoveUmaCategoria() {
+        var criacao = mvc.post().uri("/v1/categorias")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "nome": "Games", "slug": "games", "categoriaPaiId": null }
+                        """)
+                .exchange();
+        assertThat(criacao).hasStatus(HttpStatus.CREATED)
+                .bodyJson().extractingPath("$.nome").isEqualTo("Games");
+        var location = criacao.getResponse().getHeader("Location");
+        assertThat(location).startsWith("http://localhost/v1/categorias/");
+        var caminho = location.substring("http://localhost".length());
+
+        assertThat(mvc.get().uri(caminho)).hasStatusOk();
+
+        assertThat(mvc.put().uri(caminho)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "nome": "Jogos", "slug": "jogos", "categoriaPaiId": null }
+                        """))
+                .hasStatusOk()
+                .bodyJson().extractingPath("$.slug").isEqualTo("jogos");
+
+        assertThat(mvc.delete().uri(caminho)).hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(mvc.delete().uri(caminho)).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(mvc.get().uri(caminho)).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void responde404AoSubstituirUmaCategoriaInexistente() {
+        assertThat(mvc.put().uri("/v1/categorias/0192f3a0-5555-7000-8000-000000000999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "nome": "X", "slug": "x", "categoriaPaiId": null }
+                        """))
+                .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void respondeOptionsComOsMetodosDaColecao() {
+        var resposta = mvc.options().uri("/v1/categorias").exchange();
+        assertThat(resposta).hasStatusOk();
+        // A ordem dos métodos no Allow não é garantida
+        assertThat(resposta.getResponse().getHeader("Allow").split(","))
+                .containsExactlyInAnyOrder("GET", "HEAD", "POST", "OPTIONS");
+    }
 }

@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 125 · **rascunho:** 0 · **revisão:** 3 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 124 · **rascunho:** 0 · **revisão:** 4 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -54,7 +54,7 @@
 | 05.01 | Spring Boot 4 em uma página | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-01-spring-boot-4-em-uma-pagina.mdx` | revisao |
 | 05.02 | Criando o projeto Bazar | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-02-criando-o-projeto-bazar.mdx` | revisao |
 | 05.03 | Primeiro endpoint | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-03-primeiro-endpoint.mdx` | revisao |
-| 05.04 | Um CRUD com status corretos | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-04-um-crud-com-status-corretos.mdx` | esqueleto |
+| 05.04 | Um CRUD com status corretos | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-04-um-crud-com-status-corretos.mdx` | revisao |
 
 ### M06: Modelando entrada e saída
 
@@ -349,7 +349,7 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 
 | Página | O que conferir | Quando |
 |---|---|---|
-| 02.02 | Resposta de `OPTIONS /v1/categorias` (`200` com `Allow: GET,HEAD,POST,OPTIONS`) | 05.04 |
-| 02.05 | `415` com header `Accept` na resposta; `406` devolvendo Problem Details mesmo com `Accept: application/json` | 08.02 / 22.02 |
-| 02.08 | `curl --http2-prior-knowledge` (h2c) contra o Tomcat com `server.http2.enabled=true` | 05.04 |
-| 01.01 | Tags `pagina-MM.PP`: repositório Git criado na raiz (24/10/2026), ainda sem commits. Cada página que altera o `projeto-final/` precisa de um commit e de uma tag | 05.02 |
+| 02.02 | ✅ Conferido em 05.04: `200` com `Allow: GET,HEAD,POST,OPTIONS` (a ordem varia; no MockMvc saiu `POST,GET,HEAD,OPTIONS`) | 05.04 |
+| 02.05 | ✅ (05.04) `415` traz o header `Accept: application/json, application/*+json`. Falta: `406` devolvendo Problem Details mesmo com `Accept: application/json` | 08.02 / 22.02 |
+| 02.08 | ✅ Conferido em 05.04: `HTTP/2 200` e `[HTTP/2] [1] OPENED stream` com `--server.http2.enabled=true` | 05.04 |
+| 01.01 | ✅ Tags `pagina-MM.PP` criadas a partir de 05.02 (um commit e uma tag por página que altera o `projeto-final/`) | 05.02 |
