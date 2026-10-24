@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
  * id, status, versão e datas são do Bazar.
  */
 public record CriarProdutoRequest(
-        @NotBlank @Size(max = 32) String sku,
+        @NotBlank @Sku String sku,
         @NotBlank @Size(max = 120) String nome,
         @Nullable @Size(max = 2000) String descricao,
         @NotNull @Positive Long precoEmCentavos,

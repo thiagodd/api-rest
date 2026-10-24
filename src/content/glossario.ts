@@ -80,4 +80,7 @@ export const glossario: TermoGlossario[] = [
   { id: 'bean', termo: 'Bean', definicao: 'Objeto criado, configurado e gerenciado pelo container do Spring, que o entrega (injeta) a quem precisa dele.', pagina: '05.01' },
   { id: 'jspecify', termo: 'JSpecify', definicao: 'Padrão comum de anotações de nulidade para Java (@NullMarked, @Nullable), adotado pelo Spring Framework 7 e pelo Spring Boot 4.', pagina: '05.01' },
   { id: 'inversao-de-dependencia', termo: 'Inversão de dependência', ingles: 'dependency inversion', definicao: 'Princípio em que o código de alto nível (o domínio) define as interfaces de que precisa e o código de baixo nível (infraestrutura) as implementa, fazendo as dependências apontarem para o domínio.', pagina: '05.02' },
+  { id: 'serializacao', termo: 'Serialização', ingles: 'serialization', definicao: 'Conversão de um objeto em memória num formato que pode ser transmitido ou guardado, como JSON. O caminho inverso é a desserialização.', pagina: '06.03' },
+  { id: 'bean-validation', termo: 'Bean Validation', definicao: 'Especificação Jakarta que define anotações de validação (@NotNull, @Size...) e a API para executá-las. O Hibernate Validator é a implementação usada pelo Spring Boot.', pagina: '07.01' },
+  { id: 'digito-verificador', termo: 'Dígito verificador', ingles: 'check digit', definicao: 'Dígito calculado a partir dos demais dígitos de um número (CPF, cartão, código de barras) para detectar erros de digitação.', pagina: '07.02' },
 ]

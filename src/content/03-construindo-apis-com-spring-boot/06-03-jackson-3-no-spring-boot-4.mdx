@@ -34,7 +34,7 @@ Pense numa impressora de convites. O texto é o mesmo, mas trocar o modelo da im
 
 ### O que é o Jackson para o Spring
 
-O Jackson é a biblioteca que converte objetos Java em JSON (**serialização**) e JSON em objetos (**desserialização**). No Spring MVC, ele está por trás do conversor de mensagens de JSON ([09.03](/construindo-apis-com-spring-boot/httpmessageconverter-e-a-serializacao-por-dentro)): todo `@RequestBody` é lido por ele, e todo objeto devolvido por um controller é escrito por ele. O Spring Boot cria um único `JsonMapper` configurado e o entrega ao Spring MVC.
+O Jackson é a biblioteca que converte objetos Java em JSON (<Term id="serializacao">serialização</Term>) e JSON em objetos (**desserialização**). No Spring MVC, ele está por trás do conversor de mensagens de JSON ([09.03](/construindo-apis-com-spring-boot/httpmessageconverter-e-a-serializacao-por-dentro)): todo `@RequestBody` é lido por ele, e todo objeto devolvido por um controller é escrito por ele. O Spring Boot cria um único `JsonMapper` configurado e o entrega ao Spring MVC.
 
 ### Jackson 3: o que mudou na estrutura
 
@@ -119,7 +119,7 @@ O padrão do Jackson 3 é **ignorar** campos que o DTO não conhece. A alternati
 | Ignorar (padrão) | Falhar |
 |---|---|
 | Clientes podem mandar campos novos antes de o servidor conhecê-los (implantações graduais, versões diferentes) | Erros de digitação aparecem: `"precoEmCentavo"` vira `400` em vez de um preço ausente |
-| Segue o princípio do ***tolerant reader***: seja tolerante com o que recebe | Deixa explícito o que o contrato aceita |
+| Segue o princípio do <Term id="tolerant-reader">*tolerant reader*</Term>: seja tolerante com o que recebe | Deixa explícito o que o contrato aceita |
 | Combina com a validação: campos obrigatórios ausentes são pegos por ela | Quebra clientes que enviam campos extras inofensivos |
 
 O Bazar **mantém o padrão (ignorar)**. O argumento decisivo é a evolução: em [18.01](/contratos-documentacao-e-ciclo-de-vida/compatibilidade-retroativa-o-que-quebra-um-cliente), acrescentar campos é a mudança compatível por excelência, e clientes e servidores que falham com campos desconhecidos transformam essa mudança em quebra. Os erros de digitação em campos obrigatórios são pegos pela validação; o risco que sobra (um campo opcional digitado errado) é aceito. O *tolerant reader* do lado dos clientes é o assunto de [15.04](/design-de-apis-profissional/enums-evolucao-e-tolerant-reader).

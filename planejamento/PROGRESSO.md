@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 120 · **rascunho:** 0 · **revisão:** 8 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 119 · **rascunho:** 0 · **revisão:** 9 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -69,7 +69,7 @@
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
 | 07.01 | Bean Validation essencial | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/07-01-bean-validation-essencial.mdx` | revisao |
-| 07.02 | Validação avançada | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/07-02-validacao-avancada.mdx` | esqueleto |
+| 07.02 | Validação avançada | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/07-02-validacao-avancada.mdx` | revisao |
 
 ### M08: Tratamento de erros
 

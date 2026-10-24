@@ -98,7 +98,7 @@ class ProdutoControllerTest {
         assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(MethodArgumentNotValidException.class);
         var erros = ((MethodArgumentNotValidException) resposta.getMvcResult().getResolvedException()).getFieldErrors();
-        assertThat(erros).extracting(FieldError::getField).containsExactlyInAnyOrder("sku", "precoEmCentavos");
+        assertThat(erros).extracting(FieldError::getField).containsOnly("sku", "precoEmCentavos");
     }
 
     @Test
