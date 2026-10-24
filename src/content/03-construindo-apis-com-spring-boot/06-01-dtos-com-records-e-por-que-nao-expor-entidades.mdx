@@ -309,7 +309,7 @@ public record ProdutoResponse(
 }
 ```
 
-O `precoEmCentavos` de entrada é `Long`, e não `long`: com o tipo primitivo, um campo ausente no JSON viraria `0` sem aviso. Com `Long`, ele chega como `null`, e a validação de [07.01](/construindo-apis-com-spring-boot/bean-validation-essencial) poderá rejeitá-lo com uma mensagem clara.
+O `precoEmCentavos` de entrada é `Long`, e não `long`. Com o tipo primitivo, o Jackson 3 recusa um campo ausente ou `null` (`FAIL_ON_NULL_FOR_PRIMITIVES`), mas com um erro genérico de JSON ilegível; e, num projeto com os padrões do Jackson 2 (`spring.jackson.use-jackson2-defaults=true`), o campo ausente viraria `0`, um preço válido, sem aviso. Com `Long`, ele chega como `null`, e a validação de [07.01](/construindo-apis-com-spring-boot/bean-validation-essencial) o rejeita com uma mensagem que diz qual campo faltou.
 
 ### O controller
 
@@ -490,7 +490,7 @@ Outros erros frequentes:
 - **Um `ProdutoDTO` para tudo.** Cada campo vira "às vezes", e o *mass assignment* volta pela porta dos fundos (o `status` que existe para a resposta passa a ser aceito na entrada).
 - **Ignorar campos com `@JsonIgnore` na entidade.** Funciona até alguém esquecer a anotação num campo novo. A lista do que é público deve ser explícita (DTO), não a lista do que é privado.
 - **Converter no domínio.** Um `produto.paraResponse()` faz o domínio depender da camada `api`.
-- **Tipos primitivos em DTOs de entrada.** `long precoEmCentavos` transforma um campo esquecido em `0`, um preço válido. Use o tipo *wrapper* e valide.
+- **Tipos primitivos em DTOs de entrada.** Dependendo da configuração do Jackson, `long precoEmCentavos` transforma um campo esquecido em `0` (um preço válido) ou num erro genérico. Use o tipo *wrapper* e valide.
 - **Records com listas mutáveis.** Sem `List.copyOf`, a "imutabilidade" do record é só aparente.
 - **Devolver a entidade "só no GET".** O vazamento de dados acontece justamente na saída.
 
@@ -581,11 +581,11 @@ public record ClienteResponse(UUID id, String nome, String email, String cpfMasc
       question: 'Por que o precoEmCentavos de entrada é Long e não long?',
       options: [
         'Porque o Jackson não lê tipos primitivos',
-        'Porque, com long, um campo ausente viraria 0, um preço válido; com Long, ele chega null e pode ser rejeitado pela validação',
+        'Porque, com long, um campo ausente vira um erro genérico (Jackson 3) ou 0 (padrões do Jackson 2); com Long, ele chega null e a validação o rejeita dizendo qual campo faltou',
         'Porque Long ocupa menos memória',
       ],
       answer: 1,
-      explanation: 'Com o primitivo, a ausência do campo não pode ser distinguida de um preço zero. O Jackson lê primitivos normalmente, e Long ocupa mais memória que long, não menos.',
+      explanation: 'Um primitivo não pode ser null: ou o Jackson falha (FAIL_ON_NULL_FOR_PRIMITIVES, padrão no Jackson 3) ou usa 0. Nenhum dos dois diz ao cliente qual campo faltou. O Jackson lê primitivos normalmente, e Long ocupa mais memória que long, não menos.',
     },
     {
       question: 'Onde deve ficar o método que converte um Produto em ProdutoResponse?',

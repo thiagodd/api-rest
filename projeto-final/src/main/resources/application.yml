@@ -1,6 +1,10 @@
 spring:
   application:
     name: bazar
+  jackson:
+    mapper:
+      # A ordem dos campos no JSON segue a declaração (records e classes), não o alfabeto.
+      sort-properties-alphabetically: false
 
 server:
   port: 8080
