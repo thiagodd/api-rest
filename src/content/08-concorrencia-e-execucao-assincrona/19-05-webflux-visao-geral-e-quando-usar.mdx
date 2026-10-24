@@ -1,0 +1,79 @@
+---
+id: "19.05"
+titulo: "WebFlux: visão geral e quando usar"
+descricao: "O leitor vai encontrar WebFlux em projetos e entrevistas e precisa saber quando ele realmente compensa, especialmente depois das virtual threads."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: web / webflux"
+    url: "https://docs.spring.io/spring-framework/reference/web/webflux.html"
+  - titulo: "reactive-streams.org"
+    url: "https://www.reactive-streams.org/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O leitor vai encontrar WebFlux em projetos e entrevistas e precisa saber quando ele realmente compensa, especialmente depois das virtual threads.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Reactive Streams, `Mono`/`Flux`, *backpressure*
+- Netty e *event loop*
+- R2DBC
+- Custos: depuração, curva de aprendizado, bibliotecas bloqueantes
+- Virtual threads × reativo: critérios (*streaming*, *backpressure*, gateways)
+- `WebClient` em aplicações MVC (ligação com 24.04)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*event loop* × *thread-per-request* × virtual threads.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/produtos/{id}` em WebFlux, só para comparar.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

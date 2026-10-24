@@ -1,0 +1,80 @@
+---
+id: "20.01"
+titulo: "Cache HTTP (RFC 9111)"
+descricao: "O cache HTTP é a otimização mais barata que existe. Bem feito, reduz carga e latência; mal feito, mostra dados de outro usuário."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9111"
+    url: "https://www.rfc-editor.org/rfc/rfc9111"
+  - titulo: "RFC 5861 (stale-*)"
+  - titulo: "developer.mozilla.org: HTTP / Caching"
+    url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Caching"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O *cache* HTTP é a otimização mais barata que existe. Bem feito, reduz carga e latência; mal feito, mostra dados de outro usuário.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Caches privados × compartilhados (CDN, *proxy*)
+- `Cache-Control`: `max-age`, `s-maxage`, `no-cache` × `no-store`, `private`/`public`, `must-revalidate`, `stale-while-revalidate`, `stale-if-error`, `immutable`
+- Frescor × validação; `Vary`
+- Respostas autenticadas e *cache*
+- `CacheControl` no `ResponseEntity`
+- O que nunca cachear
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+árvore de decisão de diretivas; fluxo cliente → CDN → API com *hit*, *miss* e revalidação.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/produtos/{id}` com `CacheControl.maxAge(...)`; `GET /v1/categorias` com `public, max-age`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

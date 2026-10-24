@@ -1,0 +1,79 @@
+---
+id: "29.05"
+titulo: "API Gateway e BFF"
+descricao: "Decidir o que fica no gateway (TLS, autenticação, rate limit, roteamento) e o que fica na aplicação evita duplicação e lacunas de segurança."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-cloud-gateway / reference"
+    url: "https://docs.spring.io/spring-cloud-gateway/reference/"
+  - titulo: "samnewman.io: architectural / bff"
+    url: "https://samnewman.io/patterns/architectural/bff/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Decidir o que fica no gateway (TLS, autenticação, *rate limit*, roteamento) e o que fica na aplicação evita duplicação e lacunas de segurança.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Responsabilidades do gateway: roteamento, TLS, autenticação, *rate limit*, CORS, transformação mínima
+- Spring Cloud Gateway 5.0.x (Server MVC e WebFlux), do *release train* 2025.1 (Oakwood), compatível com Boot 4.1 a partir da 2025.1.2
+- Gateways gerenciados
+- *Backend for Frontend* (BFF)
+- Riscos (lógica de negócio no gateway, ponto único de falha)
+- Versionamento no gateway
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+topologia cliente web/móvel/parceiro → gateway → BFF → Bazar.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+rota do Spring Cloud Gateway com *rate limit* para `/v1/**`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

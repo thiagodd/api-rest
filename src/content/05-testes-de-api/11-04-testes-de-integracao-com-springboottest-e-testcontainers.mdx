@@ -1,0 +1,80 @@
+---
+id: "11.04"
+titulo: "Testes de integração com @SpringBootTest e Testcontainers"
+descricao: "H2 não é PostgreSQL. Testes com o banco real pegam bugs de SQL, migrations e transações."
+status: esqueleto
+referencias:
+  - titulo: "java.testcontainers.org"
+    url: "https://java.testcontainers.org/"
+  - titulo: "docs.spring.io: testing / testcontainers"
+    url: "https://docs.spring.io/spring-boot/reference/testing/testcontainers.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+H2 não é PostgreSQL. Testes com o banco real pegam bugs de SQL, migrations e transações.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `@SpringBootTest(webEnvironment = RANDOM_PORT)`
+- Testcontainers 2.0: `@Testcontainers`, `@Container`, **`@ServiceConnection`**
+- Configuração compartilhada (`@TestConfiguration` com *beans* de contêiner)
+- Contêineres no desenvolvimento (`SpringApplication.from(...).with(...)`)
+- Reutilização de contêineres; limpeza de dados entre testes
+- `@Transactional` em teste e por que pode enganar
+- Testar migrations
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+ciclo de vida do contêiner × contexto Spring × testes.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoIntegracaoTest` com Postgres; `TestBazarApplication` para subir a app local com contêineres.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

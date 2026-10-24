@@ -1,0 +1,82 @@
+---
+id: "23.01"
+titulo: "Rate limiting e quotas"
+descricao: "Protege a API contra abuso e clientes descontrolados e garante uso justo entre parceiros. Também é contrato: o cliente precisa saber os limites."
+status: esqueleto
+referencias:
+  - titulo: "datatracker.ietf.org: doc / draft-ietf-httpapi-ratelimit-headers"
+    url: "https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/"
+  - titulo: "bucket4j.com"
+    url: "https://bucket4j.com/"
+  - titulo: "RFC 6585 §4"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Protege a API contra abuso e clientes descontrolados e garante uso justo entre parceiros. Também é contrato: o cliente precisa saber os limites.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Algoritmos: *fixed window*, *sliding window*, *token bucket*, *leaky bucket*
+- Chave do limite (cliente, IP, rota)
+- 429 + `Retry-After`
+- Headers `RateLimit` e `RateLimit-Policy` (*draft* da IETF, versão 11)
+- Distribuído com Redis (Bucket4j)
+- Onde aplicar: gateway × aplicação
+- Quotas comerciais × proteção técnica
+- *Rate limiting* do lado cliente (ligação com 25.03)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*token bucket* animável (fase 2); topologia gateway + app + Redis.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+filtro com Bucket4j + Redis por parceiro; resposta 429 com ProblemDetail e headers.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

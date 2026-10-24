@@ -1,0 +1,76 @@
+---
+id: "24.04"
+titulo: "WebClient em aplicações MVC"
+descricao: "Ainda é a opção para streaming de respostas e para chamadas paralelas não bloqueantes, e aparece muito em código existente."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: web / webflux-webclient"
+    url: "https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Ainda é a opção para *streaming* de respostas e para chamadas paralelas não bloqueantes, e aparece muito em código existente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Quando faz sentido em app MVC
+- `block()` e seus riscos
+- Chamadas paralelas com `Mono.zip` × virtual threads com `RestClient`
+- *Streaming* de resposta
+- Configuração de *timeouts* no Reactor Netty
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+cotação paralela em duas transportadoras com `WebClient` e a versão equivalente com virtual threads.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

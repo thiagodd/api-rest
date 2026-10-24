@@ -1,0 +1,84 @@
+---
+id: "21.02"
+titulo: "Operações assíncronas e de longa duração (202 + polling)"
+descricao: "Reembolsos e relatórios levam segundos ou minutos. Segurar a conexão causa timeouts em cascata. O padrão 202 dá ao cliente controle e visibilidade."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 151"
+    url: "https://google.aip.dev/151"
+  - titulo: "github.com: azure / ConsiderationsForServiceDesign.md"
+    url: "https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#long-running-operations"
+  - titulo: "RFC 9110 §15.3.3 (202)"
+  - titulo: "RFC 7240"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Reembolsos e relatórios levam segundos ou minutos. Segurar a conexão causa *timeouts* em cascata. O padrão 202 dá ao cliente controle e visibilidade.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- 202 Accepted + `Location` para o recurso de operação
+- Recurso `Operacao` (status, progresso, resultado, erro como ProblemDetail)
+- `Retry-After` no *polling*
+- Ao concluir: 200 com link para o resultado × 303 See Other
+- Cancelamento (`POST /operacoes/{id}/cancelamento`)
+- Expiração de resultados
+- `Prefer: respond-async`
+- Webhook ao concluir como alternativa ao *polling*
+- Padrões de LRO da Microsoft e do Google (AIP-151)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência 202 → *polling* → 303 → resultado; estados da operação.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`POST /v1/pagamentos/{id}/reembolsos` → 202; `GET /v1/operacoes/{id}`; processador agendado.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

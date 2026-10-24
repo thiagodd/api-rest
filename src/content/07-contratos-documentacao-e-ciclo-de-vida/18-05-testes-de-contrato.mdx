@@ -1,0 +1,80 @@
+---
+id: "18.05"
+titulo: "Testes de contrato"
+descricao: "Garantem que produtor e consumidores continuam compatíveis sem precisar de ambientes integrados frágeis."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-cloud-contract / reference"
+    url: "https://docs.spring.io/spring-cloud-contract/reference/"
+  - titulo: "docs.pact.io"
+    url: "https://docs.pact.io/"
+  - titulo: "martinfowler.com: articles / consumerDrivenContracts"
+    url: "https://martinfowler.com/articles/consumerDrivenContracts.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Garantem que produtor e consumidores continuam compatíveis sem precisar de ambientes integrados frágeis.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Contratos dirigidos pelo produtor × pelo consumidor (CDC)
+- Spring Cloud Contract 5: DSL, testes gerados, *stubs* para consumidores
+- Pact: *broker*, `can-i-deploy`
+- Validação contra o OpenAPI como alternativa leve
+- Onde cada um se encaixa no pipeline
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo CDC com consumidor → *broker* → verificação no produtor.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+contrato do `GET /v1/produtos/{id}` no Spring Cloud Contract; teste de consumidor (ERP do lojista) com Pact.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

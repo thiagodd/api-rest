@@ -1,0 +1,79 @@
+---
+id: "15.04"
+titulo: "Enums, evolução e tolerant reader"
+descricao: "Adicionar um valor de enum é uma mudança que quebra clientes que não estão preparados. Projetar para evolução evita incidentes."
+status: esqueleto
+referencias:
+  - titulo: "martinfowler.com: bliki / TolerantReader"
+    url: "https://martinfowler.com/bliki/TolerantReader.html"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"SHOULD use open-ended list of values for enumeration types\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#112"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Adicionar um valor de enum é uma mudança que quebra clientes que não estão preparados. Projetar para evolução evita incidentes.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Enums em JSON: strings em UPPER_SNAKE_CASE
+- Enums "extensíveis" (`x-extensible-enum` do Zalando) e valor desconhecido no cliente
+- Padrão *tolerant reader* (ignorar campos desconhecidos; tratar valor desconhecido)
+- `@JsonEnumDefaultValue`
+- Lei de Postel e suas críticas
+- Booleanos que deveriam ser enums
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+cliente antigo recebendo o novo status `EM_SEPARACAO`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`StatusPedido` com valor desconhecido no cliente; configuração Jackson do lado consumidor.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

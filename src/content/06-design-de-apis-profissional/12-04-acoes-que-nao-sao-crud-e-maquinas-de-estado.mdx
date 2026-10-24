@@ -1,0 +1,83 @@
+---
+id: "12.04"
+titulo: "Ações que não são CRUD e máquinas de estado"
+descricao: "\"cancelar pedido\" não é um PATCH de status. Modelar ações corretamente protege as regras de negócio e deixa o contrato claro."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 136"
+    url: "https://google.aip.dev/136"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST avoid actions — think about resources\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#138"
+  - titulo: "Microsoft Azure API Guidelines (actions)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+"cancelar pedido" não é um PATCH de `status`. Modelar ações corretamente protege as regras de negócio e deixa o contrato claro.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Opções:
+  - PATCH do estado (e por que evitar)
+  - sub-recurso de ação (`POST /pedidos/{id}/cancelamento`)
+  - recurso de processo (`POST /reembolsos`)
+  - método customizado no estilo Google (`POST /pedidos/{id}:cancelar`, AIP-136)
+- Máquina de estados no domínio; 409 em transição inválida com ProblemDetail
+- Idempotência de ações (prévia de 21.01)
+- Ações em lote (ligação com 14.04)
+- *Opcional*: links condicionais ao estado com Spring HATEOAS 3.1 (`EntityModel`, `RepresentationModelAssembler`, `linkTo(methodOn(...))`), aplicando 03.04
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+máquina de estados do Pedido; sequência do cancelamento.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`Pedido.cancelar()` com validação de estado; `PedidoAcoesController`; teste 409; `PedidoModelAssembler` (opcional, HATEOAS).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

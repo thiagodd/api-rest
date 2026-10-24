@@ -1,0 +1,81 @@
+---
+id: "13.04"
+titulo: "Paginação por cursor (keyset)"
+descricao: "É a única paginação que escala para coleções grandes e com escrita constante (pedidos, eventos). APIs como Stripe, Slack e Google usam."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 158"
+    url: "https://google.aip.dev/158"
+  - titulo: "Spring Data Commons Reference (Scrolling)"
+  - titulo: "use-the-index-luke.com: no-offset"
+    url: "https://use-the-index-luke.com/no-offset"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É a única paginação que escala para coleções grandes e com escrita constante (pedidos, eventos). APIs como Stripe, Slack e Google usam.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Como funciona o *keyset* (`WHERE (criado_em, id) < (:c, :i)`)
+- Cursor opaco (Base64 de JSON ou assinado) e por que não expor valores crus
+- `nextCursor`/`prevCursor`, `limit`
+- Spring Data: `Window`, `ScrollPosition`, `KeysetScrollPosition`
+- Índice composto obrigatório
+- Limitações: não pula para a "página 50"; ordenação dinâmica
+- Google AIP-158 (`page_token`)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+comparação visual offset × keyset no índice B-tree; formato do cursor.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/pedidos?limit=20&cursor=...` com `Window`; codificador de cursor; índice na migration.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

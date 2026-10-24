@@ -1,0 +1,82 @@
+---
+id: "11.03"
+titulo: "Testando a camada web: @WebMvcTest, MockMvcTester e RestTestClient"
+descricao: "Verifica o contrato HTTP (status, headers, JSON, erros) em milissegundos, sem banco."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: mockmvc / assertj"
+    url: "https://docs.spring.io/spring-framework/reference/testing/mockmvc/assertj.html"
+  - titulo: "docs.spring.io: testing / resttestclient"
+    url: "https://docs.spring.io/spring-framework/reference/testing/resttestclient.html"
+  - titulo: "docs.spring.io: testing / spring-boot-applications"
+    url: "https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Verifica o contrato HTTP (status, headers, JSON, erros) em milissegundos, sem banco.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `@WebMvcTest(ProdutoController.class)`: o que carrega
+- `@MockitoBean`
+- **`MockMvcTester`** (AssertJ, Framework 6.2+): `assertThat(mvc.get().uri(...)).hasStatus(...).bodyJson()...`
+- **`RestTestClient`** (Framework 7 / Boot 4): uma API para MockMvc ou servidor real
+- Testar ProblemDetail, validação, `Location`, `ETag`
+- `@JsonTest` para serialização
+- MockMvc clássico (reconhecer em código legado)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+o que o *slice* carrega × o que fica de fora.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoControllerTest` com `MockMvcTester` (201 + `Location`; 400 com `erros[]`); o mesmo teste com `RestTestClient`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

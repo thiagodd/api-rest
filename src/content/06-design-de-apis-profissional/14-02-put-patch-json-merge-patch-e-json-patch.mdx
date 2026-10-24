@@ -1,0 +1,84 @@
+---
+id: "14.02"
+titulo: "PUT × PATCH: JSON Merge Patch e JSON Patch"
+descricao: "Atualização parcial mal feita apaga dados (o null acidental) ou não consegue limpar campos. É uma das partes mais sutis do design de APIs."
+status: esqueleto
+referencias:
+  - titulo: "RFC 7396"
+    url: "https://www.rfc-editor.org/rfc/rfc7396"
+  - titulo: "RFC 6902"
+    url: "https://www.rfc-editor.org/rfc/rfc6902"
+  - titulo: "RFC 5789"
+    url: "https://www.rfc-editor.org/rfc/rfc5789"
+  - titulo: "google.aip.dev: 134"
+    url: "https://google.aip.dev/134"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Atualização parcial mal feita apaga dados (o `null` acidental) ou não consegue limpar campos. É uma das partes mais sutis do design de APIs.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Semântica do PUT (substituição completa) e do PATCH (RFC 5789)
+- **JSON Merge Patch (RFC 7396)**: `application/merge-patch+json`, `null` remove; limitações com arrays
+- **JSON Patch (RFC 6902)**: operações (`add`, `remove`, `replace`, `move`, `copy`, `test`) e atomicidade
+- Como diferenciar "ausente" de `null` em Java: `JsonNode`, `Optional` em campos, `JsonNullable` (`org.openapitools:jackson-databind-nullable` 0.2.12, que tem `JsonNullableJackson3Module`)
+- Validar depois de aplicar o *patch*
+- PATCH não é idempotente por definição (JSON Patch com `add` em array)
+- Bibliotecas: `json-patch` (java-json-tools, última versão 2020) e `zjsonpatch` só suportam Jackson 2. Para Jackson 3, o Bazar implementa o Merge Patch sobre `JsonNode` e usa a **Jakarta JSON Processing 2.1** (`jakarta.json-api` 2.1.3 + Eclipse Parsson 1.1.9), que traz `JsonPatch` e `JsonMergePatch` nativos
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+o mesmo documento após PUT, Merge Patch e JSON Patch (antes/depois).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PATCH /v1/produtos/{id}` com Merge Patch (`JsonNode` → aplicar → validar → salvar); exemplo de JSON Patch com `test` para concorrência.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

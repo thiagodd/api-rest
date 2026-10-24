@@ -1,0 +1,81 @@
+---
+id: "17.03"
+titulo: "API-first: o contrato como fonte da verdade"
+descricao: "Projetar o contrato antes do código permite revisão, mocks para o front-end e trabalho em paralelo, além de evitar que detalhes de implementação vazem para a API."
+status: esqueleto
+referencias:
+  - titulo: "openapi-generator.tech: generators / spring"
+    url: "https://openapi-generator.tech/docs/generators/spring/"
+  - titulo: "stoplight.io: open-source / prism"
+    url: "https://stoplight.io/open-source/prism"
+  - titulo: "swagger.io: articles / adopting-an-api-first-approach"
+    url: "https://swagger.io/resources/articles/adopting-an-api-first-approach/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Projetar o contrato antes do código permite revisão, *mocks* para o front-end e trabalho em paralelo, além de evitar que detalhes de implementação vazem para a API.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Code-first* × *design-first*: prós e contras
+- Fluxo: escrever o YAML → revisar → *mock* (Prism) → gerar as interfaces → implementar
+- openapi-generator (gerador `spring`: `interfaceOnly`, `useSpringBoot4=true` e `useJackson3=true` (openapi-generator 7.26.0), `useJakartaEe`, `delegatePattern`)
+- O que gerar e o que não gerar
+- Contrato no repositório e versionado
+- Validar a implementação contra o contrato em teste (Atlassian `openapi-request-validator-mockmvc`/`-restassured` 3.0.0, antigo `swagger-request-validator`, compatível com Spring 7+)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo *design-first* com revisão e *mock*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`bazar-api.yaml` → configuração do `openapi-generator-maven-plugin` → `ProdutosApi` gerada → `ProdutoController implements ProdutosApi`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,78 @@
+---
+id: "14.01"
+titulo: "Criação com POST (e PUT com id do cliente)"
+descricao: "Os detalhes da criação (status, Location, corpo de retorno, ids) afetam toda a experiência do cliente."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9110 §9.3.3"
+  - titulo: "RFC 7240"
+  - titulo: "google.aip.dev: 133"
+    url: "https://google.aip.dev/133"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Os detalhes da criação (status, `Location`, corpo de retorno, ids) afetam toda a experiência do cliente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- 201 + `Location` + representação × `Prefer: return=minimal`
+- Campos somente leitura (id, datas, status) e o que fazer quando o cliente os envia
+- Criação com id gerado pelo cliente via `PUT /recurso/{id}` (*upsert* idempotente)
+- 409 em duplicidade (SKU repetido)
+- Valores padrão
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência POST → 201 → GET em `Location`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`POST /v1/produtos` com `Prefer` tratado; 409 em SKU duplicado (com *constraint* do banco traduzida para ProblemDetail).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

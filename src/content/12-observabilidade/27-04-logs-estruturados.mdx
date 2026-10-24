@@ -1,0 +1,80 @@
+---
+id: "27.04"
+titulo: "Logs estruturados"
+descricao: "Logs em JSON podem ser pesquisados e correlacionados. Logs em texto livre viram grep em incidente."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: features / logging"
+    url: "https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured"
+  - titulo: "elastic.co: current / index"
+    url: "https://www.elastic.co/guide/en/ecs/current/index.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Logs em JSON podem ser pesquisados e correlacionados. Logs em texto livre viram `grep` em incidente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `logging.structured.format.console` (`ecs`, `logstash`, `gelf`)
+- Campos do serviço (`logging.structured.ecs.service.*`)
+- MDC e a API fluente do SLF4J (`addKeyValue`)
+- Customização (`include`/`exclude`/`rename`/`add`, `StructuredLoggingJsonMembersCustomizer`)
+- *Stack traces* (`logging.structured.json.stacktrace.*`)
+- Níveis e o que logar (eventos de negócio, decisões, erros) e o que não logar (dados pessoais, segredos, corpo completo)
+- Mudança de nível em tempo real via Actuator
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração ECS no Bazar; log de evento de negócio com `addKeyValue`; exemplo de saída.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

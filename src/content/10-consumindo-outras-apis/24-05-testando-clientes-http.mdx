@@ -1,0 +1,78 @@
+---
+id: "24.05"
+titulo: "Testando clientes HTTP"
+descricao: "Integrações falham de formas que só aparecem com respostas reais (lentidão, 503, JSON inesperado). É preciso simulá-las."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: testing / spring-boot-applications (@RestClientTest)"
+    url: "https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html"
+  - titulo: "wiremock.org: docs"
+    url: "https://wiremock.org/docs/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Integrações falham de formas que só aparecem com respostas reais (lentidão, 503, JSON inesperado). É preciso simulá-las.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `@RestClientTest` + `MockRestServiceServer`
+- WireMock 3: *stubs*, cenários com estado, atrasos, falhas, verificação de requisições
+- Integração oficial `org.wiremock.integrations:wiremock-spring-boot` 4.4.3 (linha 4.x compatível com Boot 4): `@EnableWireMock`, `@ConfigureWireMock`, `@InjectWireMock`
+- Gravar e reproduzir (*record/playback*)
+- Testar *timeouts* e *retries* (prévia de 25.01)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PagaFacilClientTest` com `MockRestServiceServer`; cenário WireMock "503 duas vezes e depois 201".
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

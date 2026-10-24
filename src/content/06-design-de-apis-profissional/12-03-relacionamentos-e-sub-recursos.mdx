@@ -1,0 +1,79 @@
+---
+id: "12.03"
+titulo: "Relacionamentos e sub-recursos"
+descricao: "Decide entre aninhar URIs, usar links ou embutir dados. Isso impacta cache, permissões e o número de chamadas do cliente."
+status: esqueleto
+referencias:
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST identify resources and sub-resources via path segments\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#143"
+  - titulo: "google.aip.dev: 124"
+    url: "https://google.aip.dev/124"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Decide entre aninhar URIs, usar links ou embutir dados. Isso impacta *cache*, permissões e o número de chamadas do cliente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Sub-recursos de composição (`/clientes/{id}/enderecos`) × referência (`categoriaId` no produto)
+- Profundidade máxima (um nível)
+- Coleções filtradas × aninhamento (`/pedidos?clienteId=` × `/clientes/{id}/pedidos`)
+- Embutir × referenciar (*embed/expand*, ligação com 13.05)
+- Muitos-para-muitos
+- Implementação: `@RequestMapping("/v1/clientes/{clienteId}/enderecos")` e verificação de pertencimento (prévia de BOLA, 26.03)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+grafo de relacionamentos do Bazar e as opções de URI.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`EnderecoController`; validação de que o endereço pertence ao cliente.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

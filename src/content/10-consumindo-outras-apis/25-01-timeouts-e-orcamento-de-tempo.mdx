@@ -1,0 +1,79 @@
+---
+id: "25.01"
+titulo: "Timeouts e orçamento de tempo"
+descricao: "Sem timeout, uma dependência lenta trava threads e derruba a API inteira. É a primeira linha de defesa de qualquer integração."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: io / rest-client"
+    url: "https://docs.spring.io/spring-boot/reference/io/rest-client.html"
+  - titulo: "aws.amazon.com: builders-library / timeouts-retries-and-backoff-with-jitter"
+    url: "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Sem *timeout*, uma dependência lenta trava *threads* e derruba a API inteira. É a primeira linha de defesa de qualquer integração.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Connect timeout*, *read/response timeout*, *timeout* de aquisição de conexão do *pool*
+- Valores padrão perigosos (infinito)
+- Semântica no Spring 7.1 (0 = sem *timeout*; negativo é rejeitado)
+- Orçamento de tempo e propagação de *deadline*
+- *Timeout* do servidor × do cliente × do gateway (alinhamento)
+- Como escolher valores (p99 da dependência)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+cascata de *timeouts* (gateway 30 s > API 10 s > dependência 2 s).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`HttpClientSettings` com *timeouts* para PagaFácil e FreteJá; teste WireMock com atraso.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

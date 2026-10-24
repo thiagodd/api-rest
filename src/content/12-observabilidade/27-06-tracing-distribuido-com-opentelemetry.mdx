@@ -1,0 +1,83 @@
+---
+id: "27.06"
+titulo: "Tracing distribuído com OpenTelemetry"
+descricao: "Com várias dependências (PagaFácil, FreteJá, banco, Redis), só o tracing mostra onde o tempo de uma requisição lenta foi gasto."
+status: esqueleto
+referencias:
+  - titulo: "opentelemetry.io: languages / java"
+    url: "https://opentelemetry.io/docs/languages/java/"
+  - titulo: "w3.org: TR / trace-context"
+    url: "https://www.w3.org/TR/trace-context/"
+  - titulo: "docs.spring.io: actuator / tracing"
+    url: "https://docs.spring.io/spring-boot/reference/actuator/tracing.html"
+  - titulo: "Spring Boot 4.0/4.1 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Com várias dependências (PagaFácil, FreteJá, banco, Redis), só o *tracing* mostra onde o tempo de uma requisição lenta foi gasto.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Spans*, *traces*, contexto; W3C Trace Context (`traceparent`)
+- `spring-boot-starter-opentelemetry` (Boot 4) × Micrometer Tracing com *bridge* OTel × agente Java do OpenTelemetry: quando usar cada um
+- Exportação OTLP; amostragem (*sampler*)
+- Propagação automática no `RestClient` e no `@Async`
+- *Spans* customizados
+- *Exemplars* (de uma métrica para o *trace*)
+- OpenTelemetry Collector
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*waterfall* de um *trace* de `POST /v1/pedidos/{id}/pagamentos`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração OTLP; *span* customizado na reserva de estoque; visualização no Grafana Tempo.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,85 @@
+---
+id: "21.01"
+titulo: "Idempotency keys"
+descricao: "Quando a rede falha depois que o servidor processou um POST, o cliente não sabe se o pedido foi criado. A idempotency key permite repetir com segurança, sem cobrança dupla."
+status: esqueleto
+referencias:
+  - titulo: "datatracker.ietf.org: doc / draft-ietf-httpapi-idempotency-key-header"
+    url: "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+  - titulo: "stripe.com: blog / idempotency"
+    url: "https://stripe.com/blog/idempotency"
+  - titulo: "docs.stripe.com: api / idempotent_requests"
+    url: "https://docs.stripe.com/api/idempotent_requests"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Quando a rede falha depois que o servidor processou um POST, o cliente não sabe se o pedido foi criado. A idempotency key permite repetir com segurança, sem cobrança dupla.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- O problema (*timeout* após o *commit*)
+- Header `Idempotency-Key` (*Internet-Draft* da IETF, ainda não é RFC)
+- Escopo da chave (cliente + rota)
+- *Fingerprint* do corpo: chave reutilizada com corpo diferente → 422
+- Armazenar e retornar a resposta original
+- Requisições concorrentes com a mesma chave → 409
+- Expiração (TTL); onde guardar: Postgres × Redis (Redis apresentado aqui em uma seção curta; aprofundado em 28.03)
+- Atomicidade com a operação de negócio
+- Implementação como filtro/interceptor + anotação `@Idempotente`
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+- Sequência com falha de rede e *retry* (sem chave → pedido duplicado; com chave → mesma resposta)
+- Máquina de estados da chave (`EM_PROCESSAMENTO` → `CONCLUIDA`)
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ChaveIdempotencia`; `IdempotenciaInterceptor`; `POST /v1/pedidos` idempotente; teste concorrente.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

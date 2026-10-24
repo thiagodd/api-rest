@@ -1,0 +1,85 @@
+---
+id: "13.01"
+titulo: "Filtros e busca"
+descricao: "Filtros mal projetados viram dezenas de endpoints ou queries lentas e inseguras."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 160"
+    url: "https://google.aip.dev/160"
+  - titulo: "github.com: jirutka / rsql-parser"
+    url: "https://github.com/jirutka/rsql-parser"
+  - titulo: "RFC 10008"
+  - titulo: "Spring Framework 7.1 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Filtros mal projetados viram dezenas de endpoints ou *queries* lentas e inseguras.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Filtros simples por *query param* (`status=ATIVO&categoria=livros`); listas (`status=ATIVO,RASCUNHO`)
+- Intervalos (`precoMin`/`precoMax`, `criadoApos`)
+- Busca textual (`q`)
+- Linguagens de filtro: RSQL/FIQL e o filtro do Google (AIP-160), com prós e contras
+- Buscas complexas:
+  - `POST /produtos/buscas` (recurso de busca)
+  - **método QUERY (RFC 10008)** e o suporte mínimo no Spring 7.1
+- *Whitelist* de campos filtráveis
+- Implementação com `Specification`
+- Índices (prévia de 28.04)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+árvore de decisão "*query param* × POST de busca × QUERY".
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`FiltroProduto` (record com `@ModelAttribute`); `ProdutoSpecifications`; `POST /produtos/buscas`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

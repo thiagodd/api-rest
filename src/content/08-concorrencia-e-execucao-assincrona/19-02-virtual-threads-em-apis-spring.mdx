@@ -1,0 +1,82 @@
+---
+id: "19.02"
+titulo: "Virtual threads em APIs Spring"
+descricao: "Virtual threads (Java 21+) permitem milhares de requisições bloqueantes simultâneas com código imperativo simples, mas não removem outros gargalos."
+status: esqueleto
+referencias:
+  - titulo: "openjdk.org: jeps / 444"
+    url: "https://openjdk.org/jeps/444"
+  - titulo: "openjdk.org: jeps / 491"
+    url: "https://openjdk.org/jeps/491"
+  - titulo: "docs.spring.io: features / spring-application"
+    url: "https://docs.spring.io/spring-boot/reference/features/spring-application.html#features.spring-application.virtual-threads"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Virtual threads (Java 21+) permitem milhares de requisições bloqueantes simultâneas com código imperativo simples, mas não removem outros gargalos.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- JEP 444
+- `spring.threads.virtual.enabled=true`: o que o Boot muda (Tomcat, `@Async`, *schedulers*, clientes)
+- *Pinning*: resolvido para `synchronized` na JDK 24 (JEP 491), mas ainda há casos (código nativo)
+- `ThreadLocal` e custo de memória
+- O gargalo se move para o *pool* do banco e as APIs externas (ligação com 28.02 e 25.03)
+- Quando não ajudam: CPU-*bound*
+- Diagnóstico com JFR (`jdk.VirtualThreadPinned`)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*carrier threads* × virtual threads (montar e desmontar em I/O).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+habilitar no Bazar; teste de carga comparativo antes e depois (com nota de método).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

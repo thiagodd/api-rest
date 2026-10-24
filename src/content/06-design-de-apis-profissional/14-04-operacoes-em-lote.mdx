@@ -1,0 +1,80 @@
+---
+id: "14.04"
+titulo: "Operações em lote"
+descricao: "Integrações (por exemplo, o ERP de um lojista) precisam atualizar centenas de itens. Fazer N chamadas é lento; um lote mal projetado gera falhas parciais confusas."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 233"
+    url: "https://google.aip.dev/233"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST use code 207 for batch or bulk requests\"; note que o Zalando torna o 207 obrigatório)"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#152"
+  - titulo: "RFC 4918 §13 (207)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Integrações (por exemplo, o ERP de um lojista) precisam atualizar centenas de itens. Fazer N chamadas é lento; um lote mal projetado gera falhas parciais confusas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Lote atômico (tudo ou nada) × parcial (resultado por item)
+- Formato do resultado por item (status e ProblemDetail por item)
+- 200 com resultados × 207 Multi-Status (WebDAV, uso controverso)
+- Limites de tamanho; lote assíncrono (ligação com 21.02)
+- Idempotência do lote
+- Google AIP-231/233 (*batch get/create*)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo de um lote parcial com itens OK e itens com erro.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`POST /v1/ajustes-estoque/lotes` com até 500 itens e resultado por item.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

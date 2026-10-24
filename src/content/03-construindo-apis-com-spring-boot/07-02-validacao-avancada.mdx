@@ -1,0 +1,78 @@
+---
+id: "07.02"
+titulo: "Validação avançada"
+descricao: "Regras reais (CPF, intervalos de datas, campos dependentes) não cabem nas anotações prontas."
+status: esqueleto
+referencias:
+  - titulo: "Hibernate Validator Reference (custom constraints)"
+  - titulo: "Bean Validation 3.1 spec"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Regras reais (CPF, intervalos de datas, campos dependentes) não cabem nas anotações prontas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Validadores customizados (`ConstraintValidator`): `@Cpf`, `@Sku`
+- Validação entre campos (*cross-field*): `precoMin <= precoMax`, por meio de constraint de classe
+- Grupos de validação (`@Validated(OnCreate.class)`) e quando preferir DTOs separados
+- Validação de coleções e elementos (`List<@Valid ItemPedidoRequest>`)
+- Mensagens customizadas e i18n (`ValidationMessages.properties`, `MessageSource`)
+- Validação no serviço (`@Validated` em beans)
+- Quanto validar: borda × domínio
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`@Cpf` com o algoritmo; `@IntervaloPrecoValido`; `CriarPedidoRequest` com itens validados; testes unitários dos validadores.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,81 @@
+---
+id: "24.02"
+titulo: "RestClient a fundo"
+descricao: "É o cliente padrão para aplicações MVC. Saber tratar erros, configurar timeouts e interceptar requisições é obrigatório para integrar com terceiros."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: integration / rest-clients"
+    url: "https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-restclient"
+  - titulo: "Spring Boot Reference (RestClient)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É o cliente padrão para aplicações MVC. Saber tratar erros, configurar *timeouts* e interceptar requisições é obrigatório para integrar com terceiros.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `RestClient.Builder` autoconfigurado; `baseUrl`, headers padrão
+- `retrieve()` × `exchange()`
+- `onStatus` e conversão de erros remotos em exceções de domínio
+- Ler o ProblemDetail do remoto
+- `ClientHttpRequestInterceptor` (autenticação, logging, *correlation id*)
+- *Timeouts* por *request factory*
+- Mudança no 7.1 (o *builder* parte dos *converters* padrão; `disableDefaults()`)
+- Logging seguro de corpo
+- Observabilidade automática (ligação com 27.06)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo de uma chamada com interceptors e tratamento de status.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PagaFacilClient` com `RestClient`; tratamento de 4xx/5xx; interceptor de autenticação.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

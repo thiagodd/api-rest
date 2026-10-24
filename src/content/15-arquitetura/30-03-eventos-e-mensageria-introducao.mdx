@@ -1,0 +1,83 @@
+---
+id: "30.03"
+titulo: "Eventos e mensageria: introdução"
+descricao: "Eventos desacoplam serviços no tempo e permitem integrações escaláveis. Toda API sênior convive com mensageria."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-kafka / reference"
+    url: "https://docs.spring.io/spring-kafka/reference/"
+  - titulo: "asyncapi.com: docs"
+    url: "https://www.asyncapi.com/docs"
+  - titulo: "martinfowler.com: articles / 201701-event-driven"
+    url: "https://martinfowler.com/articles/201701-event-driven.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Eventos desacoplam serviços no tempo e permitem integrações escaláveis. Toda API sênior convive com mensageria.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Eventos de domínio × de integração
+- Notificação × *event-carried state transfer*
+- Kafka × RabbitMQ (modelos e garantias)
+- Spring Kafka 4.1 (produtor e consumidor básicos)
+- Entrega *at-least-once* e consumidor idempotente
+- Esquemas e evolução
+- AsyncAPI para documentar eventos
+- CloudEvents (revisão)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo de `pedido.pago` para os consumidores (estoque, notificações, parceiros).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+publicar `PedidoPago` no Kafka; consumidor idempotente; trecho AsyncAPI.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

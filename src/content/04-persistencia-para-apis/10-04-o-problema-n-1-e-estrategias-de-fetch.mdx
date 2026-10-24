@@ -1,0 +1,78 @@
+---
+id: "10.04"
+titulo: "O problema N+1 e estratégias de fetch"
+descricao: "É a causa nº 1 de endpoints lentos em APIs com JPA, e só aparece com dados reais."
+status: esqueleto
+referencias:
+  - titulo: "Spring Data JPA Reference (Entity Graphs)"
+  - titulo: "Hibernate ORM User Guide (fetching)"
+  - titulo: "vladmihalcea.com: n-plus-1-query-problem"
+    url: "https://vladmihalcea.com/n-plus-1-query-problem/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É a causa nº 1 de endpoints lentos em APIs com JPA, e só aparece com dados reais.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `LAZY` × `EAGER` (por que `EAGER` não resolve)
+- Como detectar: log de SQL, contagem de *queries* em teste, Hibernate Statistics
+- Soluções: `JOIN FETCH`, `@EntityGraph`, `@BatchSize` / `default_batch_fetch_size`, projeções de DTO
+- Paginação com `JOIN FETCH` de coleção: o aviso "firstResult/maxResults specified with collection fetch" e a técnica de duas *queries*
+- `LazyInitializationException` com OSIV desligado
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+número de *queries* em `GET /v1/pedidos` antes e depois (1 + N → 2).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PedidoRepository` com `@EntityGraph`; teste que verifica o número de *queries* (com `datasource-proxy-spring-boot-starter` 2.0.x, compatível com Boot 4, ou com as estatísticas do Hibernate em `hibernate.generate_statistics`).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

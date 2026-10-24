@@ -1,0 +1,81 @@
+---
+id: "30.02"
+titulo: "Microsserviços: quando (não) usar e como se comunicam"
+descricao: "Microsserviços resolvem problemas organizacionais ao custo de complexidade distribuída. Escolhê-los cedo demais é um erro comum e caro."
+status: esqueleto
+referencias:
+  - titulo: "martinfowler.com: articles / microservices"
+    url: "https://martinfowler.com/articles/microservices.html"
+  - titulo: "microservices.io"
+    url: "https://microservices.io/"
+  - titulo: "martinfowler.com: bliki / MonolithFirst"
+    url: "https://martinfowler.com/bliki/MonolithFirst.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Microsserviços resolvem problemas organizacionais ao custo de complexidade distribuída. Escolhê-los cedo demais é um erro comum e caro.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Critérios (times, escala independente, domínio)
+- Custos (rede, consistência, observabilidade, *deploy*)
+- Comunicação síncrona (REST/gRPC) × assíncrona (eventos)
+- Acoplamento temporal; cadeias síncronas e disponibilidade composta
+- *Service discovery* (menção)
+- Estrangulamento (*strangler fig*)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+disponibilidade composta (99,9% × 5 serviços em série); extração do módulo de pagamentos.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+nenhum (decisão e ADR de exemplo).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

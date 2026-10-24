@@ -1,0 +1,89 @@
+---
+id: "18.01"
+titulo: "Compatibilidade retroativa: o que quebra um cliente"
+descricao: "Versionar é caro. Quem sabe evoluir sem quebrar raramente precisa de uma v2."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 180"
+    url: "https://google.aip.dev/180"
+  - titulo: "hyrumslaw.com"
+    url: "https://www.hyrumslaw.com/"
+  - titulo: "opensource.zalando.com: restful-api-guidelines"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#compatibility"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Versionar é caro. Quem sabe evoluir sem quebrar raramente precisa de uma v2.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Catálogo de mudanças compatíveis × incompatíveis:
+  - campo novo
+  - campo obrigatório novo na entrada
+  - remover ou renomear campo
+  - mudar tipo
+  - novo valor de enum
+  - novo status code
+  - mudar valor padrão
+  - mudar ordenação padrão
+  - validação mais restrita
+- Lei de Hyrum
+- *Tolerant reader* (revisão)
+- Expand-contract no contrato (campo novo + antigo em paralelo)
+- Google AIP-180
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+tabela de mudanças com semáforo (verde, amarelo, vermelho).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+exemplos de evolução do `ProdutoResponse`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

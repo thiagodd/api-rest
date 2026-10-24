@@ -1,0 +1,81 @@
+---
+id: "08.01"
+titulo: "Problem Details (RFC 9457)"
+descricao: "Um formato padrão de erro permite que clientes tratem falhas de forma genérica. A RFC 9457 é o padrão que o Spring adota."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9457"
+    url: "https://www.rfc-editor.org/rfc/rfc9457"
+  - titulo: "google.aip.dev: 193"
+    url: "https://google.aip.dev/193"
+  - titulo: "github.com: azure / Guidelines.md (seção de erros)"
+    url: "https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Um formato padrão de erro permite que clientes tratem falhas de forma genérica. A RFC 9457 é o padrão que o Spring adota.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Campos `type`, `title`, `status`, `detail`, `instance` e o significado exato de cada um
+- Media type `application/problem+json`
+- Extensões (`codigo`, `erros[]`, `traceId`)
+- `type` como URI estável e documentável (`about:blank`)
+- O que mudou da RFC 7807 para a 9457: registro de tipos, múltiplos problemas
+- Comparação com os formatos de erro do Google (AIP-193) e da Microsoft
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+anatomia de um ProblemDetail do Bazar anotado campo a campo.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+exemplos JSON para 404, 409 e 422 com lista de erros de validação.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

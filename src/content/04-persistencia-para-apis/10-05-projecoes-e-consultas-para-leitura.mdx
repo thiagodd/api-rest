@@ -1,0 +1,77 @@
+---
+id: "10.05"
+titulo: "Projeções e consultas para leitura"
+descricao: "Carregar entidades completas para montar uma listagem desperdiça memória e banco. Projeções devolvem só o necessário."
+status: esqueleto
+referencias:
+  - titulo: "Spring Data JPA Reference (Projections, Specifications)"
+  - titulo: "docs.spring.io: jdbc / core (JdbcClient)"
+    url: "https://docs.spring.io/spring-framework/reference/data-access/jdbc/core.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Carregar entidades completas para montar uma listagem desperdiça memória e banco. Projeções devolvem só o necessário.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Projeções por interface, por record (DTO) e dinâmicas
+- `@Query` com construtor de record
+- Consultas dinâmicas para filtros: `Specification` (incluindo a API fluente) e Querydsl (menção)
+- `JdbcClient` para relatórios e consultas complexas
+- CQRS leve: modelo de leitura separado
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+escolha "entidade × projeção × JdbcClient" por caso de uso.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoResumo` (record) para listagens; `ProdutoSpecifications` para os filtros de 13.01; relatório de vendas com `JdbcClient`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

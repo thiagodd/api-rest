@@ -1,0 +1,79 @@
+---
+id: "29.01"
+titulo: "Configuração externa e profiles"
+descricao: "A mesma imagem precisa rodar em desenvolvimento, homologação e produção mudando só a configuração. Segredos não podem estar no repositório."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: features / external-config"
+    url: "https://docs.spring.io/spring-boot/reference/features/external-config.html"
+  - titulo: "docs.spring.io: features / profiles"
+    url: "https://docs.spring.io/spring-boot/reference/features/profiles.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+A mesma imagem precisa rodar em desenvolvimento, homologação e produção mudando só a configuração. Segredos não podem estar no repositório.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Ordem de precedência das fontes
+- Profiles (`spring.profiles.active`, grupos)
+- `@ConfigurationProperties` com records e validação (`@Validated`)
+- Variáveis de ambiente (*relaxed binding*); `spring.config.import` (`configtree:` para *secrets* do Kubernetes)
+- Metadados para a IDE
+- O que nunca colocar em `application.yml`
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+pirâmide de precedência das fontes de configuração.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PagaFacilProperties` (record validado); `application-prod.yml`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

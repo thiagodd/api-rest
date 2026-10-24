@@ -1,0 +1,80 @@
+---
+id: "22.02"
+titulo: "Download, streaming e Range"
+descricao: "Exportar 1 milhão de linhas carregando tudo em memória causa OutOfMemoryError. O streaming resolve."
+status: esqueleto
+referencias:
+  - titulo: "RFC 6266"
+    url: "https://www.rfc-editor.org/rfc/rfc6266"
+  - titulo: "RFC 9110 §14 (Range)"
+  - titulo: "docs.spring.io: webmvc / mvc-ann-async"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-async.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Exportar 1 milhão de linhas carregando tudo em memória causa `OutOfMemoryError`. O *streaming* resolve.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `Resource` / `InputStreamResource`
+- `Content-Disposition` (RFC 6266; `attachment`, `filename*` UTF-8)
+- `StreamingResponseBody`
+- *Streaming* do banco (`Stream<T>` do Spring Data com `@Transactional(readOnly)`, *fetch size*)
+- Range requests → 206 Partial Content, `Accept-Ranges`; *timeouts* assíncronos
+- NDJSON para *streaming* de JSON
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+memória × tempo: carregar tudo × *streaming*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/relatorios/{id}/arquivo` em CSV por *streaming*; imagem com suporte a Range.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

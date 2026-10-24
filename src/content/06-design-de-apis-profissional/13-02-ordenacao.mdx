@@ -1,0 +1,76 @@
+---
+id: "13.02"
+titulo: "Ordenação"
+descricao: "Ordenação sem critério de desempate gera páginas inconsistentes. Ordenação livre abre risco de desempenho."
+status: esqueleto
+referencias:
+  - titulo: "Spring Data Commons Reference (Paging and Sorting)"
+  - titulo: "google.aip.dev: 132"
+    url: "https://google.aip.dev/132#ordering"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Ordenação sem critério de desempate gera páginas inconsistentes. Ordenação livre abre risco de desempenho.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Sintaxes (`sort=preco,desc` do Spring × `sort=-preco` de outros guias)
+- Múltiplos campos; desempate obrigatório pelo id
+- *Whitelist*; mapear o nome da API para o nome da coluna
+- `Sort` e `Pageable` do Spring Data; limites
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+conversor de `sort` com *whitelist*; teste de ordenação estável.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

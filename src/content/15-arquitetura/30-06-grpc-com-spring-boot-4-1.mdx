@@ -1,0 +1,81 @@
+---
+id: "30.06"
+titulo: "gRPC com Spring Boot 4.1"
+descricao: "Para comunicação interna de alto volume, gRPC oferece contrato forte e desempenho. Desde o Boot 4.1 o suporte é oficial."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-grpc / reference"
+    url: "https://docs.spring.io/spring-grpc/reference/"
+  - titulo: "grpc.io: languages / java"
+    url: "https://grpc.io/docs/languages/java/"
+  - titulo: "protobuf.dev: programming-guides / proto3"
+    url: "https://protobuf.dev/programming-guides/proto3/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Para comunicação interna de alto volume, gRPC oferece contrato forte e desempenho. Desde o Boot 4.1 o suporte é oficial.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Protobuf (evolução de campos)
+- Spring gRPC 1.1: servidor (Netty ou Servlet sobre HTTP/2) e cliente
+- Erros (`Status`, *rich error model*)
+- *Deadlines*; observabilidade
+- REST externo + gRPC interno
+- Testes
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Bazar expondo REST para fora e gRPC para o serviço de estoque.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`estoque.proto`; serviço e cliente gRPC.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

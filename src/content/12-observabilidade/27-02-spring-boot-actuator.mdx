@@ -1,0 +1,79 @@
+---
+id: "27.02"
+titulo: "Spring Boot Actuator"
+descricao: "Expõe saúde, métricas e informações operacionais prontas, mas exposto sem cuidado vaza dados sensíveis."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: actuator / index"
+    url: "https://docs.spring.io/spring-boot/reference/actuator/index.html"
+  - titulo: "docs.spring.io: actuator / endpoints"
+    url: "https://docs.spring.io/spring-boot/reference/actuator/endpoints.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Expõe saúde, métricas e informações operacionais prontas, mas exposto sem cuidado vaza dados sensíveis.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Endpoints (`health`, `info`, `metrics`, `prometheus`, `env`, `loggers`, `sbom`, `httpexchanges`)
+- Exposição (`management.endpoints.web.exposure.include`)
+- Porta de gerenciamento separada
+- Proteger os endpoints
+- `info` com dados de *build* e git, além dos novos campos `process.*` do Boot 4.1
+- Endpoints customizados (`@Endpoint`)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração do Actuator no Bazar; `info` com versão; endpoint `@Endpoint` com estatísticas de entregas de webhook.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

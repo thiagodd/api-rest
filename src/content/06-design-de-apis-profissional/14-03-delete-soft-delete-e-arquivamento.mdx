@@ -1,0 +1,79 @@
+---
+id: "14.03"
+titulo: "DELETE, soft delete e arquivamento"
+descricao: "Apagar de verdade dados com histórico (produto já vendido) quebra relatórios e auditoria. Decidir a semântica do DELETE é parte do contrato."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9110 §9.3.5"
+  - titulo: "google.aip.dev: 135"
+    url: "https://google.aip.dev/135"
+  - titulo: "google.aip.dev: 164"
+    url: "https://google.aip.dev/164"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Apagar de verdade dados com histórico (produto já vendido) quebra relatórios e auditoria. Decidir a semântica do DELETE é parte do contrato.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- 204 × 200 com corpo; DELETE repetido (404 ou 204?)
+- 409 quando há dependentes; 410 Gone
+- *Soft delete* (status `DESCONTINUADO`) × exclusão física × arquivamento; o filtro padrão nas listagens (`@SQLRestriction` do Hibernate)
+- *Undelete*
+- LGPD: direito de exclusão × retenção (menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`DELETE /v1/produtos/{id}` como *soft delete*; `DELETE /v1/categorias/{id}` com 409.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

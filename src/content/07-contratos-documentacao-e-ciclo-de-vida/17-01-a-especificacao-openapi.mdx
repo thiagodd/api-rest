@@ -1,0 +1,82 @@
+---
+id: "17.01"
+titulo: "A especificação OpenAPI"
+descricao: "O contrato OpenAPI é a base para documentação, geração de clientes, mocks, testes e governança. Precisa ser lido e escrito com fluência."
+status: esqueleto
+referencias:
+  - titulo: "spec.openapis.org: oas / latest"
+    url: "https://spec.openapis.org/oas/latest.html"
+  - titulo: "spec.openapis.org: oas / v3.1.2"
+    url: "https://spec.openapis.org/oas/v3.1.2.html"
+  - titulo: "json-schema.org: draft / 2020-12"
+    url: "https://json-schema.org/draft/2020-12"
+  - titulo: "spec.openapis.org: arazzo / latest"
+    url: "https://spec.openapis.org/arazzo/latest.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O contrato OpenAPI é a base para documentação, geração de clientes, *mocks*, testes e governança. Precisa ser lido e escrito com fluência.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Estrutura: `info`, `servers`, `paths`, `components` (`schemas`, `parameters`, `responses`, `securitySchemes`), `$ref`
+- OAS 3.0 × 3.1 (alinhamento total com JSON Schema 2020-12, `type: [string, "null"]`) × 3.2 (mais recente, 3.2.1); por que o Bazar usa 3.1
+- *Webhooks* no OAS 3.1
+- Exemplos (`examples`)
+- Projetos irmãos: Arazzo (fluxos) e Overlay (transformações), só a menção
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+mapa da estrutura de um documento OpenAPI.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+trecho de `bazar-api.yaml` (produto, paginação, ProblemDetail reutilizável).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

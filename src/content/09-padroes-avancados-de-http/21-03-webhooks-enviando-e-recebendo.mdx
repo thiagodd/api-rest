@@ -1,0 +1,92 @@
+---
+id: "21.03"
+titulo: "Webhooks: enviando e recebendo"
+descricao: "Integrações modernas são orientadas a eventos. Webhooks mal feitos perdem eventos, duplicam ações ou viram vetor de ataque."
+status: esqueleto
+referencias:
+  - titulo: "standardwebhooks.com"
+    url: "https://www.standardwebhooks.com/"
+  - titulo: "github.com: spec / standard-webhooks.md"
+    url: "https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md"
+  - titulo: "cloudevents.io"
+    url: "https://cloudevents.io/"
+  - titulo: "RFC 9421"
+    url: "https://www.rfc-editor.org/rfc/rfc9421"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Integrações modernas são orientadas a eventos. Webhooks mal feitos perdem eventos, duplicam ações ou viram vetor de ataque.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- **Enviando:**
+  - registro de assinaturas e validação de URL (SSRF, 26.05)
+  - formato do evento (CloudEvents)
+  - assinatura HMAC (Standard Webhooks: `webhook-id`, `webhook-timestamp`, `webhook-signature`)
+  - entrega pelo menos uma vez (*at-least-once*)
+  - *retries* com *backoff* exponencial e *jitter*
+  - desativar endpoints que falham
+  - histórico de entregas
+  - ordenação (não garantida) e eventos "magros" (*thin*) × completos
+- **Recebendo** (do PagaFácil):
+  - validar a assinatura e o *timestamp* (proteção contra *replay*)
+  - responder 2xx rápido e processar depois
+  - deduplicar pelo `webhook-id`
+- Menção a HTTP Message Signatures (RFC 9421)
+- Ligação com o Outbox (30.04) para não perder eventos
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência de envio com *retries*; sequência de recebimento com validação e fila interna.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`AssinaturaWebhook`; `EntregadorWebhook` agendado; assinador HMAC; `POST /v1/integracoes/pagafacil/notificacoes` com verificação.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

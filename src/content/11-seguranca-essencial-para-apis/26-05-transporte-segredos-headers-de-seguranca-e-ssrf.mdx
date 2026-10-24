@@ -1,0 +1,86 @@
+---
+id: "26.05"
+titulo: "Transporte, segredos, headers de segurança e SSRF"
+descricao: "HTTPS mal configurado, segredos no Git e chamadas a URLs fornecidas pelo usuário (webhooks!) são falhas comuns e graves."
+status: esqueleto
+referencias:
+  - titulo: "owasp.org: en / 0xa7-server-side-request-forgery"
+    url: "https://owasp.org/API-Security/editions/2023/en/0xa7-server-side-request-forgery/"
+  - titulo: "Spring Boot 4.1 Release Notes"
+  - titulo: "RFC 7239"
+    url: "https://www.rfc-editor.org/rfc/rfc7239"
+  - titulo: "cheatsheetseries.owasp.org: cheatsheets / REST_Security_Cheat_Sheet"
+    url: "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+HTTPS mal configurado, segredos no Git e chamadas a URLs fornecidas pelo usuário (webhooks!) são falhas comuns e graves.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- HTTPS obrigatório; HSTS
+- TLS terminado no *proxy*: `server.forward-headers-strategy` e `X-Forwarded-*` / `Forwarded` (RFC 7239)
+- Headers de segurança relevantes para APIs (`Cache-Control: no-store` em dados sensíveis, `X-Content-Type-Options`)
+- Segredos fora do código (variáveis de ambiente, Vault, *secrets* do Kubernetes)
+- Rotação do segredo de webhook
+- **SSRF** (API7):
+  - validar as URLs de webhook
+  - bloquear IPs internos
+  - `InetAddressFilter` nos clientes HTTP (Boot 4.1)
+- Consumo inseguro de APIs de terceiros (API10)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+ataque SSRF via URL de webhook apontando para `169.254.169.254`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+validação de URL de webhook; cliente de entrega com filtro de endereços; `forward-headers-strategy`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,81 @@
+---
+id: "10.02"
+titulo: "Migrations com Flyway"
+descricao: "O esquema do banco precisa ser versionado como o código. Sem isso, deploys e ambientes divergem."
+status: esqueleto
+referencias:
+  - titulo: "documentation.red-gate.com: fd"
+    url: "https://documentation.red-gate.com/fd"
+  - titulo: "martinfowler.com: bliki / ParallelChange"
+    url: "https://martinfowler.com/bliki/ParallelChange.html"
+  - titulo: "docs.spring.io: how-to / data-initialization"
+    url: "https://docs.spring.io/spring-boot/how-to/data-initialization.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O esquema do banco precisa ser versionado como o código. Sem isso, *deploys* e ambientes divergem.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Flyway 12: migrations versionadas (`V1__...`) e *repeatable* (`R__`)
+- Convenções de nomes; `flyway_schema_history`
+- Migrations em produção: nunca editar uma migration aplicada
+- **Expand-contract** (*parallel change*) para mudar o esquema sem quebrar a versão anterior da API (liga com 18.01 e 29.04)
+- Dados de referência × dados de teste
+- Flyway × Liquibase (uma frase)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+expand-contract em três *deploys* (adicionar coluna → migrar dados e escrever nas duas → remover a antiga).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`V1__criar_catalogo.sql`, `V2__criar_estoque.sql`; renomeação de coluna feita com expand-contract.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

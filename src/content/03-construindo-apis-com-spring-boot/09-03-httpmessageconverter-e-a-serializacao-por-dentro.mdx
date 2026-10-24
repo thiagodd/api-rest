@@ -1,0 +1,80 @@
+---
+id: "09.03"
+titulo: "HttpMessageConverter e a serialização por dentro"
+descricao: "Explica 406/415 e como servir CSV, PDF ou outros formatos sem hacks."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: mvc-config / message-converters"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-config/message-converters.html"
+  - titulo: "docs.spring.io: mvc-config / content-negotiation"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-config/content-negotiation.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Explica 406/415 e como servir CSV, PDF ou outros formatos sem *hacks*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Lista de *converters* padrão e a ordem entre eles
+- Escolha pelo `Accept` e pelo `produces`
+- `consumes` e `produces` nos *mappings*
+- Converter customizado (`text/csv`)
+- `HttpMessageConverters` no Boot e a forma de adicionar *converters*
+- *Content negotiation* por sufixo ou parâmetro (desligada por padrão e por quê)
+- Mudanças no Framework 7.1 (`MultipartHttpMessageConverter`, JAXB deixando de ser detectado automaticamente)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+seleção do converter: lista ordenada × `Accept` → escolhido.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`CsvHttpMessageConverter` para `List<ProdutoResponse>`; `curl` com `Accept: text/csv`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

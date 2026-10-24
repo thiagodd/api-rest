@@ -1,0 +1,77 @@
+---
+id: "05.04"
+titulo: "Um CRUD com status corretos"
+descricao: "A maioria dos CRUDs devolve 200 para tudo. Aqui o leitor aplica 201, 204 e 404 corretamente desde o primeiro dia."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: ann-methods / responseentity"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/responseentity.html"
+  - titulo: "RFC 9110 §15.3.2 (201)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+A maioria dos CRUDs devolve 200 para tudo. Aqui o leitor aplica 201, 204 e 404 corretamente desde o primeiro dia.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- POST com `@RequestBody` → 201 com `Location` (`ServletUriComponentsBuilder`)
+- PUT → 200 ou 204; DELETE → 204
+- GET de um id inexistente → 404 (`ResponseEntity.notFound()` e `ResponseStatusException`)
+- `HEAD` e `OPTIONS` automáticos no Spring
+- Limitações desta versão (sem validação, erros feios, entidade exposta), que motivam os módulos seguintes
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+tabela "operação → método → URI → status de sucesso → status de erro".
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+CRUD completo de `Categoria` em memória; sessão de `curl` mostrando cada status.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

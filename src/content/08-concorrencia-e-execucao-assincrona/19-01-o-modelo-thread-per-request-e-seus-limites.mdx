@@ -1,0 +1,78 @@
+---
+id: "19.01"
+titulo: "O modelo thread-per-request e seus limites"
+descricao: "Entender quantas requisições a API atende ao mesmo tempo e o que acontece quando uma dependência fica lenta é a base de desempenho e resiliência."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: application-properties / index (server.tomcat.*)"
+    url: "https://docs.spring.io/spring-boot/appendix/application-properties/index.html"
+  - titulo: "tomcat.apache.org: config / http"
+    url: "https://tomcat.apache.org/tomcat-11.0-doc/config/http.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Entender quantas requisições a API atende ao mesmo tempo e o que acontece quando uma dependência fica lenta é a base de desempenho e resiliência.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Pool* de *threads* do Tomcat (`server.tomcat.threads.max`, `accept-count`, `max-connections`)
+- Lei de Little
+- Por que uma dependência lenta esgota o *pool*
+- I/O bloqueante × CPU
+- Recursos limitados além das *threads* (conexões do banco)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fila de requisições, *pool* de *threads* e *pool* de conexões (gargalos em série).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+experimento com um endpoint lento (`Thread.sleep`) e carga simples para observar a saturação.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

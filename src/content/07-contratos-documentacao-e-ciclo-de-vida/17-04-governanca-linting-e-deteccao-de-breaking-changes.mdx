@@ -1,0 +1,80 @@
+---
+id: "17.04"
+titulo: "Governança: linting e detecção de breaking changes"
+descricao: "Automatizar o guia de estilo e bloquear mudanças incompatíveis no CI é o que torna a consistência sustentável."
+status: esqueleto
+referencias:
+  - titulo: "docs.stoplight.io: docs / spectral"
+    url: "https://docs.stoplight.io/docs/spectral/"
+  - titulo: "github.com: oasdiff / oasdiff"
+    url: "https://github.com/oasdiff/oasdiff"
+  - titulo: "github.com: zalando / zally"
+    url: "https://github.com/zalando/zally"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Automatizar o guia de estilo e bloquear mudanças incompatíveis no CI é o que torna a consistência sustentável.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Spectral: *rulesets* (`spectral:oas`), regras customizadas a partir do guia do Bazar (kebab-case, ProblemDetail obrigatório, paginação)
+- Rulesets prontos: Zally (linter do Zalando) tem repositório ativo, mas a última *release* é de 2022; o Bazar usa Spectral 6.17 com regras próprias inspiradas no guia do Zalando
+- `oasdiff` para *breaking changes* entre versões e o *changelog* gerado
+- Integração no pipeline (ligação com 29.06)
+- Catálogo de APIs (Backstage, só a menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+pipeline: PR → lint → diff → revisão.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`.spectral.yaml` do Bazar; saída do `oasdiff breaking` detectando a remoção de um campo.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,81 @@
+---
+id: "30.04"
+titulo: "Padrão Outbox"
+descricao: "\"salvar no banco e publicar o evento\" sem Outbox perde ou duplica eventos (dual write). É a base para webhooks e eventos confiáveis."
+status: esqueleto
+referencias:
+  - titulo: "microservices.io: data / transactional-outbox"
+    url: "https://microservices.io/patterns/data/transactional-outbox.html"
+  - titulo: "debezium.io: transformations / outbox-event-router"
+    url: "https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html"
+  - titulo: "docs.spring.io: reference / events"
+    url: "https://docs.spring.io/spring-modulith/reference/events.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+"salvar no banco e publicar o evento" sem Outbox perde ou duplica eventos (*dual write*). É a base para webhooks e eventos confiáveis.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- O problema do *dual write*
+- Tabela de *outbox* na mesma transação
+- *Relay* por *polling* (`SKIP LOCKED`) × CDC (Debezium)
+- Ordenação por agregado; limpeza
+- Spring Modulith Event Publication Registry como implementação
+- Consumidores idempotentes; *inbox pattern*
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*dual write* com falha × Outbox (transação → *relay* → *broker* / webhooks).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`EventoOutbox`; gravação no `PedidoService`; `OutboxRelay` agendado alimentando os webhooks (21.03) e o Kafka (30.03).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

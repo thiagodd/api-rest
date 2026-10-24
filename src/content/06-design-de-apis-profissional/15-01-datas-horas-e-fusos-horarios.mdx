@@ -1,0 +1,82 @@
+---
+id: "15.01"
+titulo: "Datas, horas e fusos horários"
+descricao: "Bugs de fuso aparecem na virada do dia, no horário de verão e com clientes em outros países, e quase sempre já em produção."
+status: esqueleto
+referencias:
+  - titulo: "RFC 3339"
+    url: "https://www.rfc-editor.org/rfc/rfc3339"
+  - titulo: "docs.oracle.com: time / package-summary"
+    url: "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/package-summary.html"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST use standard formats for date and time properties\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#169"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Bugs de fuso aparecem na virada do dia, no horário de verão e com clientes em outros países, e quase sempre já em produção.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- ISO 8601 × RFC 3339 (o perfil que APIs devem usar)
+- Instante (`Instant`, sempre UTC com `Z`) × data local (`LocalDate`) × data-hora com *offset* (`OffsetDateTime`) × `ZonedDateTime` (com regra de fuso)
+- O que guardar no banco (`timestamptz`)
+- `Clock` injetável para testes
+- Durações (ISO 8601 `PT30M`)
+- Filtros por período: intervalo semiaberto `[início, fim)`
+- O Brasil e o fim do horário de verão
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+linha do tempo mostrando o mesmo instante em UTC, em `America/Sao_Paulo` e em `Asia/Tokyo`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`Pedido.criadoEm` como `Instant`; configuração do Jackson; teste com `Clock.fixed`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,80 @@
+---
+id: "26.02"
+titulo: "CORS"
+descricao: "É o erro mais comum quando um front-end consome a API. É frequentemente \"resolvido\" com *, abrindo brechas."
+status: esqueleto
+referencias:
+  - titulo: "fetch.spec.whatwg.org"
+    url: "https://fetch.spec.whatwg.org/#http-cors-protocol"
+  - titulo: "developer.mozilla.org: HTTP / CORS"
+    url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/CORS"
+  - titulo: "docs.spring.io: web / webmvc-cors"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc-cors.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É o erro mais comum quando um front-end consome a API. É frequentemente "resolvido" com `*`, abrindo brechas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Same-origin policy*; requisições simples × *preflight* (`OPTIONS`)
+- Headers `Access-Control-*`; credenciais e por que `*` não funciona com elas
+- Configuração global (`WebMvcConfigurer#addCorsMappings`) × `@CrossOrigin` × Spring Security (`CorsConfigurationSource`)
+- CORS não é mecanismo de segurança do servidor (protege o usuário do navegador)
+- Depurar no DevTools
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência de *preflight*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração CORS do Bazar por perfil; `curl` simulando o *preflight*.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

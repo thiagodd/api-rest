@@ -1,0 +1,82 @@
+---
+id: "19.04"
+titulo: "Server-Sent Events (e uma visão de WebSocket)"
+descricao: "Acompanhar o status do pedido em tempo real é um requisito comum. SSE resolve com HTTP simples, sem a complexidade do WebSocket."
+status: esqueleto
+referencias:
+  - titulo: "html.spec.whatwg.org: multipage / server-sent-events"
+    url: "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+  - titulo: "docs.spring.io: webmvc / mvc-ann-async"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-async.html"
+  - titulo: "docs.spring.io: web / websocket"
+    url: "https://docs.spring.io/spring-framework/reference/web/websocket.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Acompanhar o status do pedido em tempo real é um requisito comum. SSE resolve com HTTP simples, sem a complexidade do WebSocket.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Formato `text/event-stream` (`event`, `id`, `data`, `retry`)
+- `SseEmitter` (*timeouts*, conclusão, erros)
+- `Last-Event-ID` para retomada
+- *Heartbeats*; *proxies* e *buffering* (`X-Accel-Buffering`)
+- Escala com várias instâncias (Redis pub/sub ou mensageria)
+- Limite de conexões em HTTP/1.1
+- WebSocket/STOMP em visão geral e quando preferir
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência SSE com reconexão e `Last-Event-ID`; topologia com várias instâncias.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/pedidos/{id}/eventos` com `SseEmitter`; cliente JS `EventSource`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

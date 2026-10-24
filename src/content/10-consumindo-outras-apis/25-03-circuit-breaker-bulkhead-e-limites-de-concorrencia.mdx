@@ -1,0 +1,79 @@
+---
+id: "25.03"
+titulo: "Circuit breaker, bulkhead e limites de concorrência"
+descricao: "Evita que uma dependência fora do ar consuma todos os recursos e permite falhar rápido enquanto ela se recupera."
+status: esqueleto
+referencias:
+  - titulo: "resilience4j.readme.io: docs"
+    url: "https://resilience4j.readme.io/docs"
+  - titulo: "martinfowler.com: bliki / CircuitBreaker"
+    url: "https://martinfowler.com/bliki/CircuitBreaker.html"
+  - titulo: "Spring Framework reference (Resilience)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Evita que uma dependência fora do ar consuma todos os recursos e permite falhar rápido enquanto ela se recupera.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Estados do *circuit breaker* (fechado, aberto, meio-aberto), janelas e limiares
+- Resilience4j 2.4 (`resilience4j-spring-boot4`): `@CircuitBreaker`, `@Bulkhead`, `@RateLimiter`, `@TimeLimiter`, configuração por instância, ordem dos *decorators*
+- `@ConcurrencyLimit` nativo do Spring 7 como *bulkhead* simples
+- Métricas e eventos do *breaker*
+- Spring Cloud Circuit Breaker (abstração, só a menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+máquina de estados do *circuit breaker*; ordem Retry(CircuitBreaker(RateLimiter(TimeLimiter(Bulkhead(chamada))))), a ordem padrão dos aspectos na doc do Resilience4j.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PagaFacilClient` protegido com *circuit breaker* + *bulkhead*; teste abrindo o circuito.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

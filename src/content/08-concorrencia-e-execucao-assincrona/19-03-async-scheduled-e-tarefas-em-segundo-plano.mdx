@@ -1,0 +1,81 @@
+---
+id: "19.03"
+titulo: "@Async, @Scheduled e tarefas em segundo plano"
+descricao: "Operações demoradas (relatórios, envio de webhooks) não podem segurar a requisição. É preciso executá-las fora dela, com segurança."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: integration / scheduling"
+    url: "https://docs.spring.io/spring-framework/reference/integration/scheduling.html"
+  - titulo: "docs.spring.io: features / task-execution-and-scheduling"
+    url: "https://docs.spring.io/spring-boot/reference/features/task-execution-and-scheduling.html"
+  - titulo: "github.com: lukas-krecan / ShedLock"
+    url: "https://github.com/lukas-krecan/ShedLock"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Operações demoradas (relatórios, envio de webhooks) não podem segurar a requisição. É preciso executá-las fora dela, com segurança.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `@EnableAsync`, `@Async`, `TaskExecutor` e a configuração `spring.task.execution.*`
+- Retorno `CompletableFuture`; tratamento de exceções (`AsyncUncaughtExceptionHandler`)
+- **Propagação de contexto** (MDC, *tracing*), automática para `@Async` no Boot 4.1
+- `@Scheduled` (*fixed delay*, cron)
+- Agendamento em múltiplas instâncias e o problema do *job* duplicado (ShedLock ou `SKIP LOCKED`)
+- Limites: perder tarefas em memória no *restart* (motivação para a tabela de *jobs* e o Outbox)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+requisição → tarefa enviada → resposta imediata; a tarefa se perde em *crash* (com e sem persistência).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`RelatorioVendasService.gerarAsync`; `@Scheduled` que processa a tabela `operacao` com `SELECT ... FOR UPDATE SKIP LOCKED`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,81 @@
+---
+id: "24.01"
+titulo: "Panorama dos clientes HTTP no Spring"
+descricao: "Há quatro opções, e uma está sendo depreciada. Escolher certo evita retrabalho."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: integration / rest-clients"
+    url: "https://docs.spring.io/spring-framework/reference/integration/rest-clients.html"
+  - titulo: "docs.spring.io: io / rest-client"
+    url: "https://docs.spring.io/spring-boot/reference/io/rest-client.html"
+  - titulo: "Spring Framework 7.1 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Há quatro opções, e uma está sendo depreciada. Escolher certo evita retrabalho.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `RestTemplate`: depreciado formalmente no Framework 7.1 (nov/2026), remoção prevista no 8.0
+- `RestClient` (síncrono, fluente)
+- `WebClient` (reativo)
+- HTTP interfaces (`@HttpExchange`, declarativo)
+- Bibliotecas HTTP por baixo: `ClientHttpRequestFactory` com JDK HttpClient, Jetty, Reactor Netty e Apache HttpClient 5
+- Configuração global: `HttpClientSettings` e `spring.http.clients.*` (Boot 4)
+- Quadro de decisão
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+camadas: API do cliente → *request factory* → biblioteca HTTP → rede.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+a mesma chamada à FreteJá com os três estilos.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

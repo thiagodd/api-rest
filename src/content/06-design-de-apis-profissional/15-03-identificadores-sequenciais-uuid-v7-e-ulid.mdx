@@ -1,0 +1,83 @@
+---
+id: "15.03"
+titulo: "Identificadores: sequenciais, UUID v7 e ULID"
+descricao: "Ids sequenciais expostos permitem enumeração e vazam volume de negócio. UUID v4 aleatório degrada índices. O UUID v7 resolve os dois problemas."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9562"
+    url: "https://www.rfc-editor.org/rfc/rfc9562"
+  - titulo: "github.com: ulid / spec"
+    url: "https://github.com/ulid/spec"
+  - titulo: "Hibernate ORM User Guide (identifiers)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Ids sequenciais expostos permitem enumeração e vazam volume de negócio. UUID v4 aleatório degrada índices. O UUID v7 resolve os dois problemas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Sequencial × UUID v4 × **UUID v7 (RFC 9562)** × ULID
+- Ordenação temporal e a localidade no índice B-tree
+- Id interno × id público; ids legíveis para humanos (`BZR-2026-000123`)
+- Geração no Java: o JDK 25 não gera v7 (`UUID.ofEpochMillis` só existe a partir do JDK 26); opções:
+  - Hibernate 7 `@UuidGenerator(style = UuidGenerator.Style.VERSION_7)` (confirmado no Javadoc da 7.4)
+  - biblioteca `uuid-creator` 6.1.1
+  - nota para quem usa JDK 26+: `UUID.ofEpochMillis(long)`
+- Tipo `uuid` no PostgreSQL
+- Ids como string no JSON
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+layout de bits do UUID v7; inserções em índice (v4 espalhado × v7 sequencial).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+entidade `Produto` com UUID v7; gerador de `numero` de pedido.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

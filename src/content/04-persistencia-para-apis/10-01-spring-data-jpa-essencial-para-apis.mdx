@@ -1,0 +1,83 @@
+---
+id: "10.01"
+titulo: "Spring Data JPA essencial para APIs"
+descricao: "Quase toda API persiste dados. Usar JPA sem entender o que ele faz é a principal fonte de problemas de desempenho em APIs Spring."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: jpa / reference"
+    url: "https://docs.spring.io/spring-data/jpa/reference/"
+  - titulo: "hibernate.org: orm / documentation"
+    url: "https://hibernate.org/orm/documentation/"
+  - titulo: "docs.spring.io: data / sql"
+    url: "https://docs.spring.io/spring-boot/reference/data/sql.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Quase toda API persiste dados. Usar JPA sem entender o que ele faz é a principal fonte de problemas de desempenho em APIs Spring.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- PostgreSQL via Docker Compose (suporte do Boot)
+- Entidades JPA 3.2 com Hibernate 7.4; `@Entity`, `@Id`, estratégias de geração
+- Ciclo de vida: *managed*, *detached* e *dirty checking*
+- `JpaRepository`, *query methods*, `@Query`
+- Entidade ≠ DTO (reforço de 06.01)
+- `spring.jpa.open-in-view`: o que é, por que vem ligado e por que o Bazar desliga
+- `ddl-auto`: só em protótipos
+- Log de SQL com parâmetros
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+contexto de persistência dentro de uma requisição (o que acontece com OSIV ligado e desligado).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+entidade `Produto`, `ProdutoRepository`, `compose.yaml` com Postgres, `application.yml` com `open-in-view: false`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

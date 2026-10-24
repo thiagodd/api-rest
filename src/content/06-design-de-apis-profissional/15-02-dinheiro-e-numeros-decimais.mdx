@@ -1,0 +1,83 @@
+---
+id: "15.02"
+titulo: "Dinheiro e números decimais"
+descricao: "Double para dinheiro gera centavos errados, e um erro de moeda é um incidente financeiro."
+status: esqueleto
+referencias:
+  - titulo: "iso.org: iso-4217-currency-codes"
+    url: "https://www.iso.org/iso-4217-currency-codes.html"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST use the common money object\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#173"
+  - titulo: "google.type.Money"
+    url: "https://github.com/googleapis/googleapis/blob/master/google/type/money.proto"
+  - titulo: "google.aip.dev: 143 (códigos padronizados, inclusive moeda)"
+    url: "https://google.aip.dev/143"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+`double` para dinheiro gera centavos errados, e um erro de moeda é um incidente financeiro.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Por que não usar ponto flutuante
+- Duas representações: unidades menores (inteiro em centavos, a v1 do Bazar) × decimal em string + moeda ISO 4217 (a v2)
+- `BigDecimal` (escala, `RoundingMode`, `compareTo` × `equals`)
+- *Value object* `Dinheiro`
+- JSR 354 / Moneta (menção)
+- Arredondamento no rateio de frete e desconto
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+nenhum (tabela comparativa).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+record `Dinheiro` com validação; serializador e desserializador Jackson; rateio com resto.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

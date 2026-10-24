@@ -1,0 +1,82 @@
+---
+id: "26.03"
+titulo: "Autorização por objeto, exposição de dados e validação de entrada"
+descricao: "BOLA/IDOR (cliente A lendo o pedido do cliente B) é o risco nº 1 do OWASP API, e se resolve no design e no código da API, não no framework."
+status: esqueleto
+referencias:
+  - titulo: "owasp.org: en / 0xa1-broken-object-level-authorization"
+    url: "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"
+  - titulo: "owasp.org: en / 0xa3-broken-object-property-level-authorization"
+    url: "https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/"
+  - titulo: "gov.br: anpd"
+    url: "https://www.gov.br/anpd/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+BOLA/IDOR (cliente A lendo o pedido do cliente B) é o risco nº 1 do OWASP API, e se resolve no design e no código da API, não no *framework*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- BOLA (API1): sempre filtrar pelo dono (`findByIdAndClienteId`)
+- BOPLA (API3): *mass assignment* e exposição excessiva; DTOs como defesa
+- Mascarar dados sensíveis (CPF) e não logá-los
+- LGPD: minimização
+- Validação de entrada como segurança: tipos, tamanhos, *allowlists*
+- Injeção (SQL, JPQL, *log injection*)
+- 404 × 403 para não revelar existência
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência de um ataque BOLA e a correção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PedidoService.buscarDoCliente`; teste que tenta acessar o pedido de outro cliente; serializador que mascara o CPF.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

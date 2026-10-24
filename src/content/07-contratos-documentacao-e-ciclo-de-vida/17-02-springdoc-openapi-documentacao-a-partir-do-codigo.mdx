@@ -1,0 +1,82 @@
+---
+id: "17.02"
+titulo: "springdoc-openapi: documentação a partir do código"
+descricao: "É o caminho mais rápido para ter um contrato e uma UI de testes. Ainda assim, o contrato gerado precisa de cuidado para ser útil."
+status: esqueleto
+referencias:
+  - titulo: "springdoc.org"
+    url: "https://springdoc.org/"
+  - titulo: "github.com: springdoc / springdoc-openapi"
+    url: "https://github.com/springdoc/springdoc-openapi"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É o caminho mais rápido para ter um contrato e uma UI de testes. Ainda assim, o contrato gerado precisa de cuidado para ser útil.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- springdoc 3.2 com Boot 4.1
+- `/v3/api-docs`, Swagger UI (Scalar como alternativa)
+- Anotações `@Operation`, `@ApiResponse`, `@Schema`, `@Parameter`; exemplos
+- Documentar ProblemDetail globalmente; grupos (`GroupedOpenApi`) por versão
+- Paginação e `Pageable`
+- Esconder em produção ou proteger
+- Exportar o contrato no *build* (plugin Maven) para versionar
+- Javadoc como fonte: suportado pelo springdoc com `therapi-runtime-javadoc` + `therapi-runtime-javadoc-scribe` 0.15.0 (biblioteca sem *release* desde 2022: Complementar)
+- Versão do OpenAPI gerada: 3.1 por padrão (`springdoc.api-docs.version=openapi_3_1`); a 3.2 não é documentada pelo springdoc
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoController` anotado; `OpenApiConfig`; UI com exemplos.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

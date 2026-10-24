@@ -1,0 +1,79 @@
+---
+id: "27.03"
+titulo: "Health checks: liveness, readiness e indicadores"
+descricao: "Health checks errados reiniciam pods saudáveis em cascata ou mandam tráfego para instâncias que não estão prontas."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: actuator / endpoints"
+    url: "https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.kubernetes-probes"
+  - titulo: "kubernetes.io: configure-pod-container / configure-liveness-readiness-startup-probes"
+    url: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Health checks errados reiniciam pods saudáveis em cascata ou mandam tráfego para instâncias que não estão prontas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Liveness* × *readiness* × *startup*; `ApplicationAvailability`
+- Grupos de *health*
+- Nunca colocar dependências externas no *liveness*
+- `HealthIndicator` customizado (PagaFácil)
+- Detalhes só para autorizados
+- *Readiness* durante o *shutdown*
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+o que acontece com o *liveness* dependendo do banco quando o banco cai (reinício em massa).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+grupos `liveness`/`readiness`; `PagaFacilHealthIndicator` no grupo de *readiness* com cautela.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

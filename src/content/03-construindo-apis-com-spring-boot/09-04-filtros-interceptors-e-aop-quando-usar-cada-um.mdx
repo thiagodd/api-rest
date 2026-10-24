@@ -1,0 +1,79 @@
+---
+id: "09.04"
+titulo: "Filtros, interceptors e AOP: quando usar cada um"
+descricao: "É uma decisão frequente (logging, correlation ID, métricas, auditoria). Escolher o mecanismo errado causa bugs de ordem e de exceções não tratadas."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: webmvc / filters"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/filters.html"
+  - titulo: "docs.spring.io: mvc-config / interceptors"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-config/interceptors.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É uma decisão frequente (logging, correlation ID, métricas, auditoria). Escolher o mecanismo errado causa bugs de ordem e de exceções não tratadas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `Filter` / `OncePerRequestFilter`: antes do `DispatcherServlet`, acesso ao *request* cru, ordem com `@Order` / `FilterRegistrationBean`
+- `HandlerInterceptor`: `preHandle`, `postHandle`, `afterCompletion`; sabe qual handler foi escolhido
+- AOP (`@Aspect`) em serviços
+- Tabela de decisão
+- Por que exceções em filtros não passam pelo `@ControllerAdvice`
+- Ler o corpo duas vezes: `ContentCachingRequestWrapper` e seus custos
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+camadas concêntricas (filtro ⊃ dispatcher ⊃ interceptor ⊃ controller ⊃ aspecto no serviço).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`TempoDeRespostaFilter`; `AuditoriaInterceptor` que lê a anotação do handler; aspecto `@Auditavel`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

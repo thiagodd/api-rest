@@ -1,0 +1,73 @@
+---
+id: "31.06"
+titulo: "Pagamentos e reembolsos"
+descricao: "Integração externa com dinheiro envolvido, que exige todos os padrões de resiliência e idempotência."
+status: esqueleto
+referencias: []
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Integração externa com dinheiro envolvido, que exige todos os padrões de resiliência e idempotência.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Cliente PagaFácil com *timeouts*, *retry* seguro e *circuit breaker*
+- Webhook recebido (assinatura e deduplicação)
+- Reembolso assíncrono (202)
+- Saga do pagamento
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência completa pagamento → webhook → `PAGO`.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+módulo `pagamentos`; cenários WireMock de falha.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

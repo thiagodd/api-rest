@@ -1,0 +1,79 @@
+---
+id: "30.01"
+titulo: "Monólito modular com Spring Modulith"
+descricao: "A maioria dos sistemas deveria começar como monólito bem modularizado. O Spring Modulith verifica as fronteiras e prepara uma futura extração."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-modulith / reference"
+    url: "https://docs.spring.io/spring-modulith/reference/"
+  - titulo: "kamilgrzybek.com: posts / modular-monolith-primer"
+    url: "https://www.kamilgrzybek.com/blog/posts/modular-monolith-primer"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+A maioria dos sistemas deveria começar como monólito bem modularizado. O Spring Modulith verifica as fronteiras e prepara uma futura extração.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Módulos de aplicação (pacotes de topo); API pública × interna
+- `ApplicationModules.verify()`
+- Eventos entre módulos (`ApplicationEventPublisher`, `@ApplicationModuleListener`)
+- Testes por módulo (`@ApplicationModuleTest`)
+- Documentação gerada (C4)
+- Versão: Spring Modulith 2.1.2, compilado contra o Boot 4.1.2
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+módulos do Bazar e as dependências permitidas.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+teste de verificação de módulos; `PedidoCriado` publicado em `pedidos` e consumido em `integracoes`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

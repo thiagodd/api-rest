@@ -1,0 +1,82 @@
+---
+id: "06.02"
+titulo: "Mapeamento: manual ou MapStruct"
+descricao: "O mapeamento manual cresce rápido e esconde bugs. O MapStruct gera código verificado em compilação, sem reflexão."
+status: esqueleto
+referencias:
+  - titulo: "mapstruct.org: reference / html"
+    url: "https://mapstruct.org/documentation/stable/reference/html/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O mapeamento manual cresce rápido e esconde bugs. O MapStruct gera código verificado em compilação, sem reflexão.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Mapeamento manual com métodos estáticos (`ProdutoResponse.de(produto)`)
+- MapStruct 1.6.3:
+  - configuração com o processador de anotações
+  - `componentModel = "spring"`
+  - `@Mapping`
+  - `unmappedTargetPolicy = ERROR`
+  - mapeamento de records
+  - `@MappingTarget` para atualização
+  - *mappers* compostos
+- Quando não usar MapStruct (poucos DTOs)
+- Lombok: por que esta doc não usa (records cobrem quase tudo)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoMapper` com conversão de `precoEmCentavos`; teste mostrando erro de compilação quando um campo não é mapeado.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,83 @@
+---
+id: "08.02"
+titulo: "ProblemDetail no Spring: tratamento global de erros"
+descricao: "Centralizar o tratamento de erros elimina try/catch nos controllers e garante respostas consistentes, sem vazar stack traces."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: webmvc / mvc-ann-rest-exceptions"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html"
+  - titulo: "docs.spring.io: web / servlet (error handling)"
+    url: "https://docs.spring.io/spring-boot/reference/web/servlet.html"
+  - titulo: "Spring Framework 7.1 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Centralizar o tratamento de erros elimina `try/catch` nos controllers e garante respostas consistentes, sem vazar *stack traces*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `ProblemDetail`, `ErrorResponse`, `ErrorResponseException`
+- `spring.mvc.problemdetails.enabled`
+- `@RestControllerAdvice` estendendo `ResponseEntityExceptionHandler`
+- Exceções de domínio (`RecursoNaoEncontradoException`, `RegraDeNegocioException`) e a hierarquia
+- Mapear `MethodArgumentNotValidException` e `HandlerMethodValidationException` para `erros[]`
+- Mensagens via `MessageSource` (códigos `problemDetail.*`)
+- Erro 500 genérico: logar e devolver só o `traceId`
+- Erros fora do Spring MVC (filtros, 404 de rota): `BasicErrorController` / `ErrorAttributes`
+- Mudança no Spring 7.1: `instance` deixa de ser preenchido automaticamente
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxo da exceção: controller → `HandlerExceptionResolver` → `@ControllerAdvice` → ProblemDetail.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`TratadorGlobalDeErros` do Bazar; `RecursoNaoEncontradoException`; teste verificando `application/problem+json`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,82 @@
+---
+id: "27.05"
+titulo: "Métricas com Micrometer"
+descricao: "Métricas alimentam dashboards, alertas e SLOs, e são a forma mais barata de saber se a API está saudável."
+status: esqueleto
+referencias:
+  - titulo: "docs.micrometer.io: micrometer / reference"
+    url: "https://docs.micrometer.io/micrometer/reference/"
+  - titulo: "docs.micrometer.io: reference / observation"
+    url: "https://docs.micrometer.io/micrometer/reference/observation.html"
+  - titulo: "docs.spring.io: actuator / metrics"
+    url: "https://docs.spring.io/spring-boot/reference/actuator/metrics.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Métricas alimentam *dashboards*, alertas e SLOs, e são a forma mais barata de saber se a API está saudável.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Micrometer 1.17: `MeterRegistry`, `Counter`, `Timer`, `Gauge`, `DistributionSummary`
+- **Observation API** (`@Observed`, `ObservationRegistry`): uma instrumentação para métricas e *traces*
+- `http.server.requests` e `http.client.requests`
+- Percentis × histogramas; SLO *buckets*
+- Tags e o perigo da cardinalidade (nunca o id do pedido como tag)
+- Prometheus
+- Métricas de negócio (pedidos criados, valor) e métricas por versão de API (18.04)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+do contador ao *dashboard* (app → `/actuator/prometheus` → Prometheus → Grafana).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+contador `bazar.pedidos.criados` com tag `metodoPagamento`; `@Observed` no `PedidoService`; alerta de exemplo para SLO.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

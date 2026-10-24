@@ -1,0 +1,79 @@
+---
+id: "20.03"
+titulo: "Concorrência otimista com If-Match (412 e 428)"
+descricao: "Impede que dois usuários editando o mesmo produto ou estoque sobrescrevam as alterações um do outro (lost update) via HTTP, sem locks."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9110 §13.1.1"
+  - titulo: "RFC 6585 (428)"
+  - titulo: "google.aip.dev: 154"
+    url: "https://google.aip.dev/154"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Impede que dois usuários editando o mesmo produto ou estoque sobrescrevam as alterações um do outro (*lost update*) via HTTP, sem *locks*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Fluxo GET (ETag) → PUT/PATCH com `If-Match`
+- 412 Precondition Failed; tornar a precondição obrigatória com 428 Precondition Required
+- Mapear `@Version` ↔ ETag
+- Comparação com `If-Unmodified-Since`
+- O que o cliente faz no 412 (recarregar e mesclar)
+- Concorrência otimista × idempotência (complementares)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+dois clientes editando o mesmo produto: o segundo recebe 412.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PUT /v1/produtos/{id}/estoque` exigindo `If-Match`; ProblemDetail 412/428; testes.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

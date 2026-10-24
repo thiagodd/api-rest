@@ -1,0 +1,78 @@
+---
+id: "20.02"
+titulo: "ETag e requisições condicionais"
+descricao: "Com ETag, o cliente revalida sem baixar de novo (304). Com o mesmo mecanismo se faz controle de concorrência (20.03)."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9110 §8.8 e §13"
+  - titulo: "docs.spring.io: webmvc / mvc-caching"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-caching.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Com `ETag`, o cliente revalida sem baixar de novo (304). Com o mesmo mecanismo se faz controle de concorrência (20.03).
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- ETag forte × fraca; `Last-Modified`
+- `If-None-Match` → 304; `If-Modified-Since`
+- Gerar a ETag: hash do corpo (`ShallowEtagHeaderFilter`, que só economiza banda, não processamento) × versão da entidade (`@Version`)
+- `WebRequest.checkNotModified`
+- ETag em coleções
+- ETag e compressão (a ETag fraca após gzip)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência GET → 200 + ETag → GET com `If-None-Match` → 304.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+produto com ETag derivada de `versao`; teste do 304.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

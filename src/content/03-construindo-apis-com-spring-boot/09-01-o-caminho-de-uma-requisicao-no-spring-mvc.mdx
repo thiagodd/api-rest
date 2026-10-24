@@ -1,0 +1,77 @@
+---
+id: "09.01"
+titulo: "O caminho de uma requisição no Spring MVC"
+descricao: "Sem esse modelo mental, depurar 404, 406 ou um JSON estranho vira tentativa e erro. Ele também é a base para estender o framework."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: webmvc / mvc-servlet"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Sem esse modelo mental, depurar 404, 406 ou um JSON estranho vira tentativa e erro. Ele também é a base para estender o framework.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Servlet container (Tomcat 11) → cadeia de filtros → `DispatcherServlet`
+- `HandlerMapping` (`RequestMappingHandlerMapping`; `PathPattern` × `AntPathMatcher` depreciado)
+- `HandlerExecutionChain` com interceptors
+- `HandlerAdapter` (`RequestMappingHandlerAdapter`) → resolução de argumentos → método → *return value handlers* → `HttpMessageConverter`
+- `HandlerExceptionResolver`
+- Como ver tudo isso: *debug* com *breakpoints* e `logging.level.org.springframework.web=DEBUG`
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+**diagrama principal da parte**: sequência completa da requisição, com cada componente e ponto de extensão.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+log de DEBUG de uma requisição real do Bazar, comentado.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

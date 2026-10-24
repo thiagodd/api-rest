@@ -1,0 +1,88 @@
+---
+id: "29.02"
+titulo: "Containers: Dockerfile, layered jars e buildpacks"
+descricao: "Imagens grandes e inseguras atrasam deploys e ampliam a superfície de ataque. A JVM precisa conhecer os limites do contêiner."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: container-images / index"
+    url: "https://docs.spring.io/spring-boot/reference/packaging/container-images/index.html"
+  - titulo: "paketo.io: docs"
+    url: "https://paketo.io/docs/"
+  - titulo: "docs.spring.io: packaging / aot-cache"
+    url: "https://docs.spring.io/spring-boot/reference/packaging/aot-cache.html"
+  - titulo: "openjdk.org: jeps / 483"
+    url: "https://openjdk.org/jeps/483"
+  - titulo: "openjdk.org: jeps / 514"
+    url: "https://openjdk.org/jeps/514"
+  - titulo: "openjdk.org: jeps / 515"
+    url: "https://openjdk.org/jeps/515"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Imagens grandes e inseguras atrasam *deploys* e ampliam a superfície de ataque. A JVM precisa conhecer os limites do contêiner.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Jar executável × camadas (`-Djarmode=tools extract --layers`)
+- Dockerfile *multi-stage* com JRE 25
+- Usuário não *root*
+- Buildpacks (`spring-boot:build-image`, Paketo)
+- JVM em contêiner (`MaxRAMPercentage`, CPU)
+- *AOT cache* (JEP 483/514/515) para o *startup*: a doc do Boot recomenda AOT cache em vez de CDS no Java 25+; requer *training run* com o jar extraído (`-Djarmode=tools extract`) e é suportado também pelos *buildpacks*
+- SBOM; *scan* de vulnerabilidades
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+camadas da imagem e o que muda a cada *build*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`Dockerfile` do Bazar; `./mvnw spring-boot:build-image`; comparação de *startup* com e sem CDS/AOT cache.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

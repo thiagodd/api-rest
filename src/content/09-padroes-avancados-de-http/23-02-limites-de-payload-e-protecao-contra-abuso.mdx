@@ -1,0 +1,80 @@
+---
+id: "23.02"
+titulo: "Limites de payload e proteção contra abuso"
+descricao: "JSON de 50 MB, arrays com 1 milhão de itens ou aninhamento profundo derrubam a API sem nenhum ataque sofisticado."
+status: esqueleto
+referencias:
+  - titulo: "github.com: FasterXML / jackson-core (StreamReadConstraints)"
+    url: "https://github.com/FasterXML/jackson-core"
+  - titulo: "Spring Boot 4.1 Release Notes"
+  - titulo: "OWASP API4:2023 Unrestricted Resource Consumption"
+    url: "https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+JSON de 50 MB, arrays com 1 milhão de itens ou aninhamento profundo derrubam a API sem nenhum ataque sofisticado.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Limites do Tomcat (`max-http-form-post-size`, tamanho de header, `max-swallow-size`)
+- Restrições de leitura do Jackson (`StreamReadConstraints`: tamanho de string, profundidade, tamanho de número), configuráveis via `spring.jackson.factory.*` no Boot 4.1
+- `@Size` em coleções
+- Paginação com máximo
+- *Timeouts* de requisição
+- Limites como parte do contrato (documentar)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração de limites no Bazar; testes enviando payloads abusivos.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

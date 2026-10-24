@@ -1,0 +1,81 @@
+---
+id: "18.04"
+titulo: "Depreciação e desligamento de APIs"
+descricao: "Desligar uma versão sem processo derruba clientes. Os headers padronizados permitem que ferramentas avisem automaticamente."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9745"
+    url: "https://www.rfc-editor.org/rfc/rfc9745"
+  - titulo: "RFC 8594"
+    url: "https://www.rfc-editor.org/rfc/rfc8594"
+  - titulo: "Spring Framework reference (API Versioning, deprecation)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Desligar uma versão sem processo derruba clientes. Os headers padronizados permitem que ferramentas avisem automaticamente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Header `Deprecation` (RFC 9745, formato de data em *structured field*)
+- Header `Sunset` (RFC 8594)
+- `Link` com `rel="deprecation"` e `rel="sunset"`
+- `StandardApiVersionDeprecationHandler` do Spring 7
+- Depreciar campos e endpoints individuais (`deprecated: true` no OpenAPI)
+- Métricas de uso por versão e por cliente para saber quem ainda usa (ligação com 27.05)
+- Comunicação e prazos; 410 Gone após o *sunset*
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+linha do tempo de vida de uma versão (lançamento → depreciação → *sunset* → 410).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração do handler de depreciação para a v1 do produto; resposta com os headers; métrica por versão.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

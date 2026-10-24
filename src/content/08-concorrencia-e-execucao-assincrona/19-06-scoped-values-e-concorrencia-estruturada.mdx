@@ -1,0 +1,79 @@
+---
+id: "19.06"
+titulo: "Scoped values e concorrência estruturada"
+descricao: "São as novas ferramentas do Java para propagar contexto e paralelizar chamadas com segurança, substituindo ThreadLocal e CompletableFuture encadeados."
+status: esqueleto
+referencias:
+  - titulo: "openjdk.org: jeps / 506"
+    url: "https://openjdk.org/jeps/506"
+  - titulo: "openjdk.org: jeps / 505"
+    url: "https://openjdk.org/jeps/505"
+  - titulo: "openjdk.org: jeps / 533"
+    url: "https://openjdk.org/jeps/533"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+São as novas ferramentas do Java para propagar contexto e paralelizar chamadas com segurança, substituindo `ThreadLocal` e `CompletableFuture` encadeados.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `ScopedValue` (final no JDK 25, JEP 506)
+- `StructuredTaskScope`: ainda em *preview* (JDK 25: JEP 505, quinta *preview*; JDK 26: JEP 525; JDK 27: JEP 533, sétima *preview*), com a API mudando entre versões
+- Caso de uso: montar o detalhe do pedido chamando frete e pagamento em paralelo com *timeout*
+- Cuidados com *preview features* em produção
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+árvore de tarefas com cancelamento em cascata.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+agregação paralela com `StructuredTaskScope` (marcada como *preview*).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,77 @@
+---
+id: "27.07"
+titulo: "Correlation ID e contexto de requisição"
+descricao: "Ligar o erro relatado pelo cliente ao log e ao trace exatos economiza horas de investigação."
+status: esqueleto
+referencias:
+  - titulo: "W3C Trace Context"
+  - titulo: "Micrometer Tracing docs"
+    url: "https://docs.micrometer.io/tracing/reference/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Ligar o erro relatado pelo cliente ao log e ao *trace* exatos economiza horas de investigação.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `traceId` × *request id* × *correlation id* de negócio
+- Aceitar ou gerar `X-Request-Id`
+- Devolver o id na resposta e no ProblemDetail (`traceId`)
+- Propagar para logs (MDC automático), filas e webhooks
+- Não confiar cegamente no id vindo de fora
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+o id percorrendo cliente → gateway → API → PagaFácil → log.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+filtro que adiciona `traceId` à resposta; extensão do ProblemDetail com `traceId`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,79 @@
+---
+id: "11.02"
+titulo: "Testes unitários de domínio e serviços"
+descricao: "Regras de negócio (máquina de estados do pedido, cálculo de total) devem ser testadas rápido e sem Spring."
+status: esqueleto
+referencias:
+  - titulo: "docs.junit.org"
+    url: "https://docs.junit.org/"
+  - titulo: "assertj.github.io: doc"
+    url: "https://assertj.github.io/doc/"
+  - titulo: "javadoc.io: mockito / Mockito"
+    url: "https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Regras de negócio (máquina de estados do pedido, cálculo de total) devem ser testadas rápido e sem Spring.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- JUnit 6 (Jupiter): `@Test`, `@ParameterizedTest`, `@Nested`
+- AssertJ (*assertions* fluentes e de exceções)
+- Mockito 5: *mocks* × *stubs* × *fakes*; quando não "mockar" (*value objects*, repositório *fake*)
+- Testar a máquina de estados com tabela de transições
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`PedidoTest` (transições válidas e inválidas, parametrizado); `PedidoServiceTest` com *mock* de repositório.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,95 @@
+---
+id: "06.03"
+titulo: "Jackson 3 no Spring Boot 4"
+descricao: "A serialização define o contrato real da API. No Boot 4 o Jackson mudou de pacote e de padrões, e muitos tutoriais antigos deixaram de funcionar."
+status: esqueleto
+referencias:
+  - titulo: "github.com: wiki / Jackson-Release-3.0"
+    url: "https://github.com/FasterXML/jackson/wiki/Jackson-Release-3.0"
+  - titulo: "docs.spring.io: features / json"
+    url: "https://docs.spring.io/spring-boot/reference/features/json.html"
+  - titulo: "Spring Framework 7.0 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+A serialização define o contrato real da API. No Boot 4 o Jackson mudou de pacote e de padrões, e muitos tutoriais antigos deixaram de funcionar.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Jackson 3: pacote `tools.jackson`, `JsonMapper` imutável e construído por *builder*
+- Anotações que continuam em `com.fasterxml.jackson.annotation`
+- Diferenças de padrão em relação ao Jackson 2:
+  - `java.time` embutido no databind, sem módulo separado
+  - `WRITE_DATES_AS_TIMESTAMPS=false`
+  - `FAIL_ON_UNKNOWN_PROPERTIES=false`
+  - `FAIL_ON_NULL_FOR_PRIMITIVES=true`
+  - `FAIL_ON_TRAILING_TOKENS=true`
+  - `SORT_PROPERTIES_ALPHABETICALLY=true` (muda a ordem dos campos no JSON!)
+  - enums lidos e escritos via `toString()`
+  - exceções não checadas (`JacksonException`)
+  - profundidade máxima de aninhamento 500
+  - `spring.jackson.use-jackson2-defaults=true` restaura os padrões do Boot 3
+- Configuração via `spring.jackson.*`: `spring.jackson.json.read.*`/`json.write.*` (específicas de JSON, Boot 4.0) e `spring.jackson.read.*`/`write.*` (comuns a vários formatos, Boot 4.1)
+- `JsonMapperBuilderCustomizer` (substitui `Jackson2ObjectMapperBuilderCustomizer`); para trocar o mapper, defina um bean `JsonMapper` (não `ObjectMapper`); `@JacksonComponent`/`@JacksonMixin` substituem `@JsonComponent`/`@JsonMixin`
+- Falhar em propriedades desconhecidas: prós e contras, e o *tolerant reader* (15.04 e 18.01)
+- Inclusão de `null` (`NON_NULL`, `NON_ABSENT`); naming strategy
+- `@JsonProperty`, `@JsonIgnore`, `@JsonCreator`
+- Serializadores customizados (`ValueSerializer`, Jackson 3)
+- Polimorfismo com `@JsonTypeInfo` e cuidados de segurança
+- Jackson 2 como *fallback* depreciado
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+pipeline objeto → `JsonMapper` → bytes, com pontos de customização.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`application.yml` com as configurações do Bazar; serializador de `Dinheiro` (antecipando 15.02); teste de serialização com `@JsonTest`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

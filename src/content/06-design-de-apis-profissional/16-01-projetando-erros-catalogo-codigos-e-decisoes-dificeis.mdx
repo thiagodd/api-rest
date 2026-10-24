@@ -1,0 +1,82 @@
+---
+id: "16.01"
+titulo: "Projetando erros: catálogo, códigos e decisões difíceis"
+descricao: "Além do formato (08.01), um sênior define quais erros existem, quando usar cada status e como o cliente deve reagir."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9457 §3-4"
+  - titulo: "google.aip.dev: 193"
+    url: "https://google.aip.dev/193"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST support problem JSON\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#176"
+  - titulo: "RFC 6901 (JSON Pointer)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Além do formato (08.01), um sênior define *quais* erros existem, quando usar cada status e como o cliente deve reagir.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Catálogo de problemas do Bazar (`type`, `codigo`, status, ação sugerida ao cliente)
+- 400 × 422 × 409: um critério objetivo
+- Erros de validação com ponteiro de campo (JSON Pointer)
+- Erros retentáveis × definitivos
+- Não vazar detalhes internos (SQL, *stack*, nomes de classes)
+- Documentar os tipos (página HTML no `type` URI)
+- Evolução: adicionar `codigo` novo é compatível?
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fluxograma 400/409/422/412/428.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`enum TipoProblema` com URI, título e status; *factory* de ProblemDetail; exemplo do catálogo publicado.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

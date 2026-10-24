@@ -1,0 +1,79 @@
+---
+id: "13.05"
+titulo: "Respostas parciais e expansão"
+descricao: "Reduz o tráfego para clientes móveis e evita chamadas extras, mas aumenta a complexidade e prejudica o cache."
+status: esqueleto
+referencias:
+  - titulo: "google.aip.dev: 161"
+    url: "https://google.aip.dev/161"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"SHOULD support partial responses via filtering\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#157"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Reduz o tráfego para clientes móveis e evita chamadas extras, mas aumenta a complexidade e prejudica o *cache*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- *Sparse fieldsets* (`fields=id,nome`)
+- *Field masks* (Google AIP-161)
+- `expand=categoria` / `embed`
+- Implementação: filtro do Jackson, `@JsonView`, projeção dinâmica
+- Custo para *cache* e documentação OpenAPI
+- Quando GraphQL é a resposta melhor
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`fields` implementado com filtro do Jackson 3; `expand=categoria`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

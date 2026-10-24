@@ -1,0 +1,79 @@
+---
+id: "13.03"
+titulo: "Paginação por offset"
+descricao: "É o modelo mais comum e o padrão do Spring, mas tem custos (COUNT, páginas instáveis) que um sênior precisa conhecer."
+status: esqueleto
+referencias:
+  - titulo: "Spring Data Commons Reference (Web support)"
+  - titulo: "RFC 8288"
+  - titulo: "opensource.zalando.com: restful-api-guidelines"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#pagination"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É o modelo mais comum e o padrão do Spring, mas tem custos (`COUNT`, páginas instáveis) que um sênior precisa conhecer.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `page`/`size` × `offset`/`limit`; `Page` × `Slice`
+- O custo do `COUNT(*)`
+- Tamanho máximo de página (`spring.data.web.pageable.max-page-size`)
+- **Serialização estável de `Page`**: `PagedModel` e `@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)` ou `spring.data.web.pageable.serialization-mode=via-dto`; o padrão do Boot 4.1 continua `direct`, então é preciso ativar
+- Envelope de resposta × header `Link` (RFC 8288)
+- Instabilidade com inserções concorrentes; *offset* alto = *query* lenta
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+problema do *offset* com inserção concorrente (item duplicado ou pulado).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`GET /v1/categorias` paginado; resposta com metadados e `Link`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

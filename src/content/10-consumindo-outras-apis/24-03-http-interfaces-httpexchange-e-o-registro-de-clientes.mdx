@@ -1,0 +1,80 @@
+---
+id: "24.03"
+titulo: "HTTP interfaces (@HttpExchange) e o registro de clientes"
+descricao: "Clientes declarativos reduzem boilerplate e, com o registro do Spring 7, ficam configuráveis por propriedade, como o Feign, mas nativos."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: integration / rest-clients"
+    url: "https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-http-interface"
+  - titulo: "Spring Boot 4.0 Release Notes (HTTP Service Clients)"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Clientes declarativos reduzem *boilerplate* e, com o registro do Spring 7, ficam configuráveis por propriedade, como o Feign, mas nativos.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `@HttpExchange`, `@GetExchange`, `@PostExchange`; parâmetros
+- `HttpServiceProxyFactory`
+- **`@ImportHttpServices`** e grupos de serviços
+- Configuração por propriedades no Boot 4: `spring.http.serviceclient.<grupo>.base-url`, `.connect-timeout`, `.read-timeout`, além de headers padrão, versão de API, *redirects*, *cookies* e SSL por grupo; padrões globais em `spring.http.clients.*`
+- Lembrete: a configuração de versão do servidor não é aplicada ao cliente; configure no *builder* ou no grupo
+- Customização por grupo (`AbstractHttpServiceRegistrar`, *configurers*)
+- Versão de API no cliente
+- Migração a partir do OpenFeign
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+interface → *proxy* → RestClient do grupo → serviço remoto.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`FreteJaClient` como HTTP interface; configuração do grupo `freteja` no `application.yml`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

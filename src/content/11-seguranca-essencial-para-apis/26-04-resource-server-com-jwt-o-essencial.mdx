@@ -1,0 +1,81 @@
+---
+id: "26.04"
+titulo: "Resource Server com JWT (o essencial)"
+descricao: "É a forma mais comum de proteger APIs. Esta página entrega o mínimo funcional e correto; o resto está na doc de segurança."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: resource-server / jwt"
+    url: "https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html"
+  - titulo: "RFC 7519 (JWT)"
+  - titulo: "RFC 9068 (JWT Access Token Profile)"
+  - titulo: "doc de segurança 🔒"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+É a forma mais comum de proteger APIs. Esta página entrega o mínimo funcional e correto; o resto está na doc de segurança.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- JWT em uma página (estrutura, assinatura, `exp`, `aud`, `iss`)
+- `spring-boot-starter-oauth2-resource-server`, `issuer-uri`, validação de audiência
+- Escopos e papéis → `@PreAuthorize`
+- Respostas 401 e 403 como ProblemDetail (`WWW-Authenticate`)
+- Obter o cliente atual (`@AuthenticationPrincipal`)
+- Testar com `jwt()` do `spring-security-test`
+- Swagger UI com autenticação
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência cliente → IdP → API com validação do token (alto nível).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`SecurityConfig` mínimo do Bazar; endpoint com `@PreAuthorize("hasAuthority('SCOPE_pedidos:escrever')")`; teste com JWT simulado.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

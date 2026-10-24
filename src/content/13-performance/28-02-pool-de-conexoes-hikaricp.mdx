@@ -1,0 +1,78 @@
+---
+id: "28.02"
+titulo: "Pool de conexões (HikariCP)"
+descricao: "O pool do banco é o gargalo mais comum em APIs, especialmente com virtual threads, quando há mais concorrência do que conexões."
+status: esqueleto
+referencias:
+  - titulo: "github.com: brettwooldridge / HikariCP"
+    url: "https://github.com/brettwooldridge/HikariCP"
+  - titulo: "github.com: wiki / About-Pool-Sizing"
+    url: "https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O *pool* do banco é o gargalo mais comum em APIs, especialmente com virtual threads, quando há mais concorrência do que conexões.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Como o *pool* funciona; dimensionamento (fórmula do HikariCP e por que "mais" não é melhor)
+- `maximum-pool-size`, `connection-timeout`, `max-lifetime`, `leak-detection-threshold`
+- Métricas do Hikari
+- Virtual threads + *pool* pequeno (limitar a concorrência: *semaphore* / `@ConcurrencyLimit`)
+- Conexões por instância × limite do Postgres (PgBouncer)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+muitas *threads* → *pool* → banco (fila de espera de conexão).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração do Hikari; *dashboard* de `hikaricp_connections_pending`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

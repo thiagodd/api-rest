@@ -1,0 +1,83 @@
+---
+id: "28.03"
+titulo: "Cache na aplicação: @Cacheable, Caffeine e Redis"
+descricao: "Dados lidos muito e alterados pouco (catálogo, categorias) não precisam ir ao banco toda vez. Porém, cache errado serve dados obsoletos ou derruba o banco quando expira."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: integration / cache"
+    url: "https://docs.spring.io/spring-framework/reference/integration/cache.html"
+  - titulo: "docs.spring.io: io / caching"
+    url: "https://docs.spring.io/spring-boot/reference/io/caching.html"
+  - titulo: "github.com: caffeine / wiki"
+    url: "https://github.com/ben-manes/caffeine/wiki"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Dados lidos muito e alterados pouco (catálogo, categorias) não precisam ir ao banco toda vez. Porém, *cache* errado serve dados obsoletos ou derruba o banco quando expira.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Abstração de *cache* do Spring (`@Cacheable`, `@CacheEvict`, `@CachePut`)
+- Caffeine (local) × Redis (distribuído) × multinível
+- TTL e invalidação
+- *Cache stampede* (`sync = true`, *jitter* no TTL)
+- Serialização no Redis (Jackson 3)
+- Cache HTTP (20.01) × cache de aplicação
+- O que não cachear
+- Métricas de *hit ratio*
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+padrões *cache-aside* e *write-through*; *stampede*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`CategoriaService` com Caffeine; `ProdutoService` com Redis; invalidação ao atualizar.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

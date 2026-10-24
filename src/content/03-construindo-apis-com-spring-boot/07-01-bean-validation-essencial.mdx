@@ -1,0 +1,83 @@
+---
+id: "07.01"
+titulo: "Bean Validation essencial"
+descricao: "Validar na borda impede dados inválidos de chegarem ao domínio e devolve erros úteis ao cliente."
+status: esqueleto
+referencias:
+  - titulo: "jakarta.ee: bean-validation / 3.1"
+    url: "https://jakarta.ee/specifications/bean-validation/3.1/"
+  - titulo: "docs.spring.io: mvc-controller / ann-validation"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html"
+  - titulo: "docs.jboss.org: en-US / html_single"
+    url: "https://docs.jboss.org/hibernate/validator/9.1/reference/en-US/html_single/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Validar na borda impede dados inválidos de chegarem ao domínio e devolve erros úteis ao cliente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Jakarta Bean Validation 3.1 / Hibernate Validator 9.1
+- `spring-boot-starter-validation`
+- Constraints comuns: `@NotNull`, `@NotBlank`, `@Size`, `@Positive`, `@Email`, `@Pattern`
+- `@Valid` em `@RequestBody`
+- Validação de `@PathVariable` e `@RequestParam`: validação de métodos embutida no Spring MVC desde a 6.1, `HandlerMethodValidationException`
+- Validação em records e em objetos aninhados (`@Valid` em cascata)
+- Validação sintática (na borda) × regra de negócio (no domínio)
+- Erro padrão antes da Parte 8
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+onde cada tipo de validação acontece (borda × domínio × banco).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`CriarProdutoRequest` com constraints; resposta 400 padrão do Spring.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

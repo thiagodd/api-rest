@@ -1,0 +1,81 @@
+---
+id: "25.02"
+titulo: "Retry: quando é seguro e como fazer"
+descricao: "Retry ingênuo duplica cobranças e amplifica incidentes (retry storms). Feito certo, absorve falhas transitórias."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: core / resilience"
+    url: "https://docs.spring.io/spring-framework/reference/core/resilience.html"
+  - titulo: "Spring Framework 7.0 Release Notes"
+  - titulo: "aws.amazon.com: builders-library / timeouts-retries-and-backoff-with-jitter"
+    url: "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+*Retry* ingênuo duplica cobranças e amplifica incidentes (*retry storms*). Feito certo, absorve falhas transitórias.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- O que é retentável (métodos idempotentes, 503/429/rede) e o que não é (400, POST sem idempotency key)
+- *Backoff* exponencial com *jitter*
+- Respeitar `Retry-After`
+- Limite de tentativas e orçamento de *retry*
+- **Retry nativo do Spring Framework 7:** `@Retryable`, `RetryTemplate`, `RetryPolicy` e `@EnableResilientMethods` (em `spring-core`)
+- Spring Retry (projeto antigo) × nativo
+- *Retries* em camadas (cliente + gateway + biblioteca) multiplicando a carga
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+*retry* sem e com *jitter* (picos sincronizados × espalhados); multiplicação de *retries* em camadas.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`@Retryable` na cotação de frete; `RetryTemplate` no pagamento usando a idempotency key; testes com WireMock.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

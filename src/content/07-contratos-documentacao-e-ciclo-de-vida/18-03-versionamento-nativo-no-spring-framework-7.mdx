@@ -1,0 +1,86 @@
+---
+id: "18.03"
+titulo: "Versionamento nativo no Spring Framework 7"
+descricao: "Desde o Spring 7 / Boot 4 o versionamento é suportado pelo framework, sem hacks de prefixo ou controllers duplicados."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: web / webmvc-versioning"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc-versioning.html"
+  - titulo: "docs.spring.io: mvc-config / api-version"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-config/api-version.html"
+  - titulo: "docs.spring.io: mvc-controller / ann-requestmapping (seção API Version)"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html"
+  - titulo: "Spring Boot 4.0 Release Notes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Desde o Spring 7 / Boot 4 o versionamento é suportado pelo framework, sem *hacks* de prefixo ou controllers duplicados.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `ApiVersionConfigurer` (`WebMvcConfigurer#configureApiVersioning`)
+- Resolvers: header, *query param*, segmento de caminho, parâmetro de media type, customizado
+- Propriedades: `spring.mvc.apiversion.use.header`, `.use.query-parameter`, `.use.path-segment`, `.use.media-type-parameter.*`, `.default`, `.required`, `.supported`, `.detect-supported`
+- `@GetMapping(version = "1.1")` (fixa), `version = "1.2+"` (de base: essa versão e as suportadas acima) e sem `version` (qualquer versão, menor prioridade)
+- Versão por caminho exige variável na URI (`/{version}/produtos`) ou prefixo comum configurado em *path matching*
+- `SemanticApiVersionParser`
+- Versão obrigatória × padrão; 400 em versão ausente ou inválida (`MissingApiVersionException`, `InvalidApiVersionException`)
+- Versões suportadas declaradas × inferidas
+- Versionamento no cliente (`RestClient`, HTTP interfaces) e nos testes (MockMvc / `RestTestClient`)
+- Compartilhar código entre versões (serviço único, *mappers* por versão)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+resolução da versão → seleção do handler.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`ProdutoV2Controller` com `Dinheiro`; configuração de versão por caminho; testes das duas versões.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

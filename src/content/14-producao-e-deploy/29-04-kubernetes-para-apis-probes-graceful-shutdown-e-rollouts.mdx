@@ -1,0 +1,82 @@
+---
+id: "29.04"
+titulo: "Kubernetes para APIs: probes, graceful shutdown e rollouts"
+descricao: "Deploys sem graceful shutdown e sem probes corretas derrubam requisições em andamento a cada versão nova."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: web / graceful-shutdown"
+    url: "https://docs.spring.io/spring-boot/reference/web/graceful-shutdown.html"
+  - titulo: "kubernetes.io: pods / pod-lifecycle"
+    url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination"
+  - titulo: "docs.spring.io: deployment / cloud"
+    url: "https://docs.spring.io/spring-boot/how-to/deployment/cloud.html#howto.deployment.cloud.kubernetes"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+*Deploys* sem *graceful shutdown* e sem probes corretas derrubam requisições em andamento a cada versão nova.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Probes mapeadas para o Actuator
+- *Graceful shutdown* (`server.shutdown=graceful`, `spring.lifecycle.timeout-per-shutdown-phase`) e o *preStop*
+- Requisições e SSE em andamento
+- *Rolling update* e compatibilidade entre versões da API e do esquema (expand-contract, 10.02)
+- Recursos (*requests/limits*) e JVM
+- HPA por métricas
+- ConfigMap e Secret
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+sequência do *shutdown* (SIGTERM → *readiness* falha → drena → encerra).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+manifestos `Deployment`/`Service` do Bazar; configuração de *shutdown*.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,84 @@
+---
+id: "22.01"
+titulo: "Upload de arquivos"
+descricao: "Uploads sem limites derrubam o servidor ou permitem armazenar conteúdo malicioso."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: ann-methods / multipart-forms"
+    url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/multipart-forms.html"
+  - titulo: "docs.spring.io: web / servlet (multipart)"
+    url: "https://docs.spring.io/spring-boot/reference/web/servlet.html"
+  - titulo: "tus.io"
+    url: "https://tus.io/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Uploads sem limites derrubam o servidor ou permitem armazenar conteúdo malicioso.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `multipart/form-data`, `MultipartFile`, `@RequestPart` (metadados JSON + arquivo)
+- Limites: `spring.servlet.multipart.max-file-size` / `max-request-size` → 413
+- Validar o tipo real (*magic bytes*, Apache Tika), não confiar no `Content-Type`
+- Nomes de arquivo seguros
+- Upload direto como `application/octet-stream`
+- *Streaming* para o *storage* sem carregar tudo na memória
+- URLs pré-assinadas (S3) para arquivos grandes
+- Upload retomável (tus, só a menção)
+- Antivírus (menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+upload via API × upload direto com URL pré-assinada.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`POST /v1/produtos/{id}/imagens`; validação de tipo e tamanho; testes com `MockMultipartFile`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

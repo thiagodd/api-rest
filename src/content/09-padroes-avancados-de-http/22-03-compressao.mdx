@@ -1,0 +1,80 @@
+---
+id: "22.03"
+titulo: "Compressão"
+descricao: "JSON comprime muito bem (70–90%). É ganho de banda quase gratuito, com algumas armadilhas."
+status: esqueleto
+referencias:
+  - titulo: "RFC 9110 §8.4"
+  - titulo: "docs.spring.io: how-to / webserver (compression)"
+    url: "https://docs.spring.io/spring-boot/how-to/webserver.html"
+  - titulo: "breachattack.com"
+    url: "https://www.breachattack.com/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+JSON comprime muito bem (70–90%). É ganho de banda quase gratuito, com algumas armadilhas.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- `Content-Encoding` (gzip, br, zstd) × `Transfer-Encoding`
+- `server.compression.*` e `additional-mime-types` (Boot 4.1)
+- Tamanho mínimo; comprimir no *proxy* ou na app
+- Compressão de requisições
+- BREACH (risco com segredos refletidos em respostas comprimidas)
+- ETag e compressão
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+configuração no `application.yml`; `curl --compressed` comparando tamanhos.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

@@ -1,0 +1,83 @@
+---
+id: "18.02"
+titulo: "Estratégias de versionamento"
+descricao: "Quando uma mudança incompatível é inevitável, a estratégia de versão define custo de operação, cache e experiência do cliente."
+status: esqueleto
+referencias:
+  - titulo: "stripe.com: blog / api-versioning"
+    url: "https://stripe.com/blog/api-versioning"
+  - titulo: "github.com: azure / Guidelines.md (versioning)"
+    url: "https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md"
+  - titulo: "opensource.zalando.com: restful-api-guidelines (\"SHOULD avoid versioning\")"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#113"
+  - titulo: "#114 (\"MUST use media type versioning\")"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Quando uma mudança incompatível é inevitável, a estratégia de versão define custo de operação, *cache* e experiência do cliente.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Caminho (`/v1`), header (`API-Version`), *query param*, media type (`application/vnd.bazar.v2+json`)
+- Versionamento por data (estilo Stripe)
+- "Sem versão" (evolução contínua, Zalando)
+- Versão *major* só × semântica
+- Granularidade (API inteira × recurso)
+- Quantas versões manter
+- Decisão do Bazar (caminho, só *major*) e o porquê
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+quadro comparativo; impacto no *cache* e no roteamento do gateway.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+a mesma requisição em cada estratégia (`curl`).
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

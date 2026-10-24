@@ -1,0 +1,80 @@
+---
+id: "28.05"
+titulo: "Profiling da JVM"
+descricao: "Quando métricas e traces não explicam a lentidão (CPU, GC, contenção), o profiling mostra exatamente qual código está consumindo recursos."
+status: esqueleto
+referencias:
+  - titulo: "dev.java: jvm / jfr"
+    url: "https://dev.java/learn/jvm/jfr/"
+  - titulo: "github.com: async-profiler / async-profiler"
+    url: "https://github.com/async-profiler/async-profiler"
+  - titulo: "docs.oracle.com: 25 / gctuning"
+    url: "https://docs.oracle.com/en/java/javase/25/gctuning/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Quando métricas e *traces* não explicam a lentidão (CPU, GC, contenção), o *profiling* mostra exatamente qual código está consumindo recursos.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- JDK Flight Recorder e JDK Mission Control
+- async-profiler e *flame graphs*
+- GC (G1, ZGC geracional) e *heap*
+- Contenção de *locks*
+- *Profiling* contínuo em produção (Pyroscope, só a menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+como ler um *flame graph*.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+comando `jcmd JFR.start`; *flame graph* de um endpoint com serialização pesada.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

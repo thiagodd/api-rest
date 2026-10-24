@@ -1,0 +1,83 @@
+---
+id: "29.03"
+titulo: "Imagem nativa com GraalVM"
+descricao: "O startup em milissegundos e o baixo uso de memória importam em serverless e scale-to-zero, ao custo de build lento e restrições."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: native-image / index"
+    url: "https://docs.spring.io/spring-boot/reference/packaging/native-image/index.html"
+  - titulo: "docs.spring.io: packaging / checkpoint-restore"
+    url: "https://docs.spring.io/spring-boot/reference/packaging/checkpoint-restore.html"
+  - titulo: "docs.spring.io: integration / checkpoint-restore"
+    url: "https://docs.spring.io/spring-framework/reference/integration/checkpoint-restore.html"
+  - titulo: "graalvm.org: reference-manual / native-image"
+    url: "https://www.graalvm.org/latest/reference-manual/native-image/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O *startup* em milissegundos e o baixo uso de memória importam em *serverless* e *scale-to-zero*, ao custo de *build* lento e restrições.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- AOT do Spring; GraalVM 25
+- `native:compile` e `build-image` nativo
+- *Reachability metadata* e *runtime hints* (`RuntimeHintsRegistrar`)
+- Bibliotecas incompatíveis
+- Testar em modo nativo
+- Comparação nativa × JVM + AOT cache × CRaC (suportado pelo Boot 4.1 sob demanda ou no *startup*; exige JDK com CRaC, como Liberica ou Zulu, e gestão do ciclo de vida de recursos)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+pipeline JVM × nativa (*build time* × *runtime*).
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`RuntimeHints` para um serializador customizado; medidas de *startup* e memória.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

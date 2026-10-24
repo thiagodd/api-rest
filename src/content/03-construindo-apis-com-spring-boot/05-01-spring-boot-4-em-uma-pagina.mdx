@@ -1,0 +1,86 @@
+---
+id: "05.01"
+titulo: "Spring Boot 4 em uma página"
+descricao: "O leitor sabe o básico de Spring Boot, mas a versão 4 mudou coisas importantes (Jackson 3, modularização, null safety). Esta página nivela o conhecimento."
+status: esqueleto
+referencias:
+  - titulo: "docs.spring.io: spring-boot"
+    url: "https://docs.spring.io/spring-boot/"
+  - titulo: "github.com: wiki / Spring-Boot-4.0-Release-Notes"
+    url: "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes"
+  - titulo: "github.com: wiki / Spring-Framework-7.0-Release-Notes"
+    url: "https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-7.0-Release-Notes"
+  - titulo: "jspecify.dev"
+    url: "https://jspecify.dev/"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+O leitor sabe o básico de Spring Boot, mas a versão 4 mudou coisas importantes (Jackson 3, modularização, null safety). Esta página nivela o conhecimento.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Inversão de controle e injeção de dependências (revisão rápida); autoconfiguração; *starters*
+- Spring Boot 4.x e Spring Framework 7.x
+  - baseline Java 17
+  - Jakarta EE 11
+  - Jackson 3 como padrão
+  - JSpecify (`@Nullable`, `@NullMarked`)
+  - modularização dos *starters* e da autoconfiguração: `spring-boot-starter-webmvc` substitui `spring-boot-starter-web` (depreciado); testes com `spring-boot-starter-webmvc-test`; `RestClient` em `spring-boot-starter-restclient`
+- Remoções: Undertow, suporte a `javax.*`
+- Ciclo de lançamentos e suporte (nov/maio) e onde consultar
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+linha do tempo Boot 2 → 3 → 4 com as mudanças-chave.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+`pom.xml` mínimo com o *parent* 4.1.2; `@SpringBootApplication`; `package-info.java` com `@NullMarked`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

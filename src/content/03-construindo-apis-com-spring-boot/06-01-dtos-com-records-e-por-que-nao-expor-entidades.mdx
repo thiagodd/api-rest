@@ -1,0 +1,79 @@
+---
+id: "06.01"
+titulo: "DTOs com records e por que não expor entidades"
+descricao: "Expor a entidade acopla o contrato ao banco, vaza campos sensíveis e abre espaço para mass assignment."
+status: esqueleto
+referencias:
+  - titulo: "JEP 395 (Records)"
+    url: "https://openjdk.org/jeps/395"
+  - titulo: "martinfowler.com: eaaCatalog / dataTransferObject"
+    url: "https://martinfowler.com/eaaCatalog/dataTransferObject.html"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Expor a entidade acopla o contrato ao banco, vaza campos sensíveis e abre espaço para *mass assignment*.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- DTO de entrada × DTO de saída (`CriarProdutoRequest`, `AtualizarProdutoRequest`, `ProdutoResponse`)
+- Records do Java (construtor compacto, imutabilidade)
+- Um DTO por caso de uso × DTO genérico
+- Onde fica a conversão
+- *Mass assignment* / *over-posting* (preparando 26.03)
+- Records aninhados
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+fronteira da API: DTO ↔ domínio ↔ persistência, com setas de conversão.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+records do `Produto`; controller recebendo `CriarProdutoRequest` e retornando `ProdutoResponse`.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

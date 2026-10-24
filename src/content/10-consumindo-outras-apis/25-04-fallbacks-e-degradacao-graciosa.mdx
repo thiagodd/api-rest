@@ -1,0 +1,78 @@
+---
+id: "25.04"
+titulo: "Fallbacks e degradação graciosa"
+descricao: "Quando a FreteJá cai, o Bazar pode oferecer frete fixo em vez de impedir a compra. Isso é decisão de produto expressa em código."
+status: esqueleto
+referencias:
+  - titulo: "aws.amazon.com: builders-library / avoiding-fallback-in-distributed-systems"
+    url: "https://aws.amazon.com/builders-library/avoiding-fallback-in-distributed-systems/"
+  - titulo: "resilience4j.readme.io: docs / getting-started-3 (regras de fallback; a página cita os módulos Boot 2/3, mas o resilience4j-spring-boot4 2.4.0 segue o mesmo modelo)"
+    url: "https://resilience4j.readme.io/docs/getting-started-3"
+---
+
+{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
+    e remova cada <Draft> à medida que a seção for escrita. */}
+
+## O problema
+
+<Draft title="Por que importa (do currículo)">
+Quando a FreteJá cai, o Bazar pode oferecer frete fixo em vez de impedir a compra. Isso é decisão de produto expressa em código.
+
+Comece com o problema que o conceito resolve e uma analogia do mundo real.
+</Draft>
+
+## O conceito
+
+<Draft title="Tópicos previstos">
+- Tipos de *fallback*: valor padrão, *cache* antigo (`stale`), fila para depois, erro claro
+- *Fallbacks* perigosos (esconder falhas, inconsistência)
+- Informar o cliente (campo `estimado: true`, header `Warning`, obsoleto e por quê)
+- *Load shedding* no servidor (503 + `Retry-After`)
+- Testes de caos (menção)
+</Draft>
+
+## Diagrama
+
+<Draft title="Diagramas previstos">
+árvore de decisão de *fallback* por tipo de dependência.
+</Draft>
+
+## Na prática
+
+<Draft title="Código previsto">
+cotação com *fallback* para tabela fixa e indicação no corpo; `stale-if-error` para o catálogo.
+</Draft>
+
+## Erros comuns
+
+<Draft>
+Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
+</Draft>
+
+## Boas práticas
+
+<Draft>
+Lista curta e acionável de boas práticas.
+</Draft>
+
+## Por baixo dos panos
+
+<Draft>
+Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
+</Draft>
+
+## No projeto Bazar
+
+<Draft>
+Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
+</Draft>
+
+## Resumo
+
+<Draft>
+Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
+</Draft>
+
+## Referências
+
+<References />

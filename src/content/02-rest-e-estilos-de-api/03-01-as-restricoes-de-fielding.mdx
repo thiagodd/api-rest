@@ -1,0 +1,334 @@
+---
+id: "03.01"
+titulo: "As restrições de Fielding"
+descricao: "REST é um estilo arquitetural com restrições precisas, não \"JSON sobre HTTP\". Entender as restrições explica por que as boas práticas existem."
+status: pronta
+referencias:
+  - titulo: "Fielding (2000), cap. 5: Representational State Transfer (REST)"
+    url: "https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm"
+  - titulo: "Fielding (2008): REST APIs must be hypertext-driven"
+    url: "https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven"
+  - titulo: "Fielding (2000), cap. 6: Experience and Evaluation"
+    url: "https://ics.uci.edu/~fielding/pubs/dissertation/evaluation.htm"
+  - titulo: "RFC 9110: HTTP Semantics"
+    url: "https://www.rfc-editor.org/rfc/rfc9110"
+---
+
+## O problema
+
+Pergunte a dez desenvolvedores o que é uma API REST e você vai ouvir algo como "uma API que recebe e devolve JSON por HTTP". Com essa definição, qualquer coisa vira REST: um único endpoint `POST /api` que recebe `{"acao": "cancelarPedido", "id": 123}` também usa JSON e HTTP. E as "boas práticas" viram uma lista de regras arbitrárias: "use substantivos na URI", "devolva 201 na criação", "não guarde sessão". Sem saber de onde elas vêm, você não sabe quando pode quebrá-las nem o que perde ao fazer isso.
+
+REST tem uma definição precisa. Ele foi descrito por Roy Fielding, um dos autores da especificação do HTTP, como um **conjunto de restrições** aplicadas a uma arquitetura. Cada restrição proíbe algo e, em troca, garante uma propriedade: escala, evolução independente, visibilidade para intermediários.
+
+Pense nas regras de um sistema de trânsito: mão de direção, semáforos, placas padronizadas. Cada regra restringe o motorista (você não pode dirigir do lado que quiser) e, em troca, permite algo que seria impossível sem ela (milhões de motoristas desconhecidos circulando juntos sem combinar nada antes). As restrições do REST fazem o mesmo para milhões de clientes e servidores que nunca conversaram.
+
+> **A pergunta desta página:** quais são as restrições que definem o REST, o que cada uma garante, quanto cada uma custa, e o que isso significa para as APIs que você constrói?
+
+## O conceito
+
+### De onde vem o REST
+
+Em 2000, Roy Fielding apresentou sua tese de doutorado, *Architectural Styles and the Design of Network-based Software Architectures*. No capítulo 5, ele descreve o <Term id="rest">REST</Term> (*Representational State Transfer*), o estilo arquitetural que guiou o desenho do HTTP/1.1 e das URIs nos anos 1990. O REST não foi inventado para APIs: ele foi a explicação de **por que a Web funciona** em escala planetária, e um critério para avaliar mudanças no HTTP.
+
+Um **estilo arquitetural** é um conjunto de restrições sobre os elementos de uma arquitetura e sobre como eles interagem. O método de Fielding é derivar o REST a partir do "estilo nulo" (uma arquitetura sem restrição nenhuma) e acrescentar restrições, uma por vez, justificando cada uma pela propriedade que ela traz.
+
+### As seis restrições
+
+#### 1. Cliente-servidor
+
+Separa quem consome (a interface com o usuário, o app) de quem guarda e processa os dados (o servidor).
+
+- **O que traz:** cada lado evolui sozinho. O app do Bazar pode ganhar uma tela nova sem mexer na API; a API pode trocar o banco de dados sem o app perceber. O servidor fica mais simples e escala melhor, porque não se ocupa da interface.
+- **Quanto custa:** toda interação passa pela rede.
+
+#### 2. *Stateless* (sem estado)
+
+Cada requisição do cliente ao servidor deve conter **toda a informação necessária** para ser entendida. O servidor não guarda o contexto da conversa: o estado da aplicação fica no cliente. Esse é o assunto de [02.07](/comecando-e-fundamentos-de-http/cookies-estado-e-sessoes).
+
+- **O que traz:** **visibilidade** (um monitor ou *proxy* entende cada requisição isoladamente), **confiabilidade** (se uma instância cai, outra continua, sem perder a conversa) e **escalabilidade** (o servidor não acumula memória por cliente, e qualquer instância atende qualquer requisição).
+- **Quanto custa:** dados repetidos em toda requisição (o token, os filtros, o cursor), o que aumenta o tráfego. E o servidor perde o controle sobre a consistência do comportamento do cliente.
+
+#### 3. *Cache*
+
+As respostas precisam dizer, explícita ou implicitamente, se podem ser guardadas e reutilizadas. Se podem, o cliente (ou um intermediário) pode reaproveitá-las para requisições equivalentes.
+
+- **O que traz:** elimina interações inteiras. Uma lista de categorias cacheada por 5 minutos numa CDN pode poupar milhões de requisições à API.
+- **Quanto custa:** o cliente pode ver dados desatualizados, se a regra de validade não for bem pensada.
+
+No HTTP, essa restrição se realiza nos métodos cacheáveis ([02.02](/comecando-e-fundamentos-de-http/metodos-http-semantica-seguranca-e-idempotencia)) e nos headers `Cache-Control` e `ETag` (Parte 9).
+
+#### 4. Interface uniforme
+
+A <Term id="interface-uniforme">interface uniforme</Term> é a restrição central, a que mais diferencia o REST de outros estilos: **todos os componentes conversam pela mesma interface genérica**, em vez de uma interface sob medida para cada aplicação. No HTTP, essa interface é o conjunto fixo de métodos, status, headers e *media types*, que funciona igual para um produto do Bazar, um vídeo ou uma página da Wikipédia.
+
+- **O que traz:** **simplicidade** e **visibilidade** (qualquer componente entende qualquer interação) e **evolução independente** (o servidor muda a implementação sem mudar a interface).
+- **Quanto custa:** **eficiência**. A interface genérica não é otimizada para nenhum caso específico. Uma chamada gRPC sob medida, com um contrato binário próprio, pode ser bem mais eficiente que uma troca HTTP genérica.
+
+Fielding detalha a interface uniforme em quatro restrições, vistas na próxima seção.
+
+#### 5. Sistema em camadas
+
+Cada componente só enxerga a camada com que interage diretamente. O cliente não sabe se está falando com a API, com uma CDN, com um gateway ou com um *load balancer*.
+
+- **O que traz:** permite inserir intermediários (*cache*, balanceamento, segurança, tradução de protocolos) sem mudar cliente nem servidor. É por isso que o Bazar pode colocar uma CDN na frente da API num fim de semana.
+- **Quanto custa:** cada camada acrescenta latência e processamento. A restrição de *cache* compensa parte disso.
+
+#### 6. *Code-on-demand* (opcional)
+
+O servidor pode estender o cliente enviando código executável (na Web, JavaScript). É a única restrição **opcional**: ela reduz a visibilidade (um intermediário não sabe o que o código vai fazer), e por isso Fielding a deixou fora do núcleo. Em APIs, praticamente não é usada.
+
+### Os quatro elementos da interface uniforme
+
+A interface uniforme é definida por quatro restrições:
+
+| Restrição | O que significa | No Bazar |
+|---|---|---|
+| **Identificação de recursos** | Cada <Term id="recurso">recurso</Term> tem um identificador (no HTTP, a URI), independente de como ele é armazenado. | `/v1/pedidos/0192f3a1-9999-7000-8000-000000000123` identifica um pedido. |
+| **Manipulação por representações** | O cliente não mexe no recurso diretamente: ele recebe e envia <Term id="representacao">representações</Term> (o JSON), e o servidor decide como aplicá-las. | O app envia `{ "nome": "Livros e HQs" }` num `PUT`; a API decide como gravar. |
+| **Mensagens autodescritivas** | Cada mensagem traz o que é preciso para ser processada: o método diz a operação, o `Content-Type` diz o formato, o status diz o resultado, `Cache-Control` diz se pode ser guardada. | Um *proxy* sabe que o `GET` é seguro e que o `201` com `Location` criou algo, sem conhecer o Bazar. |
+| **Hipermídia como motor do estado da aplicação** (<Term id="hateoas">HATEOAS</Term>) | O cliente descobre as próximas ações possíveis pelos **links** na resposta, em vez de conhecê-las de antemão. | A resposta de um pedido `CRIADO` traz links para `pagar` e `cancelar`; a de um pedido `ENVIADO`, não. |
+
+As três primeiras são o que a maioria das APIs chamadas "REST" segue. A quarta é a mais ignorada, e é o assunto de [03.04](/rest-e-estilos-de-api/hateoas-e-hipermidia). Recursos e representações são aprofundados na próxima página, [03.02](/rest-e-estilos-de-api/recursos-representacoes-e-a-interface-uniforme).
+
+### Benefícios e custos, lado a lado
+
+| Restrição | Propriedades que traz | Custo |
+|---|---|---|
+| Cliente-servidor | Evolução independente; servidor mais simples | Toda interação passa pela rede |
+| *Stateless* | Visibilidade, confiabilidade, escala horizontal | Dados repetidos em cada requisição |
+| *Cache* | Eficiência; menos latência e carga | Risco de dados desatualizados |
+| Interface uniforme | Simplicidade, visibilidade, evolução independente | Eficiência menor que uma interface sob medida |
+| Sistema em camadas | Intermediários transparentes (CDN, gateway) | Latência a cada camada |
+| *Code-on-demand* | Clientes extensíveis | Menos visibilidade (por isso é opcional) |
+
+Repare que as restrições trabalham juntas. O *cache* só é seguro porque as mensagens são autodescritivas (o intermediário sabe que um `GET` é seguro e quanto tempo a resposta vale). As camadas só funcionam porque a comunicação é *stateless* (o *load balancer* manda cada requisição para qualquer instância). Tirar uma restrição enfraquece as outras.
+
+### O que a maioria das "APIs REST" realmente é
+
+Em 2008, irritado com o uso do nome, Fielding escreveu que uma API que não é guiada por hipertexto **não é REST**, e que o cliente deveria precisar conhecer apenas a URI de entrada e os *media types*, descobrindo todo o resto pelos links.
+
+Pelo critério dele, quase nenhuma API pública é REST. O que o mercado chama de API REST costuma ser:
+
+- **recursos identificados por URIs** (`/v1/pedidos/{id}`);
+- **métodos HTTP usados pela semântica** (`GET` lê, `DELETE` remove);
+- **status codes e headers corretos**;
+- **JSON** como representação;
+- **sem hipermídia**: o cliente conhece as URIs e as regras pela documentação (OpenAPI), não pelos links.
+
+Isso é o nível 2 do modelo de maturidade que você vai ver em [03.03](/rest-e-estilos-de-api/o-modelo-de-maturidade-de-richardson). Muitos preferem chamar esse estilo de "HTTP API" ou "API orientada a recursos".
+
+E está tudo bem, **desde que seja uma escolha consciente**. Abrir mão do HATEOAS significa que os clientes ficam acoplados às URIs e às regras de negócio documentadas. Em troca, a API fica mais simples de consumir e de documentar, e as ferramentas do ecossistema (OpenAPI, geradores de cliente) funcionam melhor. O que não está tudo bem é abrir mão das outras restrições sem perceber: guardar sessão em memória (perde-se o *stateless*), usar `POST` para leituras (perde-se o *cache* e a visibilidade), devolver `200` com erro no corpo (perde-se a mensagem autodescritiva).
+
+O Bazar segue todas as restrições, exceto o HATEOAS completo. Ele usa hipermídia de forma leve (o header `Link` na paginação e na depreciação) e mostra em [12.04](/design-de-apis-profissional/acoes-que-nao-sao-crud-e-maquinas-de-estado) como expor as ações disponíveis de um pedido quando isso vale a pena.
+
+## Diagrama
+
+Fielding apresenta o REST como uma derivação: parte do estilo nulo e acrescenta uma restrição por vez. Cada passo herda as restrições anteriores:
+
+```mermaid title="Derivação do REST: uma restrição por vez"
+flowchart LR
+    N["Estilo nulo<br/>(sem restrições)"] --> CS["+ Cliente-servidor<br/>evolução independente"]
+    CS --> S["+ Stateless<br/>visibilidade, escala"]
+    S --> C["+ Cache<br/>eficiência"]
+    C --> U["+ Interface uniforme<br/>simplicidade, desacoplamento"]
+    U --> L["+ Sistema em camadas<br/>intermediários transparentes"]
+    L --> COD["+ Code-on-demand<br/>(opcional)"]
+    COD --> REST((REST))
+```
+
+E o sistema em camadas aplicado ao Bazar. O app não sabe quantas camadas existem entre ele e o banco:
+
+```mermaid title="O Bazar como sistema em camadas"
+flowchart LR
+    APP[App do Bazar] -- HTTPS --> CDN["CDN<br/>cache de GET /v1/categorias"]
+    CDN --> GW["Gateway<br/>TLS, rate limiting"]
+    GW --> LB[Load balancer]
+    LB --> I1[API do Bazar<br/>instância 1]
+    LB --> I2[API do Bazar<br/>instância 2]
+    I1 --> DB[(PostgreSQL)]
+    I2 --> DB
+```
+
+Cada camada só funciona porque as outras restrições valem: a CDN só cacheia porque o `GET` é seguro e a resposta traz `Cache-Control`; o *load balancer* só distribui livremente porque cada requisição é *stateless*.
+
+## Na prática
+
+Esta página é conceitual, mas cada restrição aparece em trocas HTTP concretas do Bazar. Veja como reconhecê-las.
+
+### *Stateless*: a requisição traz tudo
+
+<HttpExchange
+  title="Segunda página de pedidos: nada depende da primeira"
+  request={{
+    method: 'GET',
+    url: '/v1/pedidos?clienteId=0192f3a0-1111-7000-8000-000000000001&status=PAGO&limit=20&cursor=eyJjcmlhZG9FbSI6IjIwMjYtMTAtMjBUMTI6MDA6MDBaIn0',
+    headers: { Authorization: 'Bearer eyJhbGciOiJSUzI1NiJ9...', Accept: 'application/json' },
+  }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json' }, body: { itens: ['...'], proximoCursor: 'eyJjcmlhZG9FbSI6IjIwMjYtMTAtMTVUMDk6MzA6MDBaIn0' } }}
+>
+  O filtro, o tamanho da página, a posição (o cursor) e a credencial vão na requisição. Qualquer instância da API atende, sem ter visto a primeira página.
+</HttpExchange>
+
+### *Cache* e mensagens autodescritivas
+
+<HttpExchange
+  title="Lista de categorias, cacheável por 5 minutos"
+  request={{ method: 'GET', url: '/v1/categorias', headers: { Accept: 'application/json' } }}
+  response={{
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', ETag: '"cat-v42"' },
+    body: { itens: [{ id: '0192f3a0-5555-7000-8000-000000000001', nome: 'Livros', slug: 'livros', categoriaPaiId: null }] },
+  }}
+>
+  A resposta diz o próprio formato (`Content-Type`), se pode ser guardada e por quanto tempo (`Cache-Control`) e qual é a sua versão (`ETag`). Uma CDN que nunca ouviu falar do Bazar sabe o que fazer com ela. Os headers de cache são explicados em [20.01](/padroes-avancados-de-http/cache-http-rfc-9111).
+</HttpExchange>
+
+### Interface uniforme: os mesmos verbos para recursos diferentes
+
+As operações sobre categorias, produtos e endereços usam os mesmos métodos com o mesmo significado. Quem aprendeu um, sabe usar os outros:
+
+```http
+GET    /v1/categorias/{id}                     ← ler uma categoria
+GET    /v1/produtos/{id}                       ← ler um produto
+GET    /v1/clientes/{id}/enderecos/{enderecoId} ← ler um endereço
+
+DELETE /v1/categorias/{id}                     ← remover uma categoria
+DELETE /v1/clientes/{id}/enderecos/{enderecoId} ← remover um endereço
+```
+
+Compare com uma interface sob medida, em que cada operação tem um nome próprio (`buscarCategoria`, `obterProdutoPorId`, `listarEnderecosDoCliente`, `excluirEndereco`) e cada cliente precisa aprender todos.
+
+### Como o Spring ajuda (e onde não ajuda)
+
+O Spring MVC facilita seguir as restrições, mas não as impõe. Este trecho de um controller, construído de verdade nas Partes 3 e 9, mostra a mensagem autodescritiva com cache:
+
+```java
+@GetMapping("/v1/categorias")
+ResponseEntity<ListaResponse<CategoriaResponse>> listar() {
+    return ResponseEntity.ok()
+            .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic())  // Cache-Control
+            .eTag("\"cat-v42\"")                                                      // ETag
+            .body(service.listar());
+}
+```
+
+Nada no Spring impede você de criar uma sessão em memória (violando o *stateless*) ou de mapear leituras em `@PostMapping` (violando a interface uniforme). As restrições são uma disciplina de design, não um recurso do framework.
+
+## Erros comuns
+
+<BadVsGood title="Interface sob medida × interface uniforme" why="Um único endpoint com a operação no corpo esconde a semântica do HTTP: todo intermediário vê apenas POSTs opacos, nada pode ser cacheado nem repetido com segurança, e cada operação precisa ser documentada como um caso especial.">
+<Bad title="Tudo num endpoint">
+
+```http
+POST /api
+Content-Type: application/json
+
+{ "operacao": "buscarCategoria", "parametros": { "id": "0192f3a0-..." } }
+```
+
+</Bad>
+<Good title="Recurso + método">
+
+```http
+GET /v1/categorias/0192f3a0-5555-7000-8000-000000000001
+Accept: application/json
+```
+
+</Good>
+</BadVsGood>
+
+Outros equívocos frequentes:
+
+- **Achar que REST é "JSON sobre HTTP".** JSON é um formato de representação; REST é um conjunto de restrições. Uma API pode usar JSON e violar todas elas.
+- **Achar que *stateless* proíbe o banco de dados.** A restrição fala do estado da **conversa**, não do estado dos recursos.
+- **Chamar de "não REST" tudo o que não tem HATEOAS e, por isso, desistir das outras restrições.** Mesmo sem hipermídia, *stateless*, *cache* e mensagens autodescritivas trazem benefícios concretos.
+- **Seguir as "boas práticas" como dogma.** Saber que uma regra vem da interface uniforme permite avaliar o custo de quebrá-la: um endpoint gRPC interno, por exemplo, troca a interface uniforme por eficiência, de forma legítima ([04.01](/rest-e-estilos-de-api/rest-rpc-graphql-grpc-websocket-sse-e-webhooks-quando-usar)).
+- **Esquecer os intermediários.** Uma API desenhada como se o cliente falasse diretamente com ela quebra quando uma CDN ou um gateway entram no caminho.
+
+## Boas práticas
+
+- **Justifique** cada decisão de design pela restrição que ela preserva (ou pelo motivo de abrir mão dela).
+- **Mantenha** cada requisição autossuficiente: nenhuma depende de estado guardado de requisições anteriores.
+- **Declare** em toda resposta de leitura se ela pode ser cacheada e por quanto tempo.
+- **Use** os métodos, status e headers do HTTP pelo significado padrão, para que intermediários os entendam.
+- **Assuma** que existem camadas entre o cliente e a API (CDN, gateway, balanceador) e não dependa de falar diretamente com o cliente.
+- **Decida** conscientemente quanto de hipermídia usar e documente a decisão.
+
+## Resumo
+
+- REST é o estilo arquitetural descrito por Roy Fielding (2000, cap. 5): um **conjunto de restrições**, cada uma trocando uma liberdade por uma propriedade.
+- As seis restrições: **cliente-servidor**, ***stateless***, ***cache***, **interface uniforme**, **sistema em camadas** e ***code-on-demand*** (opcional).
+- A interface uniforme tem quatro elementos: **identificação de recursos**, **manipulação por representações**, **mensagens autodescritivas** e **HATEOAS**.
+- As restrições trazem escala, visibilidade e evolução independente, e custam eficiência, tráfego repetido e latência de camadas.
+- A maioria das "APIs REST" segue tudo menos o HATEOAS. Isso é aceitável quando é uma escolha consciente.
+
+<Exercise title="Que restrição foi violada?" difficulty="medio">
+Para cada situação, diga qual restrição do REST foi violada e qual propriedade se perdeu:
+
+1. A API guarda em memória o "produto atualmente selecionado" de cada usuário, e o endpoint `PUT /v1/produto-selecionado/preco` altera o preço dele.
+2. Todas as respostas, inclusive as de `GET /v1/categorias`, vêm com `Cache-Control: no-store`, "por garantia".
+3. As leituras são feitas com `POST /v1/consultas` e o tipo da consulta no corpo.
+4. O app do Bazar passa a chamar a instância da API diretamente pelo IP, pulando o *load balancer*, "para ganhar desempenho".
+5. Erros de validação voltam como `200 OK` com `{"ok": false}`.
+
+<Hint>
+Volte à tabela "Benefícios e custos, lado a lado". Para cada caso, pergunte: um intermediário que não conhece o Bazar ainda entende a mensagem? Qualquer instância consegue atender? A resposta pode ser reaproveitada?
+</Hint>
+
+<Solution>
+
+| # | Restrição violada | O que se perde |
+|---|---|---|
+| 1 | *Stateless* (e identificação de recursos) | Escala e confiabilidade: só a instância que guardou a seleção atende, e a seleção some se ela cair. Além disso, a URI não identifica qual produto está sendo alterado. Correção: `PUT /v1/produtos/{id}` (ou `PATCH`) com o id na URI. |
+| 2 | *Cache* (a restrição exige que a resposta diga se pode ser cacheada; aqui, ela diz que nunca pode, sem motivo) | Eficiência: cada abertura do app vai até a API e o banco. Categorias mudam raramente; `max-age=300` resolveria. |
+| 3 | Interface uniforme (mensagens autodescritivas) | Visibilidade e *cache*: intermediários veem `POST` e não sabem que é uma leitura segura; nada é cacheado nem repetido automaticamente. |
+| 4 | Sistema em camadas | O app passa a depender da topologia interna. Uma instância substituída num *deploy* quebra o app, e não há mais onde colocar balanceamento ou *cache*. |
+| 5 | Interface uniforme (mensagens autodescritivas) | Visibilidade: monitoramento, *retries* e caches tratam o erro como sucesso. |
+
+</Solution>
+</Exercise>
+
+<Quiz
+  questions={[
+    {
+      question: 'Qual das restrições do REST é opcional?',
+      options: ['Cache', 'Code-on-demand', 'Sistema em camadas', 'Stateless'],
+      answer: 1,
+      explanation: 'Fielding deixou o code-on-demand como opcional porque ele reduz a visibilidade: um intermediário não sabe o que o código enviado vai fazer. As outras cinco fazem parte do núcleo do estilo.',
+    },
+    {
+      question: 'Qual é o principal custo da interface uniforme?',
+      options: [
+        'Ela impede o uso de cache',
+        'Ela obriga o servidor a guardar sessão',
+        'Ela é menos eficiente que uma interface otimizada para a aplicação específica',
+      ],
+      answer: 2,
+      explanation: 'Uma interface genérica serve a todos, mas não é ótima para ninguém. Em troca, traz simplicidade e visibilidade. Ela favorece o cache (as mensagens são autodescritivas) e não tem relação com sessões.',
+    },
+    {
+      question: 'Uma API usa URIs para recursos, métodos e status corretos, JSON, e nenhum link nas respostas. Pelo critério de Fielding em 2008, ela é REST?',
+      options: [
+        'Sim, porque usa HTTP corretamente',
+        'Não, porque não é guiada por hipermídia (HATEOAS)',
+        'Não, porque REST exige XML',
+      ],
+      answer: 1,
+      explanation: 'Fielding considera a hipermídia obrigatória: sem ela, o cliente depende de conhecimento externo sobre URIs e ações. Usar HTTP corretamente cobre as outras restrições, mas não esta. REST não exige formato nenhum, muito menos XML.',
+    },
+    {
+      question: 'Por que um load balancer pode mandar cada requisição para qualquer instância da API do Bazar?',
+      options: [
+        'Porque a API é stateless: cada requisição traz tudo o que é preciso para ser atendida',
+        'Porque o load balancer guarda as sessões dos clientes',
+        'Porque todas as respostas são cacheadas',
+      ],
+      answer: 0,
+      explanation: 'O sistema em camadas depende do stateless: sem estado da conversa no servidor, a instância não importa. Um balanceador que guarda sessões seria uma sticky session, o oposto disso, e o cache não tem relação com a escolha da instância.',
+    },
+  ]}
+/>
+
+## Referências
+
+<References />
