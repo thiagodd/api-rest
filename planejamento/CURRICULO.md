@@ -1715,7 +1715,7 @@
 
 # Parte 11: Segurança essencial para APIs 🔒
 
-> Esta parte cobre só o que todo desenvolvedor de API precisa aplicar. Autenticação, OAuth 2.1/OIDC e Spring Security a fundo estão na **documentação de segurança** (link a definir na fase 2).
+> Esta parte cobre só o que todo desenvolvedor de API precisa aplicar. Autenticação, OAuth 2.1/OIDC e Spring Security a fundo estão na **documentação de segurança** (https://security-doc-beta.vercel.app/).
 
 ## M26: O essencial de segurança para quem constrói APIs
 

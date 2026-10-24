@@ -1,0 +1,4 @@
+# Serviços de infraestrutura para o desenvolvimento local.
+# O spring-boot-docker-compose sobe este arquivo junto com a aplicação.
+# O PostgreSQL entra na Parte 4 (10.01).
+services: {}

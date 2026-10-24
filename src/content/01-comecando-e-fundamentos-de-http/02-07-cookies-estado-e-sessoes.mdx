@@ -89,7 +89,7 @@ Os atributos controlam para onde e por quanto tempo o cookie é enviado, e como 
 O `SameSite` não está na RFC 6265 original: ele vem da **RFC 6265bis**, a revisão da especificação de cookies, que foi aprovada e está na fila de publicação do RFC Editor (out/2026). Os navegadores já o implementam há anos. O Chrome e os demais navegadores baseados no Chromium tratam cookies sem `SameSite` como `Lax`; outros navegadores não aplicam esse padrão, então declare o atributo sempre.
 
 <Callout type="info" title="Segurança de cookies a fundo">
-  CSRF, XSS, prefixos `__Host-` e `__Secure-` e cookies particionados são assuntos da documentação de segurança 🔒. Para quem constrói APIs, o essencial é: um cookie de sessão sempre leva `Secure`, `HttpOnly` e `SameSite`.
+  CSRF, XSS, prefixos `__Host-` e `__Secure-` e cookies particionados são assuntos da [documentação de segurança](https://security-doc-beta.vercel.app/) 🔒. Para quem constrói APIs, o essencial é: um cookie de sessão sempre leva `Secure`, `HttpOnly` e `SameSite`.
 </Callout>
 
 ### Sessão no servidor × token

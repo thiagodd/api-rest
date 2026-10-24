@@ -140,7 +140,7 @@ Muitas APIs usam `400` para tudo, e isso não é um erro grave. O importante é 
 - **`401 Unauthorized`**: o servidor não sabe **quem** é o cliente. Faltou a credencial, ou ela é inválida ou expirou. O nome é infeliz (deveria ser "*Unauthenticated*"). A resposta deve trazer o header `WWW-Authenticate`, dizendo como se autenticar.
 - **`403 Forbidden`**: o servidor sabe quem é o cliente, e ele **não tem permissão** para aquela ação. Mandar a credencial de novo não adianta.
 
-A autenticação de APIs é aprofundada na documentação de segurança 🔒; a Parte 11 cobre o essencial para quem constrói a API.
+A autenticação de APIs é aprofundada na [documentação de segurança](https://security-doc-beta.vercel.app/) 🔒; a Parte 11 cobre o essencial para quem constrói a API.
 
 #### 404 × 403: esconder que o recurso existe
 

@@ -77,4 +77,7 @@ export const glossario: TermoGlossario[] = [
   { id: 'grpc', termo: 'gRPC', definicao: 'Framework de RPC com contrato em Protocol Buffers, mensagens binárias e transporte HTTP/2, com suporte a streaming. Usado principalmente entre serviços internos.', pagina: '04.01' },
   { id: 'graphql', termo: 'GraphQL', definicao: 'Linguagem de consulta e estilo de API em que o cliente escolhe, numa única requisição, exatamente os campos e relações de que precisa, a partir de um esquema tipado.', pagina: '04.01' },
   { id: 'long-polling', termo: 'Long polling', definicao: 'Técnica em que o servidor segura a resposta até haver uma novidade ou um tempo limite, e o cliente faz nova requisição em seguida.', pagina: '04.01' },
+  { id: 'bean', termo: 'Bean', definicao: 'Objeto criado, configurado e gerenciado pelo container do Spring, que o entrega (injeta) a quem precisa dele.', pagina: '05.01' },
+  { id: 'jspecify', termo: 'JSpecify', definicao: 'Padrão comum de anotações de nulidade para Java (@NullMarked, @Nullable), adotado pelo Spring Framework 7 e pelo Spring Boot 4.', pagina: '05.01' },
+  { id: 'inversao-de-dependencia', termo: 'Inversão de dependência', ingles: 'dependency inversion', definicao: 'Princípio em que o código de alto nível (o domínio) define as interfaces de que precisa e o código de baixo nível (infraestrutura) as implementa, fazendo as dependências apontarem para o domínio.', pagina: '05.02' },
 ]
