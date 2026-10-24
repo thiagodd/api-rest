@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 119 · **rascunho:** 0 · **revisão:** 9 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 118 · **rascunho:** 0 · **revisão:** 10 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -75,7 +75,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 08.01 | Problem Details (RFC 9457) | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/08-01-problem-details-rfc-9457.mdx` | esqueleto |
+| 08.01 | Problem Details (RFC 9457) | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/08-01-problem-details-rfc-9457.mdx` | revisao |
 | 08.02 | ProblemDetail no Spring: tratamento global de erros | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/08-02-problemdetail-no-spring-tratamento-global-de-erros.mdx` | esqueleto |
 
 ### M09: Spring MVC por dentro
@@ -356,3 +356,4 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 | 15.01 | `Instant.now()` sai com nove casas decimais no JSON (`2026-10-24T23:20:44.027372882Z`, visto em 06.01). Decidir a precisão (truncar?) e atualizar os exemplos de 06.01 | 15.01 |
 | 06.03 | ✅ Conferido: `SORT_PROPERTIES_ALPHABETICALLY=true` e `SORT_CREATOR_PROPERTIES_FIRST=true`; classes saem em ordem alfabética, records na ordem dos componentes. O Bazar desliga a ordem alfabética | 06.03 |
 | 07.01 | ✅ Resolvido com `@NotNull @Positive` (teste `rejeitaUmProdutoSemPreco`): `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |
+| 08.02 | Trocar o status de validação de `400` (padrão do Spring, visto em 07.01/07.02) para `422`, como decidido em 02.03; atualizar os testes `BAD_REQUEST` de validação | 08.02 |

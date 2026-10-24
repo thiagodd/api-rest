@@ -70,7 +70,7 @@ Anotar o DTO não basta: é preciso pedir ao Spring que o valide. O `@Valid` (de
 public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
 ```
 
-O Spring lê o JSON, cria o record e o valida **antes** de chamar o método. Se houver erros, o método não é chamado: o Spring lança uma **`MethodArgumentNotValidException`**, com **todos** os erros (não só o primeiro), e responde `400`. O `@Validated` do Spring também funciona aqui, e é necessário quando se quer usar grupos de validação ([07.02](/construindo-apis-com-spring-boot/validacao-avancada)).
+O Spring lê o JSON, cria o record e o valida **antes** de chamar o método. Se houver erros, o método não é chamado: o Spring lança uma **`MethodArgumentNotValidException`**, com **todos** os erros (não só o primeiro), e responde `400`. Esse é o padrão do Spring; o Bazar decidiu em [02.03](/comecando-e-fundamentos-de-http/status-codes-em-profundidade) usar `400` só para requisições ilegíveis e `422 Unprocessable Content` para violações de validação, e a troca é feita em 08.02. O `@Validated` do Spring também funciona aqui, e é necessário quando se quer usar grupos de validação ([07.02](/construindo-apis-com-spring-boot/validacao-avancada)).
 
 ### Validando `@PathVariable` e `@RequestParam`
 
@@ -121,7 +121,7 @@ Nem toda verificação é validação de entrada. Vale separar dois tipos:
 | Exemplos | nome obrigatório, preço positivo, slug no formato, até 120 caracteres | SKU único, categoria existente, pedido só pode ser cancelado antes do envio |
 | Depende do estado do sistema? | Não: olha só a requisição | Sim: consulta o banco ou o estado atual |
 | Onde | Anotações no DTO, `@Valid` | Serviços e entidades do domínio |
-| Status típico | `400` | `409` ou `422` ([02.03](/comecando-e-fundamentos-de-http/status-codes-em-profundidade)) |
+| Status no Bazar | `422` (o padrão do Spring é `400`) | `409` quando o estado atual impede a operação ([02.03](/comecando-e-fundamentos-de-http/status-codes-em-profundidade)) |
 
 Misturar os dois é um erro comum nos dois sentidos: uma anotação `@SkuUnico` que consulta o banco dentro da validação do DTO acopla a borda à persistência (e roda fora da transação); uma regra "preço positivo" escrita no serviço deixa de aparecer junto com os outros erros de formato. A divisão completa, inclusive o que o domínio deve verificar de novo, está em [07.02](/construindo-apis-com-spring-boot/validacao-avancada).
 
@@ -135,7 +135,7 @@ Hoje, uma requisição inválida recebe isto:
 {"timestamp":"2026-10-24T23:34:28.246Z","status":400,"error":"Bad Request","path":"/v1/produtos"}
 ```
 
-O status está certo, mas o corpo **não diz quais campos estão errados**. O Spring Boot omite os detalhes de validação por padrão (`server.error.include-binding-errors=never`). Os detalhes existem: o Spring registra cada erro no log, em nível `WARN`. A resposta definitiva, com a lista `erros[]` em Problem Details, é construída em [08.02](/construindo-apis-com-spring-boot/problemdetail-no-spring-tratamento-global-de-erros), e é ela que o cliente vai receber.
+Dois problemas: o status é o `400` padrão do Spring, e não o `422` que o Bazar adotou, e o corpo **não diz quais campos estão errados**. O Spring Boot omite os detalhes de validação por padrão (`server.error.include-binding-errors=never`). Os detalhes existem: o Spring registra cada erro no log, em nível `WARN`. A resposta definitiva, com a lista `erros[]` em Problem Details, é construída em [08.02](/construindo-apis-com-spring-boot/problemdetail-no-spring-tratamento-global-de-erros), e é ela que o cliente vai receber.
 
 ### As mensagens
 
@@ -150,9 +150,9 @@ flowchart LR
     R["Requisição"] --> J{"JSON legível?<br/>(Jackson)"}
     J -- não --> E1["400<br/>HttpMessageNotReadable"]
     J -- sim --> V{"Constraints do DTO<br/>e dos parâmetros?<br/>(Bean Validation)"}
-    V -- não --> E2["400<br/>MethodArgumentNotValid /<br/>HandlerMethodValidation"]
+    V -- não --> E2["400 hoje, 422 no Bazar (08.02)<br/>MethodArgumentNotValid /<br/>HandlerMethodValidation"]
     V -- sim --> D{"Regras de negócio?<br/>(domínio)"}
-    D -- não --> E3["409 / 422<br/>exceção de domínio"]
+    D -- não --> E3["409<br/>exceção de domínio"]
     D -- sim --> B{"Constraints do banco?<br/>(NOT NULL, UNIQUE)"}
     B -- não --> E4["409 (unicidade)<br/>ou 500 (bug)"]
     B -- sim --> OK["201 / 200"]
@@ -379,7 +379,7 @@ Outros erros frequentes:
 
 - **Bean Validation 3.1** é a especificação; o **Hibernate Validator 9.1** é a implementação; o **`spring-boot-starter-validation`** liga tudo ao Spring MVC.
 - *Constraints* comuns: `@NotNull`, `@NotBlank`, `@Size`, `@Positive`, `@Email`, `@Pattern`. **`null` é válido** para todas, exceto as de "não nulo".
-- **`@Valid` no `@RequestBody`** → `MethodArgumentNotValidException`; *constraints* em **parâmetros** → `HandlerMethodValidationException` (validação de métodos embutida desde o Spring 6.1). As duas dão `400`, com todos os erros.
+- **`@Valid` no `@RequestBody`** → `MethodArgumentNotValidException`; *constraints* em **parâmetros** → `HandlerMethodValidationException` (validação de métodos embutida desde o Spring 6.1). O Spring responde `400` para as duas, com todos os erros; o Bazar troca para `422` em 08.02.
 - Em records, anote os componentes; para objetos aninhados, use **`@Valid`** em cascata.
 - **Sintático na borda, regra de negócio no domínio**, integridade no banco.
 - O corpo padrão do erro **não lista os campos**; o formato final chega em 08.02.

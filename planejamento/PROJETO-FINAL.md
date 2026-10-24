@@ -73,7 +73,7 @@ CRIADO ──pagar──▶ PAGAMENTO_PENDENTE ──(webhook aprovado)──▶
 - **Datas**: sempre `Instant` em UTC no formato RFC 3339 (`2026-10-24T17:30:00Z`). Datas sem horário usam `LocalDate` (15.01).
 - **IDs**: UUID v7 nos IDs públicos e identificador legível para humanos (`numero` do pedido) (15.03).
 - **Nulos e coleções**: as respostas incluem os campos sem valor como `null` explícito (nunca omitem nem usam `""`), e coleções são sempre um objeto com a lista em `itens` (nunca um array no topo) (02.06).
-- **Erros**: `application/problem+json` (RFC 9457) com `type` em `https://api.bazar.example/problemas/<codigo>` e as extensões `codigo`, `erros[]` e `traceId` (08.01, 16.01).
+- **Erros**: `application/problem+json` (RFC 9457) com `type` em `https://api.bazar.example/problemas/<slug>` e as extensões `codigo` (o mesmo slug em MAIÚSCULAS com `_`: `produto-nao-encontrado` → `PRODUTO_NAO_ENCONTRADO`), `erros[]` (itens `{ campo, mensagem }`, sem eco do valor rejeitado) e `traceId` (08.01, 16.01). Validação: `422` com `type` `.../problemas/validacao`.
 
 ## Endpoints (v1)
 
