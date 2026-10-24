@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 121 · **rascunho:** 0 · **revisão:** 7 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 120 · **rascunho:** 0 · **revisão:** 8 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -68,7 +68,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 07.01 | Bean Validation essencial | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/07-01-bean-validation-essencial.mdx` | esqueleto |
+| 07.01 | Bean Validation essencial | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/07-01-bean-validation-essencial.mdx` | revisao |
 | 07.02 | Validação avançada | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/07-02-validacao-avancada.mdx` | esqueleto |
 
 ### M08: Tratamento de erros
@@ -355,4 +355,4 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 | 01.01 | ✅ Tags `pagina-MM.PP` criadas a partir de 05.02 (um commit e uma tag por página que altera o `projeto-final/`) | 05.02 |
 | 15.01 | `Instant.now()` sai com nove casas decimais no JSON (`2026-10-24T23:20:44.027372882Z`, visto em 06.01). Decidir a precisão (truncar?) e atualizar os exemplos de 06.01 | 15.01 |
 | 06.03 | ✅ Conferido: `SORT_PROPERTIES_ALPHABETICALLY=true` e `SORT_CREATOR_PROPERTIES_FIRST=true`; classes saem em ordem alfabética, records na ordem dos componentes. O Bazar desliga a ordem alfabética | 06.03 |
-| 07.01 | `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |
+| 07.01 | ✅ Resolvido com `@NotNull @Positive` (teste `rejeitaUmProdutoSemPreco`): `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |

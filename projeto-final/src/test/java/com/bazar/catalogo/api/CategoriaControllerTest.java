@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,6 +60,24 @@ class CategoriaControllerTest {
     @Test
     void responde400ParaUmIdQueNaoEUuid() {
         assertThat(mvc.get().uri("/v1/categorias/abc")).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void rejeitaUmSlugForaDoFormato() {
+        assertThat(mvc.post().uri("/v1/categorias")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "nome": "Games", "slug": "Jogos Eletrônicos" }
+                        """))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void validaOParametroDeBuscaPeloMetodo() {
+        var resposta = mvc.get().uri("/v1/categorias?q=a").exchange();
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(HandlerMethodValidationException.class);
     }
 
     @Test

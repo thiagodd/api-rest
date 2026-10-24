@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -81,6 +83,32 @@ class ProdutoControllerTest {
                 .bodyJson().isLenientlyEqualTo("""
                         { "sku": "LIV-0044", "nome": "Domain-Driven Design", "precoEmCentavos": 17990 }
                         """);
+    }
+
+    @Test
+    void rejeitaUmProdutoInvalidoComOsErrosDeCadaCampo() {
+        var resposta = mvc.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "sku": "", "nome": "Clean Code", "precoEmCentavos": -5,
+                          "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                        """)
+                .exchange();
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(MethodArgumentNotValidException.class);
+        var erros = ((MethodArgumentNotValidException) resposta.getMvcResult().getResolvedException()).getFieldErrors();
+        assertThat(erros).extracting(FieldError::getField).containsExactlyInAnyOrder("sku", "precoEmCentavos");
+    }
+
+    @Test
+    void rejeitaUmProdutoSemPreco() {
+        assertThat(mvc.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "sku": "LIV-0042", "nome": "Clean Code", "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                        """))
+                .hasStatus(HttpStatus.BAD_REQUEST);
     }
 
     @Test

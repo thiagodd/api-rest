@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.compartilhado.Lista;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpStatus;
@@ -33,7 +35,7 @@ public class CategoriaController {
 
     @GetMapping
     public Lista<CategoriaResponse> listar(
-            @RequestParam(required = false) @Nullable String q,
+            @RequestParam(required = false) @Nullable @Size(min = 2, max = 60) String q,
             @RequestParam(defaultValue = "false") boolean apenasRaizes) {
         var categorias = repository.findAll().stream()
                 .filter(c -> q == null || c.nome().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
@@ -49,7 +51,7 @@ public class CategoriaController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoriaResponse> criar(@RequestBody CategoriaRequest request) {
+    public ResponseEntity<CategoriaResponse> criar(@Valid @RequestBody CategoriaRequest request) {
         // Ainda é UUID v4; o Bazar passa a gerar UUID v7 em 15.03.
         var categoria = repository.save(request.paraCategoria(UUID.randomUUID()));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -60,7 +62,7 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public CategoriaResponse substituir(@PathVariable UUID id, @RequestBody CategoriaRequest request) {
+    public CategoriaResponse substituir(@PathVariable UUID id, @Valid @RequestBody CategoriaRequest request) {
         if (!repository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada");
         }

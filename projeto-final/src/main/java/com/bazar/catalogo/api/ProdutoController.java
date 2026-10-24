@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Dinheiro;
+import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,7 @@ public class ProdutoController {
     }
 
     @PostMapping
-    public ResponseEntity<ProdutoResponse> criar(@RequestBody CriarProdutoRequest request) {
+    public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
         var produto = repository.save(mapper.paraProduto(request));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -45,7 +46,7 @@ public class ProdutoController {
     }
 
     @PutMapping("/{id}")
-    public ProdutoResponse atualizar(@PathVariable UUID id, @RequestBody AtualizarProdutoRequest request) {
+    public ProdutoResponse atualizar(@PathVariable UUID id, @Valid @RequestBody AtualizarProdutoRequest request) {
         var produto = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         produto.atualizar(request.nome(), request.descricao(), Dinheiro.deCentavos(request.precoEmCentavos(), "BRL"),
