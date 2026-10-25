@@ -1,6 +1,7 @@
 package com.bazar.clientes.api;
 
 import com.bazar.clientes.dominio.Cliente;
+import com.bazar.compartilhado.Canal;
 import com.bazar.compartilhado.validacao.Cpf;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +15,7 @@ public record CriarClienteRequest(
         @NotBlank @Cpf String cpf,
         @Nullable @Pattern(regexp = "\\+\\d{10,13}") String telefone) {
 
-    Cliente paraCliente() {
-        return Cliente.novo(nome, email, cpf, telefone);
+    Cliente paraCliente(Canal canal) {
+        return Cliente.novo(nome, email, cpf, telefone, canal);
     }
 }

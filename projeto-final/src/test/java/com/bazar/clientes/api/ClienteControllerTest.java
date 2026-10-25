@@ -37,6 +37,35 @@ class ClienteControllerTest {
     }
 
     @Test
+    void registraOCanalDoCabecalhoBazarCanal() {
+        assertThat(mvc.post().uri("/v1/clientes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Bazar-Canal", "app")
+                .content("""
+                        { "nome": "Ana Souza", "email": "ana@example.com", "cpf": "52998224725" }
+                        """))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .hasPathSatisfying("$.canalDeCadastro", canal -> assertThat(canal).isEqualTo("APP"));
+    }
+
+    @Test
+    void usaDesconhecidoSemOCabecalhoOuComValorInvalido() {
+        for (var valor : new String[] { null, "fax" }) {
+            var requisicao = mvc.post().uri("/v1/clientes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "nome": "Ana Souza", "email": "ana@example.com", "cpf": "52998224725" }
+                            """);
+            if (valor != null) {
+                requisicao.header("Bazar-Canal", valor);
+            }
+            assertThat(requisicao).bodyJson()
+                    .hasPathSatisfying("$.canalDeCadastro", canal -> assertThat(canal).isEqualTo("DESCONHECIDO"));
+        }
+    }
+
+    @Test
     void recusaCpfComDigitoErradoComAMensagemNoIdiomaDoCliente() {
         var resposta = mvc.post().uri("/v1/clientes")
                 .contentType(MediaType.APPLICATION_JSON)

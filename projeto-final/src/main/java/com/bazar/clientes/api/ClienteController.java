@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.web.ContextoRequisicao;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -26,8 +27,9 @@ public class ClienteController {
     }
 
     @PostMapping
-    public ResponseEntity<ClienteResponse> cadastrar(@Valid @RequestBody CriarClienteRequest request) {
-        var cliente = repository.save(request.paraCliente());
+    public ResponseEntity<ClienteResponse> cadastrar(@Valid @RequestBody CriarClienteRequest request,
+            ContextoRequisicao contexto) {
+        var cliente = repository.save(request.paraCliente(contexto.canal()));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(cliente.id())

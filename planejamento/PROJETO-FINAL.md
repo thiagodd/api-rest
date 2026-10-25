@@ -45,7 +45,7 @@ bazar
 | **Produto** | `id` (UUID v7), `sku`, `nome`, `descricao`, `preco` (Dinheiro), `categoriaId`, `status` (`RASCUNHO`, `ATIVO`, `DESCONTINUADO`), `atributos` (mapa), `versao`, `criadoEm`, `atualizadoEm` | Recurso central: paginação, filtros, PATCH, ETag e versionamento v2. |
 | **ImagemProduto** | `id`, `produtoId`, `nomeArquivo`, `tipoConteudo`, `tamanhoBytes`, `urlArmazenamento`, `ordem` | Upload multipart (22.01) |
 | **Estoque** | `produtoId`, `quantidadeDisponivel`, `quantidadeReservada`, `versao` | Concorrência otimista (10.06, 20.03) e lote (14.04) |
-| **Cliente** | `id`, `nome`, `email`, `cpf`, `telefone`, `criadoEm` | Dados sensíveis, mascaramento e BOLA (26.03) |
+| **Cliente** | `id`, `nome`, `email`, `cpf`, `telefone`, `canalDeCadastro` (`WEB`, `APP`, `PARCEIRO`, `DESCONHECIDO`, do header `Bazar-Canal`, 09.02), `criadoEm` | Dados sensíveis, mascaramento e BOLA (26.03) |
 | **Endereco** | `id`, `clienteId`, `cep`, `logradouro`, `numero`, `complemento`, `cidade`, `uf`, `principal` | Sub-recurso de cliente (12.03) |
 | **Pedido** | `id`, `numero` (legível, ex. `BZR-2026-000123`), `clienteId`, `itens`, `enderecoEntrega` (cópia), `valorItens`, `valorFrete`, `valorTotal`, `status`, `versao`, `criadoEm` | Máquina de estados (12.04), idempotência (21.01) |
 | **ItemPedido** | `produtoId`, `sku`, `nomeProduto` (cópia), `quantidade`, `precoUnitario`, `subtotal` | Mostra por que se copia o preço no momento da compra |
@@ -73,6 +73,7 @@ CRIADO ──pagar──▶ PAGAMENTO_PENDENTE ──(webhook aprovado)──▶
 - **Datas**: sempre `Instant` em UTC no formato RFC 3339 (`2026-10-24T17:30:00Z`). Datas sem horário usam `LocalDate` (15.01).
 - **IDs**: UUID v7 nos IDs públicos e identificador legível para humanos (`numero` do pedido) (15.03).
 - **Nulos e coleções**: as respostas incluem os campos sem valor como `null` explícito (nunca omitem nem usam `""`), e coleções são sempre um objeto com a lista em `itens` (nunca um array no topo) (02.06).
+- **Headers próprios**: prefixo `Bazar-` (nunca `X-`, 02.04). `Bazar-Canal` informa o canal do cliente; valor ausente ou desconhecido vira `DESCONHECIDO` (09.02).
 - **Erros**: `application/problem+json` (RFC 9457) com `type` em `https://api.bazar.example/problemas/<slug>` e as extensões `codigo` (o mesmo slug em MAIÚSCULAS com `_`: `produto-nao-encontrado` → `PRODUTO_NAO_ENCONTRADO`), `erros[]` (itens `{ campo, mensagem }`, sem eco do valor rejeitado) e `traceId` (08.01, 16.01). Validação: `422` com `type` `.../problemas/validacao`.
 
 ## Endpoints (v1)
