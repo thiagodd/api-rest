@@ -54,7 +54,7 @@ Três decisões de contrato:
 
 ### O Google mudou de ideia: *views* em vez de máscaras
 
-O Google é a origem das <Term id="mascara-de-campos">máscaras de campos</Term> (*field masks*, AIP-161): listas de caminhos como `title,author.given_name` que dizem quais campos ler ou atualizar. Elas continuam sendo o padrão para **atualizações parciais** (o `update_mask` de um PATCH, tema da [12.05](/design-de-apis-profissional/put-patch-json-merge-patch-e-json-patch)). Para **leituras**, o Google hoje desaconselha a máscara no pedido. A AIP-157 diz que o `read_mask` como campo da requisição está *"DEPRECATED"*, e recomenda outra coisa:
+O Google é a origem das <Term id="mascara-de-campos">máscaras de campos</Term> (*field masks*, AIP-161): listas de caminhos como `title,author.given_name` que dizem quais campos ler ou atualizar. Elas continuam sendo o padrão para **atualizações parciais** (o `update_mask` de um PATCH, tema da [14.02](/design-de-apis-profissional/put-patch-json-merge-patch-e-json-patch)). Para **leituras**, o Google hoje desaconselha a máscara no pedido. A AIP-157 diz que o `read_mask` como campo da requisição está *"DEPRECATED"*, e recomenda outra coisa:
 
 > *"When partial responses are needed, APIs should use view enumerations as the primary pattern."*
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.bazar.compartilhado.Constraints;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Janelas;
 import com.bazar.compartilhado.Keyset;
@@ -13,6 +14,7 @@ import com.bazar.estoque.dominio.Estoque;
 import com.bazar.estoque.dominio.EstoqueRepository;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -66,11 +68,20 @@ public class ProdutoService {
     @Transactional
     public Produto criar(Produto produto) {
         exigirCategoria(produto.getCategoriaId());
-        // A constraint unique continua sendo a garantia; a consulta antes existe para responder 409, e não 500.
+        // A consulta resolve o caso comum sem uma escrita que falha (e sem o erro no log do banco).
         if (produtos.existsBySku(produto.getSku())) {
             throw new SkuDuplicadoException(produto.getSku());
         }
-        produtos.save(produto);
+        // Dois cadastros simultâneos passam os dois pela consulta; quem decide é a constraint unique. O flush aqui
+        // faz a violação acontecer dentro do método, e não no commit, onde ela viraria um 500 (14.01).
+        try {
+            produtos.saveAndFlush(produto);
+        } catch (DataIntegrityViolationException ex) {
+            if (Constraints.violou(ex, "produto_sku_key")) {
+                throw new SkuDuplicadoException(produto.getSku());
+            }
+            throw ex;
+        }
         estoques.save(new Estoque(produto.getId()));
         return produto;
     }

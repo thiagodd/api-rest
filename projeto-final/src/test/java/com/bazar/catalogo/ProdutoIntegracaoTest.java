@@ -1,5 +1,9 @@
 package com.bazar.catalogo;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import com.bazar.LimpezaDoBanco;
 import com.bazar.TesteDeIntegracao;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +35,9 @@ class ProdutoIntegracaoTest {
 
     @Autowired
     JdbcClient jdbc;
+
+    @Autowired
+    TransactionTemplate transacao;
 
     @LocalServerPort
     int porta;
@@ -81,6 +89,80 @@ class ProdutoIntegracaoTest {
                           "detail": "Já existe um produto com o SKU LIV-0042." }
                         """);
         assertThat(jdbc.sql("select count(*) from produto").query(Integer.class).single()).isEqualTo(1);
+    }
+
+    // A janela que a 11.04 deixou aberta: os dois cadastros passam pela consulta existsBySku, e só a constraint
+    // decide. A transação do "outro" insere o SKU e fica aberta; o INSERT da API espera pelo índice unique e falha
+    // quando o outro confirma. Sem a tradução da constraint, a resposta seria 500.
+    @Test
+    void doisCadastrosSimultaneosComOMesmoSkuDao409ParaOSegundo() throws Exception {
+        var inseriu = new CountDownLatch(1);
+        var confirmar = new CountDownLatch(1);
+        try (var threads = Executors.newFixedThreadPool(2)) {
+            var outro = threads.submit(() -> transacao.executeWithoutResult(status -> {
+                jdbc.sql("""
+                        insert into produto (id, sku, nome, preco_valor, preco_moeda, categoria_id, status, versao,
+                                             criado_em, atualizado_em)
+                        values (gen_random_uuid(), 'LIV-0042', 'Outro', 10, 'BRL',
+                                '0192f3a0-5555-7000-8000-000000000003', 'RASCUNHO', 0, now(), now())
+                        """).update();
+                inseriu.countDown();
+                aguardar(confirmar);
+            }));
+            inseriu.await();
+            var api = threads.submit(() -> cliente.post().uri("/v1/produtos")
+                    .contentType(MediaType.APPLICATION_JSON).body(CLEAN_CODE)
+                    .exchange().returnResult());
+            // Espera o INSERT da API ficar bloqueado no índice, e só então deixa o outro confirmar.
+            while (jdbc.sql("select count(*) from pg_stat_activity where wait_event_type = 'Lock'")
+                    .query(Integer.class).single() == 0) {
+                Thread.onSpinWait();
+            }
+            confirmar.countDown();
+            outro.get(10, TimeUnit.SECONDS);
+
+            assertThat(api.get(10, TimeUnit.SECONDS).getStatus()).isEqualTo(HttpStatus.CONFLICT);
+        }
+        assertThat(jdbc.sql("select count(*) from produto").query(Integer.class).single()).isEqualTo(1);
+    }
+
+    @Test
+    void comPreferReturnMinimalResponde201SemCorpo() {
+        var resposta = cliente.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Prefer", "return=minimal")
+                .body(CLEAN_CODE)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().valueEquals("Preference-Applied", "return=minimal")
+                .expectBody().isEmpty();
+
+        assertThat(resposta.getResponseHeaders().getLocation()).isNotNull();
+    }
+
+    // Os campos que o servidor controla (id, status, datas) não estão no CriarProdutoRequest: o Jackson os ignora,
+    // e o produto nasce com os valores do servidor (14.01).
+    @Test
+    void ignoraOsCamposSomenteLeituraEnviadosNaCriacao() {
+        cliente.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(CLEAN_CODE.replace("{ \"sku\"", """
+                        { "id": "00000000-0000-0000-0000-000000000001", "status": "ATIVO",
+                          "criadoEm": "2020-01-01T00:00:00Z", "sku\""""))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.id").value(id -> assertThat(id).isNotEqualTo("00000000-0000-0000-0000-000000000001"))
+                .jsonPath("$.status").isEqualTo("RASCUNHO")
+                .jsonPath("$.criadoEm").value(criadoEm -> assertThat((String) criadoEm).doesNotStartWith("2020"));
+    }
+
+    private static void aguardar(CountDownLatch sinal) {
+        try {
+            sinal.await(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test

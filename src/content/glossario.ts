@@ -120,4 +120,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'resposta-parcial', termo: 'Resposta parcial', ingles: 'partial response / sparse fieldset', definicao: 'Resposta com só os campos que o cliente pediu, em geral num parâmetro fields. Economiza rede, mas multiplica as formas da resposta para o cache e para a documentação.', pagina: '13.05' },
   { id: 'mascara-de-campos', termo: 'Máscara de campos', ingles: 'field mask', definicao: 'Lista de caminhos de campos (como title,author.given_name) que diz quais campos ler ou atualizar. No Google, é o padrão das atualizações parciais (update_mask).', pagina: '13.05' },
   { id: 'expansao-de-recursos', termo: 'Expansão de recursos', ingles: 'resource expansion / embedding', definicao: 'Incluir na resposta um recurso relacionado (como a categoria de um produto) quando o cliente pede, em geral com um parâmetro embed ou expand, para evitar uma segunda chamada.', pagina: '13.05' },
+  { id: 'upsert', termo: 'Upsert', ingles: 'upsert', definicao: 'Escrita que cria o recurso se ele não existe e o substitui se existe. Em HTTP, é o PUT com o id escolhido pelo cliente, que é idempotente.', pagina: '14.01' },
 ]

@@ -14,6 +14,7 @@ import com.bazar.compartilhado.web.CamposDaResposta;
 import com.bazar.compartilhado.web.CamposOrdenaveis;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
+import com.bazar.compartilhado.web.PreferenciaDeRetorno;
 import com.bazar.compartilhado.web.ValoresDeParametro;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -83,13 +85,20 @@ public class ProdutoController {
                 .body(new Lista<>(produtos.stream().map(mapper::paraResumo).toList()));
     }
 
+    // 201 com Location e a representação; com Prefer: return=minimal, 201 sem corpo (14.01).
     @PostMapping
-    public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
+    public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request,
+            @RequestHeader(name = "Prefer", required = false) @Nullable String prefer) {
         var produto = servico.criar(mapper.paraProduto(request));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(produto.getId())
                 .toUri();
+        if (PreferenciaDeRetorno.minima(prefer)) {
+            return ResponseEntity.created(location)
+                    .header(PreferenciaDeRetorno.APLICADA, "return=minimal")
+                    .build();
+        }
         return ResponseEntity.created(location).body(mapper.paraResponse(produto));
     }
 
