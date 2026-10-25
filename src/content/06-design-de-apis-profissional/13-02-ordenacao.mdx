@@ -2,7 +2,7 @@
 id: "13.02"
 titulo: "Ordenação"
 descricao: "Ordenação sem critério de desempate gera páginas inconsistentes. Ordenação livre abre risco de desempenho."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Data Commons: Web support (Pageable e Sort como argumentos)"
     url: "https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html"
@@ -36,6 +36,8 @@ A documentação do Spring Data avisa: as ordens resolvidas a partir da requisi�
 E há um problema mais sutil, que aparece mesmo com os campos certos. Três livros custam R$ 159,00. Em que ordem eles saem quando o cliente pede `?sort=precoEmCentavos,desc`? O SQL não garante nenhuma: o banco pode devolvê-los numa ordem agora e em outra na próxima consulta. Com paginação ([13.03](/design-de-apis-profissional/paginacao-por-offset)), um deles aparece em duas páginas e outro em nenhuma.
 
 Ordenar é como organizar uma fila por ordem de chegada. Se duas pessoas chegam no mesmo minuto, alguém precisa decidir quem vai primeiro, senão elas trocam de lugar toda vez que a fila é refeita. Numa API, esse critério é o **desempate**, e ele não pode ficar por conta do banco.
+
+> **A pergunta desta página:** como deixar o cliente escolher a ordenação sem expor a estrutura interna da entidade, e como garantir que a ordem seja sempre a mesma?
 
 ## O conceito
 

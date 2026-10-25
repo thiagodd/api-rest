@@ -2,7 +2,7 @@
 id: "14.04"
 titulo: "Operações em lote"
 descricao: "Integrações (por exemplo, o ERP de um lojista) precisam atualizar centenas de itens. Fazer N chamadas é lento; um lote mal projetado gera falhas parciais confusas."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Zalando: MUST use code 207 for batch or bulk requests [152]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#152"
@@ -27,6 +27,10 @@ A tentação é criar um endpoint que recebe tudo de uma vez. É a decisão cert
 - Que status a resposta tem, quando 399 itens deram certo e um deu errado? `200`? `400`? Outro?
 - E se o lote tiver 100 mil itens?
 - E se a rede cair no meio e o ERP reenviar o lote?
+
+É a diferença entre ir ao correio 400 vezes, com uma carta de cada vez, e entregar um malote. O malote economiza viagens, mas o correio precisa dizer quais cartas foram aceitas e quais voltaram.
+
+> **A pergunta desta página:** como desenhar um endpoint de lote: atômico ou parcial, com que status, como reportar o resultado de cada item e com que limites?
 
 ## O conceito
 

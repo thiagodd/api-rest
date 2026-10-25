@@ -2,7 +2,7 @@
 id: "12.03"
 titulo: "Relacionamentos e sub-recursos"
 descricao: "Decide entre aninhar URIs, usar links ou embutir dados. Isso impacta cache, permissões e o número de chamadas do cliente."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Zalando: MUST identify resources and sub-resources via path segments [143]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#143"
@@ -35,6 +35,10 @@ Cada escolha tem consequências que aparecem depois:
 - **Embutir demais** gera respostas enormes e dados que envelhecem em *cache*. **Referenciar demais** obriga o cliente a fazer dezenas de chamadas.
 
 Esta página dá os critérios para cada decisão, e implementa os endereços do cliente, o primeiro sub-recurso do Bazar com coleção, regras e verificação de pertencimento.
+
+Pense no endereço de um apartamento: rua, número, apartamento. O apartamento só existe dentro do prédio, e o porteiro confere se a encomenda é mesmo para alguém dali. Já o livro que você comprou não mora na livraria: ele só leva uma etiqueta com o nome dela.
+
+> **A pergunta desta página:** quando aninhar um recurso na URI, quando referenciá-lo por id e quando embuti-lo na resposta, e como garantir que um sub-recurso pertence mesmo ao pai?
 
 ## O conceito
 

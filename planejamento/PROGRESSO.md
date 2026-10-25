@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 81 · **rascunho:** 0 · **revisão:** 20 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 81 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 62
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -119,46 +119,46 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 12.01 | Modelando recursos a partir do domínio | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-01-modelando-recursos-a-partir-do-dominio.mdx` | revisao |
-| 12.02 | Convenções de nomenclatura | basico | essencial | `src/content/06-design-de-apis-profissional/12-02-convencoes-de-nomenclatura.mdx` | revisao |
-| 12.03 | Relacionamentos e sub-recursos | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-03-relacionamentos-e-sub-recursos.mdx` | revisao |
-| 12.04 | Ações que não são CRUD e máquinas de estado | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-04-acoes-que-nao-sao-crud-e-maquinas-de-estado.mdx` | revisao |
+| 12.01 | Modelando recursos a partir do domínio | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-01-modelando-recursos-a-partir-do-dominio.mdx` | pronta |
+| 12.02 | Convenções de nomenclatura | basico | essencial | `src/content/06-design-de-apis-profissional/12-02-convencoes-de-nomenclatura.mdx` | pronta |
+| 12.03 | Relacionamentos e sub-recursos | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-03-relacionamentos-e-sub-recursos.mdx` | pronta |
+| 12.04 | Ações que não são CRUD e máquinas de estado | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-04-acoes-que-nao-sao-crud-e-maquinas-de-estado.mdx` | pronta |
 
 ### M13: Consultando coleções
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 13.01 | Filtros e busca | intermediario | essencial | `src/content/06-design-de-apis-profissional/13-01-filtros-e-busca.mdx` | revisao |
-| 13.02 | Ordenação | basico | importante | `src/content/06-design-de-apis-profissional/13-02-ordenacao.mdx` | revisao |
-| 13.03 | Paginação por offset | basico | essencial | `src/content/06-design-de-apis-profissional/13-03-paginacao-por-offset.mdx` | revisao |
-| 13.04 | Paginação por cursor (keyset) | intermediario | essencial | `src/content/06-design-de-apis-profissional/13-04-paginacao-por-cursor-keyset.mdx` | revisao |
-| 13.05 | Respostas parciais e expansão | avancado | complementar | `src/content/06-design-de-apis-profissional/13-05-respostas-parciais-e-expansao.mdx` | revisao |
+| 13.01 | Filtros e busca | intermediario | essencial | `src/content/06-design-de-apis-profissional/13-01-filtros-e-busca.mdx` | pronta |
+| 13.02 | Ordenação | basico | importante | `src/content/06-design-de-apis-profissional/13-02-ordenacao.mdx` | pronta |
+| 13.03 | Paginação por offset | basico | essencial | `src/content/06-design-de-apis-profissional/13-03-paginacao-por-offset.mdx` | pronta |
+| 13.04 | Paginação por cursor (keyset) | intermediario | essencial | `src/content/06-design-de-apis-profissional/13-04-paginacao-por-cursor-keyset.mdx` | pronta |
+| 13.05 | Respostas parciais e expansão | avancado | complementar | `src/content/06-design-de-apis-profissional/13-05-respostas-parciais-e-expansao.mdx` | pronta |
 
 ### M14: Escrita e modificação
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 14.01 | Criação com POST (e PUT com id do cliente) | basico | essencial | `src/content/06-design-de-apis-profissional/14-01-criacao-com-post-e-put-com-id-do-cliente.mdx` | revisao |
-| 14.02 | PUT × PATCH: JSON Merge Patch e JSON Patch | intermediario | essencial | `src/content/06-design-de-apis-profissional/14-02-put-patch-json-merge-patch-e-json-patch.mdx` | revisao |
-| 14.03 | DELETE, soft delete e arquivamento | basico | importante | `src/content/06-design-de-apis-profissional/14-03-delete-soft-delete-e-arquivamento.mdx` | revisao |
-| 14.04 | Operações em lote | avancado | importante | `src/content/06-design-de-apis-profissional/14-04-operacoes-em-lote.mdx` | revisao |
+| 14.01 | Criação com POST (e PUT com id do cliente) | basico | essencial | `src/content/06-design-de-apis-profissional/14-01-criacao-com-post-e-put-com-id-do-cliente.mdx` | pronta |
+| 14.02 | PUT × PATCH: JSON Merge Patch e JSON Patch | intermediario | essencial | `src/content/06-design-de-apis-profissional/14-02-put-patch-json-merge-patch-e-json-patch.mdx` | pronta |
+| 14.03 | DELETE, soft delete e arquivamento | basico | importante | `src/content/06-design-de-apis-profissional/14-03-delete-soft-delete-e-arquivamento.mdx` | pronta |
+| 14.04 | Operações em lote | avancado | importante | `src/content/06-design-de-apis-profissional/14-04-operacoes-em-lote.mdx` | pronta |
 
 ### M15: Tipos de dados no contrato
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 15.01 | Datas, horas e fusos horários | intermediario | essencial | `src/content/06-design-de-apis-profissional/15-01-datas-horas-e-fusos-horarios.mdx` | revisao |
-| 15.02 | Dinheiro e números decimais | intermediario | essencial | `src/content/06-design-de-apis-profissional/15-02-dinheiro-e-numeros-decimais.mdx` | revisao |
-| 15.03 | Identificadores: sequenciais, UUID v7 e ULID | intermediario | importante | `src/content/06-design-de-apis-profissional/15-03-identificadores-sequenciais-uuid-v7-e-ulid.mdx` | revisao |
-| 15.04 | Enums, evolução e tolerant reader | intermediario | importante | `src/content/06-design-de-apis-profissional/15-04-enums-evolucao-e-tolerant-reader.mdx` | revisao |
-| 15.05 | Internacionalização na API | intermediario | complementar | `src/content/06-design-de-apis-profissional/15-05-internacionalizacao-na-api.mdx` | revisao |
+| 15.01 | Datas, horas e fusos horários | intermediario | essencial | `src/content/06-design-de-apis-profissional/15-01-datas-horas-e-fusos-horarios.mdx` | pronta |
+| 15.02 | Dinheiro e números decimais | intermediario | essencial | `src/content/06-design-de-apis-profissional/15-02-dinheiro-e-numeros-decimais.mdx` | pronta |
+| 15.03 | Identificadores: sequenciais, UUID v7 e ULID | intermediario | importante | `src/content/06-design-de-apis-profissional/15-03-identificadores-sequenciais-uuid-v7-e-ulid.mdx` | pronta |
+| 15.04 | Enums, evolução e tolerant reader | intermediario | importante | `src/content/06-design-de-apis-profissional/15-04-enums-evolucao-e-tolerant-reader.mdx` | pronta |
+| 15.05 | Internacionalização na API | intermediario | complementar | `src/content/06-design-de-apis-profissional/15-05-internacionalizacao-na-api.mdx` | pronta |
 
 ### M16: Consistência e guia de estilo
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 16.01 | Projetando erros: catálogo, códigos e decisões difíceis | intermediario | essencial | `src/content/06-design-de-apis-profissional/16-01-projetando-erros-catalogo-codigos-e-decisoes-dificeis.mdx` | revisao |
-| 16.02 | Escrevendo o guia de estilo da sua API | avancado | importante | `src/content/06-design-de-apis-profissional/16-02-escrevendo-o-guia-de-estilo-da-sua-api.mdx` | revisao |
+| 16.01 | Projetando erros: catálogo, códigos e decisões difíceis | intermediario | essencial | `src/content/06-design-de-apis-profissional/16-01-projetando-erros-catalogo-codigos-e-decisoes-dificeis.mdx` | pronta |
+| 16.02 | Escrevendo o guia de estilo da sua API | avancado | importante | `src/content/06-design-de-apis-profissional/16-02-escrevendo-o-guia-de-estilo-da-sua-api.mdx` | pronta |
 
 ## Parte 7: Contratos, documentação e ciclo de vida
 

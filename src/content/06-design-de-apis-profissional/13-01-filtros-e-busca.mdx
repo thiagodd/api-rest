@@ -2,7 +2,7 @@
 id: "13.01"
 titulo: "Filtros e busca"
 descricao: "Filtros mal projetados viram dezenas de endpoints ou queries lentas e inseguras."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Zalando: SHOULD design simple query languages using query parameters [236]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#236"
@@ -44,6 +44,8 @@ GET /v1/produtos?categoria=…                       ← o nome errado, ignorado
 O primeiro caminho multiplica endpoints: cada nova combinação vira uma rota, um teste e uma linha na documentação. O segundo entrega o banco ao cliente: ele filtra por colunas internas, monta consultas que nenhum índice atende e, se o servidor concatenar o texto, abre a porta para *SQL injection*. O terceiro é o pior de todos, porque ninguém percebe: o filtro com nome errado é ignorado e a resposta parece certa.
 
 Filtrar é como o balcão de uma loja de material de construção. O cliente não entra no estoque: ele diz o que quer ("parafuso, 6 mm, inox, até R$ 20") e o vendedor sabe quais perguntas consegue responder rápido. Uma API de filtros bem desenhada é esse balcão: um vocabulário pequeno, documentado e que o servidor sabe atender.
+
+> **A pergunta desta página:** como oferecer filtros e busca que o cliente consegue combinar, que o servidor atende com índices, e que nunca ignoram um parâmetro em silêncio?
 
 ## O conceito
 

@@ -2,7 +2,7 @@
 id: "15.01"
 titulo: "Datas, horas e fusos horários"
 descricao: "Bugs de fuso aparecem na virada do dia, no horário de verão e com clientes em outros países, e quase sempre já em produção."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 3339: Date and Time on the Internet: Timestamps"
     url: "https://www.rfc-editor.org/rfc/rfc3339.html"
@@ -31,6 +31,10 @@ Três relatos que toda equipe de API conhece:
 - **"Os testes passam de manhã e falham à noite."** Um teste confere que o pedido é "de hoje". Depois das 21h, em São Paulo, já é amanhã em UTC.
 
 Nenhum desses bugs aparece no ambiente de desenvolvimento, onde o desenvolvedor, o servidor e o banco estão no mesmo fuso, testando no meio da tarde. Eles aparecem em produção, na virada do dia.
+
+É o problema da reunião marcada "às 10h" entre São Paulo e Lisboa. Sem o fuso, cada pessoa aparece numa hora diferente, e as duas têm certeza de que estão certas.
+
+> **A pergunta desta página:** como representar datas e horas no contrato de uma API, e em que ponto do servidor o fuso horário deve entrar?
 
 ## O conceito
 

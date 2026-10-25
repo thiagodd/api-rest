@@ -2,7 +2,7 @@
 id: "13.04"
 titulo: "Paginação por cursor (keyset)"
 descricao: "É a única paginação que escala para coleções grandes e com escrita constante (pedidos, eventos). APIs como Stripe, Slack e Google usam."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Google AIP-158: Pagination"
     url: "https://google.aip.dev/158"
@@ -30,6 +30,10 @@ A [13.03](/design-de-apis-profissional/paginacao-por-offset) terminou com duas f
 As duas falhas vêm da mesma escolha: o *offset* identifica uma página pela **posição** ("a partir do 40º"), e a posição muda quando os dados mudam. A paginação por cursor identifica a página pelo **último item visto** ("depois do pedido X"). Um item novo no topo não muda o que vem depois de X, e o banco consegue ir direto até X por um índice.
 
 É o modelo da Stripe (`starting_after`), do Slack (`cursor`), do Google (`page_token`) e o que a Zalando prefere (regra [160]). E é onde mais aparecem implementações que parecem certas e não são: nesta página, a implementação mais natural com o Spring Data foi tão lenta quanto o *offset*, e só uma medição mostrou isso.
+
+É a diferença entre anotar o número da página e usar um marcador. O número muda quando alguém insere páginas antes; o marcador continua exatamente onde você parou.
+
+> **A pergunta desta página:** como funciona a paginação por cursor, como implementá-la com uma consulta que o índice atende, e como confirmar com números que ela é mesmo rápida?
 
 ## O conceito
 

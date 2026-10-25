@@ -2,7 +2,7 @@
 id: "13.03"
 titulo: "Paginação por offset"
 descricao: "É o modelo mais comum e o padrão do Spring, mas tem custos (COUNT, páginas instáveis) que um sênior precisa conhecer."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Data Commons: Web support (Pageable, PagedModel, VIA_DTO)"
     url: "https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html"
@@ -42,6 +42,10 @@ E o `Pageable` do Spring tem um comportamento que nenhum tutorial mostra: valore
 ```
 
 Esta página usa paginação por *offset* na listagem de categorias, mostra onde ela funciona bem, onde ela falha e por que o Bazar não usa o `Pageable` diretamente.
+
+É como marcar um livro pelo número da página. Funciona enquanto ninguém mexe no livro. Se alguém insere um capítulo no começo, a página 40 que você anotou passa a ter outro texto.
+
+> **A pergunta desta página:** como paginar por *offset* do jeito certo, com limites validados e links de navegação, e quando ele deixa de ser a escolha certa?
 
 ## O conceito
 

@@ -2,7 +2,7 @@
 id: "15.03"
 titulo: "Identificadores: sequenciais, UUID v7 e ULID"
 descricao: "Ids sequenciais expostos permitem enumeração e vazam volume de negócio. UUID v4 aleatório degrada índices. O UUID v7 resolve os dois problemas."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 9562: Universally Unique IDentifiers (UUIDs)"
     url: "https://www.rfc-editor.org/rfc/rfc9562.html"
@@ -29,6 +29,10 @@ O primeiro protótipo do Bazar usava ids sequenciais: o produto 1, o produto 2, 
 - **A importação de um parceiro gerou duplicatas.** O parceiro criava os produtos no sistema dele e precisava do id do Bazar para ligar os dois; como só o banco do Bazar podia gerar o id, cada falha de rede no meio do cadastro deixava um produto que o parceiro não sabia que existia.
 
 A troca óbvia é o UUID aleatório (`UUID.randomUUID()`), e foi o que o Bazar fez. Resolveu os três problemas e criou um quarto, mais silencioso: a tabela de pedidos ficou mais lenta para inserir a cada mês, e o índice da chave primária cresceu mais que a própria tabela justificava.
+
+Um número sequencial é como a senha de atendimento de uma padaria: diz a qualquer um quantas pessoas vieram antes. Um id aleatório é como guardar fichas numa gaveta sem ordem: ninguém deduz nada, mas achar o lugar de cada ficha nova dá trabalho.
+
+> **A pergunta desta página:** que identificador usar numa API pública, e como o UUID v7 junta a opacidade do id aleatório com a ordem do sequencial?
 
 ## O conceito
 

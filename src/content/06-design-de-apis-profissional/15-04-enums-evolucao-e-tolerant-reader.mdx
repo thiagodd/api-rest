@@ -2,7 +2,7 @@
 id: "15.04"
 titulo: "Enums, evolução e tolerant reader"
 descricao: "Adicionar um valor de enum é uma mudança que quebra clientes que não estão preparados. Projetar para evolução evita incidentes."
-status: revisao
+status: pronta
 referencias:
   - titulo: "martinfowler.com: bliki / TolerantReader"
     url: "https://martinfowler.com/bliki/TolerantReader.html"
@@ -27,6 +27,10 @@ O Bazar contratou um centro de distribuição, e o pedido ganhou uma etapa entre
 Às 9h da manhã seguinte, o aplicativo do parceiro que revende pelo Bazar parou de mostrar a lista de pedidos. O código dele tinha um `enum StatusPedido` com os sete valores do contrato, e o Jackson, ao encontrar `"EM_SEPARACAO"`, lançou uma exceção. Uma exceção na leitura de **um** pedido derrubava a lista **inteira**. O painel interno da equipe financeira, escrito em outra linguagem, não quebrou, mas fez pior: um `switch` sem caso padrão deixou os pedidos em separação fora de todos os relatórios, sem nenhum erro.
 
 Os dois lados erraram. O cliente presumiu que a lista de valores era fechada para sempre. O Bazar nunca disse no contrato que ela podia crescer. Esta página trata dos dois lados: como o servidor projeta e documenta enums que vão evoluir, e como o cliente lê respostas de uma versão mais nova da API sem quebrar.
+
+É como um formulário com as opções "solteiro, casado, viúvo". Quem programou o sistema que lê o formulário supôs que a lista nunca mudaria; no dia em que aparece "união estável", o sistema trava.
+
+> **A pergunta desta página:** como projetar enums que podem crescer, como dizer isso no contrato, e como um cliente lê respostas de uma versão mais nova da API sem quebrar?
 
 ## O conceito
 

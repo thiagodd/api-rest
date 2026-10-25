@@ -2,7 +2,7 @@
 id: "15.05"
 titulo: "Internacionalização na API"
 descricao: "Mensagens de erro e conteúdos traduzidos dependem de negociar o idioma corretamente."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 9110 §12.5.4: Accept-Language"
     url: "https://www.rfc-editor.org/rfc/rfc9110.html#name-accept-language"
@@ -38,6 +38,10 @@ O Bazar não fala espanhol, mas fala português, a terceira opção da lista. A 
 E nenhuma resposta dizia em que idioma estava, nem avisava um *cache* que a resposta mudava com o `Accept-Language`. Para piorar, o `title` do `415` saía em português e o `detail`, na mesma resposta, em inglês.
 
 Internacionalizar uma API é menos sobre traduzir textos e mais sobre três decisões: **o que** é traduzido (e o que nunca deve ser), **como** o idioma é negociado, e como a resposta **declara** o idioma escolhido.
+
+É como o cardápio de um restaurante para turistas: os nomes dos pratos e os preços são os mesmos em todas as versões, só a descrição muda de língua. E a capa de cada versão diz em que língua ela está.
+
+> **A pergunta desta página:** o que traduzir numa API e o que nunca traduzir, como negociar o idioma com o `Accept-Language`, e como a resposta declara o idioma escolhido?
 
 ## O conceito
 

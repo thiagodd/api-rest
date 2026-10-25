@@ -2,7 +2,7 @@
 id: "16.01"
 titulo: "Projetando erros: catálogo, códigos e decisões difíceis"
 descricao: "Além do formato (08.01), um sênior define quais erros existem, quando usar cada status e como o cliente deve reagir."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 9457: Problem Details for HTTP APIs (§3 e §4)"
     url: "https://www.rfc-editor.org/rfc/rfc9457.html"
@@ -30,6 +30,10 @@ O Bazar responde erros em Problem Details desde a [08.01](/construindo-apis-com-
 
 O formato diz **como** um erro é escrito. Projetar erros é decidir **quais** erros existem, **que status** cada um usa, por um critério que qualquer pessoa da equipe aplica do mesmo jeito, e **o que o cliente faz** ao receber cada um. O resultado é um <Term id="catalogo-de-problemas">catálogo de problemas</Term>, e ele é parte do contrato da API.
 
+Pense nas mensagens de um caixa eletrônico: "saldo insuficiente", "cartão retido", "serviço indisponível, tente mais tarde". Cada uma diz ao cliente o que fazer em seguida, e o banco não inventa uma mensagem nova em cada agência.
+
+> **A pergunta desta página:** quais erros a API devolve, com que status e por qual critério, e o que o cliente deve fazer ao receber cada um?
+
 ## O conceito
 
 ### O que a RFC 9457 pede de um tipo de problema
@@ -50,10 +54,10 @@ A mesma seção traz um limite: nem todo erro merece um tipo próprio. *"Truly g
 |---|---|---|---|
 | 400 | `REQUISICAO_INVALIDA` | JSON malformado, tipo errado (`precoMin=abc`) | Corrigir a requisição |
 | 400 | `PARAMETRO_DESCONHECIDO` | Parâmetro que não é filtro (`?categoria=`) | Corrigir a requisição |
-| 400 | `VALOR_NAO_ACEITO` | Valor fora da lista em `fields` ou `expand` | Corrigir a requisição |
+| 400 | `VALOR_NAO_ACEITO` | Valor fora da lista em `fields` ou `embed` | Corrigir a requisição |
 | 400 | `ORDENACAO_INVALIDA` | `sort` com campo ou formato inválido | Corrigir a requisição |
 | 400 | `CURSOR_INVALIDO` | Cursor alterado ou de outra consulta | Corrigir a requisição |
-| 400 | `PATCH_INVALIDO` | Operação de JSON Patch impossível | Corrigir a requisição |
+| 400 | `PATCH_INVALIDO` | Operação de JSON Patch sem `op` ou `path` válidos | Corrigir a requisição |
 | 404 | `PRODUTO_NAO_ENCONTRADO` (e categoria, cliente, endereço, pedido) | O recurso não existe | Mostrar ao usuário |
 | 406 | `FORMATO_NAO_ACEITO` | Nenhum formato do `Accept` disponível | Corrigir a requisição |
 | 409 | `SKU_DUPLICADO`, `CATEGORIA_COM_PRODUTOS`, `ESTOQUE_INSUFICIENTE`, `TRANSICAO_INVALIDA`... | Válida, mas conflita com o estado atual | Mostrar ao usuário |

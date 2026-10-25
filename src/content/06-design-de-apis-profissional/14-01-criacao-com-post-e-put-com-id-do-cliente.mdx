@@ -2,7 +2,7 @@
 id: "14.01"
 titulo: "Criação com POST (e PUT com id do cliente)"
 descricao: "Os detalhes da criação (status, Location, corpo de retorno, ids) afetam toda a experiência do cliente."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 9110: POST (§9.3.3), PUT (§9.3.4) e 201 Created (§15.3.2)"
     url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.3"
@@ -25,6 +25,10 @@ Criar um recurso parece a operação mais simples de uma API: `POST`, salvar, de
 - Dois operadores cadastram o mesmo SKU no mesmo segundo. Um recebe `201` e o outro… `500`.
 
 Este último caso está no Bazar desde a [11.04](/testes-de-api/testes-de-integracao-com-springboottest-e-testcontainers). Aquela página corrigiu o `500` do SKU repetido com uma consulta antes do `INSERT` e deixou registrado que dois cadastros simultâneos ainda escapavam. Esta página fecha essa janela e trata cada uma das outras perguntas.
+
+Pense no protocolo de uma repartição. Quem entrega um documento sai com um número para acompanhar o pedido. Se voltar ao balcão com o mesmo documento, o atendente percebe que ele já foi entregue, e não abre um segundo processo.
+
+> **A pergunta desta página:** o que um `POST` de criação deve responder, o que fazer com campos que o cliente não pode definir, e como evitar duplicatas quando a requisição se repete ou chega ao mesmo tempo que outra?
 
 ## O conceito
 

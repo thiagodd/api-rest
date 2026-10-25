@@ -2,7 +2,7 @@
 id: "14.03"
 titulo: "DELETE, soft delete e arquivamento"
 descricao: "Apagar de verdade dados com histórico (produto já vendido) quebra relatórios e auditoria. Decidir a semântica do DELETE é parte do contrato."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 9110: DELETE (§9.3.5), idempotência (§9.2.2) e 410 Gone (§15.5.11)"
     url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.5"
@@ -31,6 +31,10 @@ Se o Bazar apagar a linha da tabela `produto`:
 E se não apagar, outras perguntas aparecem: o produto continua aparecendo nas listagens? Um `GET` nele dá `200` ou `404`? E um segundo `DELETE`?
 
 Esta página trata da semântica do `DELETE`: o que ele responde, o que acontece quando há dependentes, e quando "apagar" deve significar **marcar como apagado**.
+
+Uma livraria que deixa de vender um título não rasga as notas fiscais em que ele aparece. Ela tira o livro da vitrine, e ele continua nos registros de quem o comprou.
+
+> **A pergunta desta página:** o que um `DELETE` deve responder, o que fazer com os recursos de que outros dependem, e quando apagar deve significar desativar?
 
 ## O conceito
 

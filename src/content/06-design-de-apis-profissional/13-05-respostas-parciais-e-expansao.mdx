@@ -2,7 +2,7 @@
 id: "13.05"
 titulo: "Respostas parciais e expansão"
 descricao: "Reduz o tráfego para clientes móveis e evita chamadas extras, mas aumenta a complexidade e prejudica o cache."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Zalando: SHOULD support partial responses via filtering [157] e SHOULD allow optional embedding of sub-resources [158]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#157"
@@ -30,6 +30,10 @@ Os dois problemas têm soluções conhecidas:
 - **Expansão:** o cliente pede que um recurso relacionado venha dentro da resposta (`?embed=categoria`).
 
 Os dois parecem ganhos sem custo, e não são. Cada combinação de campos vira uma resposta diferente para o *cache*, o OpenAPI não consegue descrever o que sai, e o servidor ganha um pequeno interpretador de consultas para manter. Esta página mostra como implementar as duas coisas e, principalmente, quando **não** implementar.
+
+É como pedir num restaurante "sem cebola" ou "com a salada junto". Para quem pede, é ótimo. Para a cozinha, cada pedido personalizado é um prato que não pode sair pronto do balcão.
+
+> **A pergunta desta página:** quando vale oferecer respostas parciais e expansão, como implementá-las com segurança, e o que elas custam ao *cache* e à documentação?
 
 ## O conceito
 

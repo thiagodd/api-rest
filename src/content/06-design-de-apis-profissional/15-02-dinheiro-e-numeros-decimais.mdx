@@ -2,7 +2,7 @@
 id: "15.02"
 titulo: "Dinheiro e números decimais"
 descricao: "Double para dinheiro gera centavos errados, e um erro de moeda é um incidente financeiro."
-status: revisao
+status: pronta
 referencias:
   - titulo: "ISO 4217: Currency codes"
     url: "https://www.iso.org/iso-4217-currency-codes.html"
@@ -37,6 +37,10 @@ Dinheiro tem três problemas que os outros números não têm:
 - **Precisão exata.** Um centavo a mais ou a menos é um erro, e não uma aproximação.
 - **Uma moeda.** `100` não é um valor: 100 reais, 100 dólares e 100 ienes são coisas diferentes.
 - **Divisão sem perda.** Ratear R$ 10,00 de frete entre três itens dá R$ 3,333... por item, e alguém precisa ficar com o centavo que sobra.
+
+Ninguém paga uma conta de "mais ou menos 129,90". No caixa, cada centavo é contado, e a nota diz em que moeda.
+
+> **A pergunta desta página:** como representar dinheiro no JSON e no Java sem perder centavos, sem confundir moedas e sem errar no rateio?
 
 ## O conceito
 

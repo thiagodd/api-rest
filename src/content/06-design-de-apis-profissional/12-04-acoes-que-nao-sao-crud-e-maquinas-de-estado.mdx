@@ -2,7 +2,7 @@
 id: "12.04"
 titulo: "Ações que não são CRUD e máquinas de estado"
 descricao: "\"cancelar pedido\" não é um PATCH de status. Modelar ações corretamente protege as regras de negócio e deixa o contrato claro."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Google AIP-136: Custom methods"
     url: "https://google.aip.dev/136"
@@ -36,6 +36,10 @@ Funciona no primeiro dia, e cria problemas que só aparecem depois:
 - **Permissões e auditoria por ação ficam difíceis.** "O cliente pode cancelar, mas só o financeiro pode reembolsar" exige olhar o valor do campo para decidir a permissão.
 
 Cancelar, pagar, enviar e reembolsar não são edições de um campo. São **ações** com regras e efeitos. Esta página mostra como modelá-las num contrato HTTP, como manter as regras no domínio e como o servidor informa ao cliente quais ações estão disponíveis em cada estado.
+
+Num banco, você não edita o saldo da conta. Você faz um depósito, um saque ou uma transferência: cada operação tem regras, deixa registro e provoca efeitos, e o saldo muda como consequência.
+
+> **A pergunta desta página:** como modelar ações de negócio, como cancelar e pagar, num contrato HTTP sem transformá-las em edições de um campo, e como o cliente descobre quais ações estão disponíveis?
 
 ## O conceito
 

@@ -2,7 +2,7 @@
 id: "14.02"
 titulo: "PUT × PATCH: JSON Merge Patch e JSON Patch"
 descricao: "Atualização parcial mal feita apaga dados (o null acidental) ou não consegue limpar campos. É uma das partes mais sutis do design de APIs."
-status: revisao
+status: pronta
 referencias:
   - titulo: "RFC 5789: PATCH Method for HTTP"
     url: "https://www.rfc-editor.org/rfc/rfc5789.html"
@@ -31,6 +31,10 @@ Com o que o Bazar oferecia até agora, só o `PUT`, ele precisa mandar o produto
 A [02.06](/comecando-e-fundamentos-de-http/json-para-apis) contou essa história: o parceiro que serializava todos os campos, inclusive os nulos, e apagava a cada atualização o que não tinha preenchido. A causa está na fronteira entre JSON e Java. Para o JSON, `"descricao": null` e a ausência de `descricao` são coisas diferentes. Para um `record` Java, os dois viram `null`.
 
 Esta página mostra como fazer atualizações parciais que mudam só o que o cliente quis mudar, conseguem **limpar** um campo quando o cliente quer, e não apagam nada por acidente.
+
+É como corrigir um formulário em papel: você risca e reescreve o campo errado, e não preenche um formulário novo inteiro. E um campo que você deixou de preencher no formulário novo não deveria apagar o que estava escrito no antigo.
+
+> **A pergunta desta página:** como fazer atualizações parciais com `PATCH`, distinguindo "não mexa neste campo" de "apague este campo", e validando o resultado, e não o pedido?
 
 ## O conceito
 
