@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 113 · **rascunho:** 0 · **revisão:** 15 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 112 · **rascunho:** 0 · **revisão:** 16 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -86,7 +86,7 @@
 | 09.02 | Argument resolvers e return value handlers customizados | avancado | complementar | `src/content/03-construindo-apis-com-spring-boot/09-02-argument-resolvers-e-return-value-handlers-customizados.mdx` | revisao |
 | 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | revisao |
 | 09.04 | Filtros, interceptors e AOP: quando usar cada um | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-04-filtros-interceptors-e-aop-quando-usar-cada-um.mdx` | revisao |
-| 09.05 | Functional endpoints (RouterFunction) | intermediario | complementar | `src/content/03-construindo-apis-com-spring-boot/09-05-functional-endpoints-routerfunction.mdx` | esqueleto |
+| 09.05 | Functional endpoints (RouterFunction) | intermediario | complementar | `src/content/03-construindo-apis-com-spring-boot/09-05-functional-endpoints-routerfunction.mdx` | revisao |
 
 ## Parte 4: Persistência para APIs
 
