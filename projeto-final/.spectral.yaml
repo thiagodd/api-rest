@@ -1,0 +1,170 @@
+# As regras do guia de estilo (docs/GUIA-DE-ESTILO.md) que uma máquina consegue conferir (17.04). Cada regra leva o
+# identificador do guia no nome; as marcadas "revisão" ou "teste" no guia ficam fora daqui.
+extends: ["spectral:oas"]
+
+rules:
+  # O summary basta para a referência; a description fica para o que o summary não diz.
+  operation-description: off
+
+  bzr-nom-01-caminhos-kebab-case:
+    description: Caminhos em kebab-case, sem extensão nem barra final (BZR-NOM-01).
+    message: "{{property}}: use kebab-case, sem extensão nem barra final (BZR-NOM-01)."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/([a-z0-9]+(-[a-z0-9]+)*|\\{[a-zA-Z]+\\}))+$"
+
+  bzr-rec-05-versao-no-caminho:
+    description: A versão maior no início do caminho (BZR-REC-05).
+    message: "{{property}}: o caminho deve começar pela versão, como /v1 (BZR-REC-05)."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^/v[0-9]+/"
+
+  bzr-rec-02-um-nivel-de-sub-recurso:
+    description: No máximo um nível de sub-recurso, ou seja, até dois ids no caminho (BZR-REC-02).
+    message: "{{property}}: mais de um nível de sub-recurso (BZR-REC-02)."
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "\\{[^}]+\\}.*\\{[^}]+\\}.*\\{"
+
+  bzr-nom-02-campos-camel-case:
+    description: Campos JSON em camelCase (BZR-NOM-02). _links e _embedded vêm do HAL (12.04).
+    message: "Campo {{property}}: use camelCase (BZR-NOM-02)."
+    severity: error
+    given: $..properties[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(_links|_embedded|[a-z][a-zA-Z0-9]*)$"
+
+  bzr-nom-02-parametros-camel-case:
+    description: Parâmetros de query em camelCase (BZR-NOM-02).
+    message: "Parâmetro {{value}}: use camelCase (BZR-NOM-02)."
+    severity: error
+    given: $.paths[*][*].parameters[?(@.in == 'query')].name
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+
+  bzr-nom-05-instantes-terminam-em-em:
+    description: Instantes têm o nome no particípio seguido de Em (criadoEm), e filtros de período, de Apos ou Antes (BZR-NOM-05).
+    message: "Campo {{property}}: um instante deve terminar em Em, como criadoEm (BZR-NOM-05)."
+    severity: error
+    given: $..properties[?(@.format == 'date-time')]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "(Em|Apos|Antes)$"
+
+  bzr-nom-06-booleanos-sem-prefixo:
+    description: Booleanos sem prefixo is, has, tem (BZR-NOM-06).
+    message: "Campo {{property}}: booleanos não levam prefixo (BZR-NOM-06)."
+    severity: error
+    given: $..properties[?(@.type == 'boolean')]~
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "^(is|has|tem|eh|possui)[A-Z]"
+
+  bzr-nom-08-enum-upper-snake-case:
+    description: Valores de enum em UPPER_SNAKE_CASE (BZR-NOM-08).
+    message: "Valor {{value}}: use UPPER_SNAKE_CASE (BZR-NOM-08)."
+    severity: error
+    given: $..enum[*]
+    then:
+      function: casing
+      functionOptions:
+        type: macro
+
+  bzr-id-02-ids-sao-uuid:
+    # O traceId não é o id de um recurso: tem o formato do trace-id do W3C Trace Context, 32 dígitos hexadecimais
+    # (08.02, 27.06).
+    description: Ids são strings com format uuid (BZR-ID-02).
+    message: "Campo {{property}}: um id deve ser string com format uuid (BZR-ID-02)."
+    severity: error
+    given: $..properties[?(@property == 'id' || (@property.match(/^[a-z]+Id$/) && @property != 'traceId'))]
+    then:
+      # Com pattern no campo format, um id sem format passaria: a função ignora um campo ausente.
+      function: schema
+      functionOptions:
+        schema:
+          required: [type, format]
+          properties:
+            type:
+              const: string
+            format:
+              const: uuid
+
+  bzr-tip-04-sem-ponto-flutuante:
+    description: Nada de float ou double no contrato; dinheiro é Dinheiro (BZR-TIP-04).
+    message: "{{path}}: float e double não são exatos (BZR-TIP-04)."
+    severity: error
+    given: $..[?(@.format == 'float' || @.format == 'double')]
+    then:
+      field: format
+      function: falsy
+
+  bzr-err-01-erros-sao-problem-details:
+    description: Toda resposta 4xx e 5xx é application/problem+json (BZR-ERR-01).
+    message: "{{path}}: um erro deve ser application/problem+json (BZR-ERR-01)."
+    severity: error
+    given: $.paths[*][*].responses[?(@property.match(/^[45]/))].content
+    then:
+      field: application/problem+json
+      function: truthy
+
+  bzr-col-04-colecoes-paginadas:
+    # Só um aviso: a máquina não sabe se a coleção cresce sem limite. As pequenas ficam nos overrides, no fim.
+    description: Uma coleção que devolve itens recebe limit (BZR-COL-04, BZR-COL-05).
+    message: "{{path}}: uma listagem deve aceitar limit (BZR-COL-04)."
+    severity: warn
+    given: $.paths[?(!@property.match(/\}$/))].get
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            required: [responses]
+            properties:
+              responses:
+                required: ["200"]
+                properties:
+                  "200":
+                    required: [content]
+                    properties:
+                      content:
+                        required: [application/json]
+                        properties:
+                          application/json:
+                            required: [schema]
+                            properties:
+                              schema:
+                                required: [properties]
+                                properties:
+                                  properties:
+                                    required: [itens]
+          then:
+            required: [parameters]
+            properties:
+              parameters:
+                contains:
+                  required: [name]
+                  properties:
+                    name:
+                      const: limit
+
+overrides:
+  # Um cliente tem poucos endereços: a lista sai inteira, sem paginação (BZR-COL-04).
+  - files: ["docs/openapi/bazar-api.yaml#/paths/~1v1~1clientes~1%7BclienteId%7D~1enderecos/get"]
+    rules:
+      bzr-col-04-colecoes-paginadas: off

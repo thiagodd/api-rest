@@ -1642,6 +1642,9 @@ components:
           type: string
         traceId:
           type: string
+          description: "No formato do trace-id do W3C Trace Context. Liga o erro ao\
+            \ log, para o suporte."
+          pattern: "^[0-9a-f]{32}$"
         type:
           type: string
           format: uri

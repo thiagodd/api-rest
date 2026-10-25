@@ -32,7 +32,7 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 | BZR-NOM-02 | Campos JSON e parâmetros de *query* **DEVEM** usar *camelCase*, com siglas escritas como palavras (`cpf`, `traceId`, `urlImagem`); referências são o recurso + `Id` (`clienteId`). | lint | 12.02 |
 | BZR-NOM-03 | Recursos, campos e valores **DEVEM** estar em português, sem acentos (ADR-0001). | revisão | 12.02 |
 | BZR-NOM-04 | Os parâmetros transversais **DEVEM** usar os nomes comuns do mercado, em inglês: `q`, `page`, `limit`, `cursor`, `sort`, `fields`, `embed`. | lint | 13.01–13.05 |
-| BZR-NOM-05 | Instantes **DEVEM** ter o nome no particípio seguido de `Em` (`criadoEm`, `canceladoEm`). Datas sem hora **DEVEM** usar `format: date`. | lint | 12.02, 15.01 |
+| BZR-NOM-05 | Instantes **DEVEM** ter o nome no particípio seguido de `Em` (`criadoEm`, `canceladoEm`); filtros de período, seguido de `Apos` ou `Antes` (`criadoApos`). Datas sem hora **DEVEM** usar `format: date`. | lint | 12.02, 15.01 |
 | BZR-NOM-06 | Booleanos **NÃO DEVEM** ter prefixo (`principal`, e não `isPrincipal`). | lint | 12.02 |
 | BZR-NOM-07 | Números soltos com unidade **DEVEM** levar a unidade no nome (`precoEmCentavos`, `prazoEmDias`). | revisão | 12.02 |
 | BZR-NOM-08 | Valores de enum **DEVEM** estar em `UPPER_SNAKE_CASE`. | lint | 15.04 |
@@ -84,7 +84,7 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 | BZR-COL-01 | Filtros **DEVEM** ser um parâmetro por critério, com o nome do campo da resposta, combinados com E; os valores de uma lista são alternativas (OU). | revisão | 13.01 |
 | BZR-COL-02 | Parâmetros de *query* desconhecidos **DEVEM** ser recusados com `400 parametro-desconhecido`. | teste | 12.02, 13.01 |
 | BZR-COL-03 | A ordenação **DEVE** usar `sort=campo,direcao`, com uma lista fechada de campos, e **DEVE** terminar pelo id como desempate. | teste | 13.02 |
-| BZR-COL-04 | Coleções que crescem sem limite **DEVEM** usar paginação por cursor (`cursor`, `limit`). Offset (`page`, `limit`) **PODE** ser usado em coleções pequenas. | revisão | 13.03, 13.04 |
+| BZR-COL-04 | Coleções que crescem sem limite **DEVEM** usar paginação por cursor (`cursor`, `limit`). Offset (`page`, `limit`) **PODE** ser usado em coleções pequenas. | lint (aviso), revisão | 13.03, 13.04 |
 | BZR-COL-05 | `limit` **DEVE** ter padrão 20 e máximo 100. Os links de navegação **DEVEM** ir no header `Link`. | teste | 13.03 |
 | BZR-COL-06 | Respostas parciais (`fields`) e expansão (`embed`) **PODEM** ser oferecidas; sem o parâmetro, a resposta **DEVE** sair completa. | teste | 13.05 |
 

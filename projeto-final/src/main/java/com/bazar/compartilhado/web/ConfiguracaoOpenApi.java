@@ -1,8 +1,11 @@
 package com.bazar.compartilhado.web;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.bazar.compartilhado.Dinheiro;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +22,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.jspecify.annotations.Nullable;
 import org.springdoc.core.utils.SpringDocUtils;
 
 import org.springframework.context.annotation.Bean;
@@ -99,6 +103,57 @@ public class ConfiguracaoOpenApi {
                                 new ApiResponse().$ref("#/components/responses/RequisicaoInvalida"))));
             }
         };
+    }
+
+    /**
+     * O tipo de um esquema na 3.1 é um conjunto, e a ordem de "null" e do tipo variava com a ordem em que o contexto
+     * do Spring era montado: o mesmo código gerava dois contratos. Aqui o "null" vai sempre por último (17.04).
+     */
+    @Bean
+    @SuppressWarnings("rawtypes")   // o swagger-core guarda os esquemas como Schema cru
+    GlobalOpenApiCustomizer ordemDosTipos() {
+        return openApi -> {
+            var esquemas = new ArrayList<Schema>();
+            if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
+                esquemas.addAll(openApi.getComponents().getSchemas().values());
+            }
+            if (openApi.getPaths() != null) {
+                openApi.getPaths().values().forEach(caminho -> caminho.readOperations().forEach(operacao -> {
+                    if (operacao.getParameters() != null) {
+                        operacao.getParameters().forEach(parametro -> esquemas.add(parametro.getSchema()));
+                    }
+                }));
+            }
+            esquemas.forEach(ConfiguracaoOpenApi::nullPorUltimo);
+        };
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void nullPorUltimo(@Nullable Schema esquema) {
+        if (esquema == null) {
+            return;
+        }
+        if (esquema.getTypes() != null && esquema.getTypes().size() > 1) {
+            var ordenados = new LinkedHashSet<String>(new TreeSet<>(esquema.getTypes()));
+            if (ordenados.remove("null")) {
+                ordenados.add("null");
+            }
+            esquema.setTypes(ordenados);
+        }
+        var filhos = new ArrayList<Schema>();
+        if (esquema.getProperties() != null) {
+            filhos.addAll(esquema.getProperties().values());
+        }
+        filhos.add(esquema.getItems());
+        if (esquema.getAdditionalProperties() instanceof Schema valores) {
+            filhos.add(valores);
+        }
+        for (var composicao : new List[] {esquema.getAllOf(), esquema.getAnyOf(), esquema.getOneOf()}) {
+            if (composicao != null) {
+                filhos.addAll(composicao);
+            }
+        }
+        filhos.forEach(ConfiguracaoOpenApi::nullPorUltimo);
     }
 
     /**
@@ -205,7 +260,8 @@ public class ConfiguracaoOpenApi {
                 .addProperty("codigo", texto()
                         .description("O tipo em MAIÚSCULAS, estável para o código do cliente.")
                         .examples(List.of("PRODUTO_NAO_ENCONTRADO")))
-                .addProperty("traceId", texto())
+                .addProperty("traceId", texto().pattern("^[0-9a-f]{32}$")
+                        .description("No formato do trace-id do W3C Trace Context. Liga o erro ao log, para o suporte."))
                 .addProperty("erros", tipo("array").items(erroDeCampo)
                         .description("Só nos erros de validação (422): um item por campo."));
     }
