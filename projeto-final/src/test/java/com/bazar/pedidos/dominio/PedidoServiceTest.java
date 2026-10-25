@@ -1,5 +1,8 @@
 package com.bazar.pedidos.dominio;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,12 +56,15 @@ class PedidoServiceTest {
     // O repositório de clientes ainda guarda tudo num mapa: é um fake pronto, e o teste usa o real.
     ClienteRepository clientes = new ClienteRepository();
 
+    // 25/10/2026, 10:30 em São Paulo: com o relógio fixo, "agora" é sempre o mesmo instante (15.01).
+    static final Clock RELOGIO = Clock.fixed(Instant.parse("2026-10-25T13:30:00Z"), ZoneOffset.UTC);
+
     PedidoService service;
     Cliente maria;
 
     @BeforeEach
     void montarOServico() {
-        service = new PedidoService(pedidos, produtos, estoques, clientes, eventos);
+        service = new PedidoService(pedidos, produtos, estoques, clientes, eventos, RELOGIO);
         maria = clientes.save(Cliente.novo("Maria Souza", "maria@example.com", "52998224725", null, Canal.WEB));
     }
 
@@ -70,6 +76,7 @@ class PedidoServiceTest {
         var pedido = service.criar(maria.id(), List.of(new ItemSolicitado(cleanCode.getId(), 2)));
 
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CRIADO);
+        assertThat(pedido.getCriadoEm()).isEqualTo(Instant.parse("2026-10-25T13:30:00Z"));
         assertThat(pedido.getValorTotal()).isEqualTo(Dinheiro.deCentavos(25980, "BRL"));
         verify(estoques).reservar(cleanCode.getId(), 2);
         verify(pedidos).save(pedido);

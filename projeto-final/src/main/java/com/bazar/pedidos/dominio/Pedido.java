@@ -73,7 +73,8 @@ public class Pedido {
     protected Pedido() {
     }
 
-    public Pedido(UUID clienteId) {
+    // O instante vem de fora (o Clock do serviço, 15.01): o pedido não decide que horas são.
+    public Pedido(UUID clienteId, Instant criadoEm) {
         // UUID v4 por enquanto; UUID v7 e o número legível (BZR-2026-000123) chegam em 15.03.
         this.id = UUID.randomUUID();
         this.clienteId = clienteId;
@@ -82,7 +83,7 @@ public class Pedido {
         this.valorItens = BigDecimal.ZERO.setScale(2);
         this.valorFrete = BigDecimal.ZERO.setScale(2);
         this.valorTotal = BigDecimal.ZERO.setScale(2);
-        this.criadoEm = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        this.criadoEm = criadoEm.truncatedTo(ChronoUnit.MICROS);
     }
 
     // O nome, o SKU e o preço são copiados do produto: o pedido registra o que foi comprado, e por quanto,
@@ -113,9 +114,9 @@ public class Pedido {
     }
 
     // A transição é validada primeiro: um pedido que não pode ser cancelado não ganha um Cancelamento.
-    public void cancelar(MotivoCancelamento motivo, @Nullable String observacao) {
+    public void cancelar(MotivoCancelamento motivo, @Nullable String observacao, Instant quando) {
         mudarPara(StatusPedido.CANCELADO);
-        cancelamento = new Cancelamento(motivo, observacao, Instant.now().truncatedTo(ChronoUnit.MICROS));
+        cancelamento = new Cancelamento(motivo, observacao, quando.truncatedTo(ChronoUnit.MICROS));
     }
 
     public void reembolsar() {

@@ -1,5 +1,6 @@
 package com.bazar.pedidos.dominio;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,8 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 // Um teste unitário: sem Spring, sem banco. Roda em milissegundos.
 class PedidoTest {
+
+    static final Instant AGORA = Instant.parse("2026-10-25T14:00:00Z");
 
     @Nested
     class Valores {
@@ -80,7 +83,7 @@ class PedidoTest {
             CONFIRMAR_PAGAMENTO(Pedido::confirmarPagamento, PAGO),
             ENVIAR(Pedido::enviar, ENVIADO),
             CONFIRMAR_ENTREGA(Pedido::confirmarEntrega, ENTREGUE),
-            CANCELAR(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null), CANCELADO),
+            CANCELAR(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null, AGORA), CANCELADO),
             REEMBOLSAR(Pedido::reembolsar, REEMBOLSADO);
 
             final Consumer<Pedido> executar;
@@ -154,7 +157,7 @@ class PedidoTest {
         void registraOMotivoEOMomento() {
             var pedido = umPedido().build();
 
-            pedido.cancelar(MotivoCancelamento.OUTRO, "Comprei em outra loja");
+            pedido.cancelar(MotivoCancelamento.OUTRO, "Comprei em outra loja", AGORA);
 
             assertThat(pedido.getStatus()).isEqualTo(CANCELADO);
             assertThat(pedido.getCancelamento()).isNotNull()
@@ -168,7 +171,7 @@ class PedidoTest {
             var pedido = umPedido().noStatus(PAGO).build();
 
             catchThrowableOfType(TransicaoInvalidaException.class,
-                    () -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null));
+                    () -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null, AGORA));
 
             assertThat(pedido.getStatus()).isEqualTo(PAGO);
             assertThat(pedido.getCancelamento()).isNull();

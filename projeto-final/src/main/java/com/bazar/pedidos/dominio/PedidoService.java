@@ -1,5 +1,6 @@
 package com.bazar.pedidos.dominio;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +31,16 @@ public class PedidoService {
     private final EstoqueService estoques;
     private final ClienteRepository clientes;
     private final ApplicationEventPublisher eventos;
+    private final Clock relogio;
 
     public PedidoService(PedidoRepository pedidos, ProdutoRepository produtos, EstoqueService estoques,
-            ClienteRepository clientes, ApplicationEventPublisher eventos) {
+            ClienteRepository clientes, ApplicationEventPublisher eventos, Clock relogio) {
         this.pedidos = pedidos;
         this.produtos = produtos;
         this.estoques = estoques;
         this.clientes = clientes;
         this.eventos = eventos;
+        this.relogio = relogio;
     }
 
     // Tudo ou nada: se a reserva de qualquer item falhar, as reservas dos itens anteriores e o pedido são desfeitos.
@@ -46,7 +49,7 @@ public class PedidoService {
         if (clientes.findById(clienteId).isEmpty()) {
             throw new CampoInvalidoException("clienteId", "bazar.pedido.cliente-inexistente");
         }
-        var pedido = new Pedido(clienteId);
+        var pedido = new Pedido(clienteId, relogio.instant());
         for (int i = 0; i < itens.size(); i++) {
             var solicitado = itens.get(i);
             var campo = "itens[" + i + "].produtoId";
@@ -66,7 +69,7 @@ public class PedidoService {
     public Pedido cancelar(UUID id, MotivoCancelamento motivo, @Nullable String observacao) {
         var pedido = pedidos.findComItensById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("pedido-nao-encontrado", id));
-        pedido.cancelar(motivo, observacao);
+        pedido.cancelar(motivo, observacao, relogio.instant());
         // Grava o novo status antes de mexer no estoque. Se outra requisição cancelou este pedido ao mesmo tempo,
         // o UPDATE com "where versao=?" falha aqui (409), e a reserva não é liberada duas vezes.
         pedidos.flush();

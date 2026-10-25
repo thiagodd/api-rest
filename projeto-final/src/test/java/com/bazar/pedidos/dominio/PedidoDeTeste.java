@@ -1,5 +1,6 @@
 package com.bazar.pedidos.dominio;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public final class PedidoDeTeste {
     }
 
     public Pedido build() {
-        var pedido = new Pedido(clienteId);
+        var pedido = new Pedido(clienteId, Instant.parse("2026-10-25T13:30:00Z"));
         if (itens.isEmpty()) {
             pedido.adicionarItem(umProduto().build(), 1);
         }
@@ -62,7 +63,7 @@ public final class PedidoDeTeste {
             case ENVIADO -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::enviar);
             case ENTREGUE -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::enviar,
                     Pedido::confirmarEntrega);
-            case CANCELADO -> List.of(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null));
+            case CANCELADO -> List.of(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null, Instant.parse("2026-10-25T14:00:00Z")));
             case REEMBOLSADO -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::reembolsar);
         };
     }

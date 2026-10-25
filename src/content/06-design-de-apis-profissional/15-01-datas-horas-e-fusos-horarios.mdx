@@ -2,80 +2,464 @@
 id: "15.01"
 titulo: "Datas, horas e fusos horários"
 descricao: "Bugs de fuso aparecem na virada do dia, no horário de verão e com clientes em outros países, e quase sempre já em produção."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "RFC 3339"
-    url: "https://www.rfc-editor.org/rfc/rfc3339"
-  - titulo: "docs.oracle.com: time / package-summary"
+  - titulo: "RFC 3339: Date and Time on the Internet: Timestamps"
+    url: "https://www.rfc-editor.org/rfc/rfc3339.html"
+  - titulo: "Java SE 25: pacote java.time"
     url: "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/package-summary.html"
-  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST use standard formats for date and time properties\")"
+  - titulo: "Zalando: MUST use standard formats for date and time properties [169]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#169"
+  - titulo: "Zalando: SHOULD use appropriate formats for date and time properties [255]"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#255"
+  - titulo: "Zalando: SHOULD use standard formats for time duration and interval properties [127]"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#127"
+  - titulo: "Google AIP-142: Time and duration"
+    url: "https://google.aip.dev/142"
+  - titulo: "PostgreSQL: Date/Time Types"
+    url: "https://www.postgresql.org/docs/current/datatype-datetime.html"
+  - titulo: "IANA Time Zone Database"
+    url: "https://www.iana.org/time-zones"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Bugs de fuso aparecem na virada do dia, no horário de verão e com clientes em outros países, e quase sempre já em produção.
+Três relatos que toda equipe de API conhece:
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+- **"O pedido apareceu no dia errado."** A cliente comprou às 22h do dia 25 em São Paulo. O relatório do dia 25 não mostra a compra, e o do dia 26 mostra. O servidor gravou o horário em UTC (01h do dia 26), e o relatório filtrou pela data UTC.
+- **"O horário mudou sozinho."** O app manda `"2026-10-25T10:30:00"`, sem fuso. O servidor, configurado em UTC, entende 10h30 UTC. Para o lojista em São Paulo, o pedido foi feito às 7h30.
+- **"Os testes passam de manhã e falham à noite."** Um teste confere que o pedido é "de hoje". Depois das 21h, em São Paulo, já é amanhã em UTC.
+
+Nenhum desses bugs aparece no ambiente de desenvolvimento, onde o desenvolvedor, o servidor e o banco estão no mesmo fuso, testando no meio da tarde. Eles aparecem em produção, na virada do dia.
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- ISO 8601 × RFC 3339 (o perfil que APIs devem usar)
-- Instante (`Instant`, sempre UTC com `Z`) × data local (`LocalDate`) × data-hora com *offset* (`OffsetDateTime`) × `ZonedDateTime` (com regra de fuso)
-- O que guardar no banco (`timestamptz`)
-- `Clock` injetável para testes
-- Durações (ISO 8601 `PT30M`)
-- Filtros por período: intervalo semiaberto `[início, fim)`
-- O Brasil e o fim do horário de verão
-</Draft>
+### Instante, data local e fuso: três ideias diferentes
 
-## Diagrama
+O erro de fundo é tratar "data e hora" como uma coisa só. São pelo menos três:
 
-<Draft title="Diagramas previstos">
-linha do tempo mostrando o mesmo instante em UTC, em `America/Sao_Paulo` e em `Asia/Tokyo`.
-</Draft>
+- Um **instante** é um ponto na linha do tempo, igual para o mundo inteiro: "o momento em que o pedido foi criado". Ele não tem fuso; o fuso só muda **como o instante é escrito**.
+- Uma **data ou hora local** é o que aparece num calendário ou num relógio de parede: "25 de outubro", "10h30". Sozinha, não aponta para nenhum instante: 25 de outubro começa em momentos diferentes em São Paulo e em Tóquio.
+- Um **fuso horário** (`America/Sao_Paulo`) é a **regra** que converte entre os dois, incluindo o histórico de horários de verão. Um ***offset*** (`-03:00`) é só a diferença naquele momento.
+
+```mermaid title="Dois instantes, escritos em UTC, em São Paulo e em Tóquio"
+flowchart LR
+    I(["Instante<br/><b>2026-10-25<br/>13:30:00Z</b><br/>(UTC)"])
+    I --> SP["America/Sao_Paulo<br/>2026-10-25<br/>10:30:00-03:00<br/><i>domingo, 10h30</i>"]
+    I --> TK["Asia/Tokyo<br/>2026-10-25<br/>22:30:00+09:00<br/><i>domingo, 22h30</i>"]
+    J(["Instante<br/><b>2026-10-26<br/>02:30:00Z</b>"])
+    J --> SP2["America/Sao_Paulo<br/>2026-10-25<br/>23:30:00-03:00<br/><i>ainda domingo, 25</i>"]
+    J --> TK2["Asia/Tokyo<br/>2026-10-26<br/>11:30:00+09:00<br/><i>já segunda, 26</i>"]
+```
+
+O segundo instante é o bug do relatório: em UTC e em Tóquio, ele é do dia 26; em São Paulo, do dia 25. "De que dia é este pedido?" só tem resposta **com um fuso**.
+
+### Os tipos do `java.time`
+
+O `java.time` tem um tipo para cada ideia, e escolher o tipo certo resolve metade dos bugs:
+
+| Tipo | Representa | Exemplo no JSON | Use para |
+|---|---|---|---|
+| `Instant` | Um instante, em UTC | `"2026-10-25T13:30:00Z"` | Quando algo **aconteceu**: `criadoEm`, `pagoEm`, `canceladoEm` |
+| `LocalDate` | Uma data de calendário, sem hora nem fuso | `"2026-10-25"` | Datas "de papel": nascimento, vencimento de boleto, data de um relatório |
+| `OffsetDateTime` | Um instante **e** o *offset* em que foi escrito | `"2026-10-25T10:30:00-03:00"` | Quando o *offset* original importa (raro em APIs) |
+| `ZonedDateTime` | Um instante, o *offset* **e** a regra do fuso | não tem formato padrão no JSON | Cálculos de calendário: "amanhã, à mesma hora, em São Paulo" |
+| `LocalDateTime` | Data e hora de parede, sem fuso | `"2026-10-25T10:30:00"` | Quase nunca numa API: **não é um instante** |
+| `Duration` | Uma quantidade de tempo | `"PT30M"` | Prazos, *timeouts*, tempo estimado |
+
+A regra prática para APIs:
+
+- **Momentos em que algo aconteceu são `Instant`**, escritos em UTC com `Z`.
+- **Datas sem hora são `LocalDate`**, e o contrato diz em que fuso elas valem.
+- **`LocalDateTime` não sai nem entra numa API** sem um fuso ao lado, porque o cliente não tem como saber a que instante ele se refere.
+
+### RFC 3339: o perfil do ISO 8601 para a internet
+
+O ISO 8601 é a norma de datas, e ela é enorme: aceita `20261025T1030`, semanas (`2026-W43`), dias do ano (`2026-298`), frações de hora. Nenhuma API quer aceitar tudo isso. A **<Term id="rfc-3339">RFC 3339</Term>** define um **perfil** do ISO 8601 para a internet: um subconjunto pequeno e sem ambiguidade.
+
+```
+2026-10-25T13:30:00Z
+2026-10-25T10:30:00.123456-03:00
+```
+
+Ano com 4 dígitos, mês e dia com 2, `T` entre data e hora, segundos obrigatórios, fração opcional, e **o *offset* obrigatório**: `Z` (UTC) ou `±hh:mm`. Uma data-hora sem *offset* não é RFC 3339.
+
+A Zalando torna o formato obrigatório (regra 169, *MUST*) e vai além: exige `T` e `Z` **maiúsculos** (a RFC também aceita `t` e `z`) e **recomenda UTC sem *offset***: *"we recommend to only use times without offsets, for example 2015-05-28T14:07:17Z instead of 2015-05-28T14:07:17+00:00 or 2015-05-28T13:07:17+01:00"*. O motivo: *"from experience we learned that time offsets are not easy to understand, different to time-zones and often not correctly handled. Localization should be done locally by the services that provide user interfaces"*. A mesma regra desencoraja os **números** (`1761399000`): não se sabe se são segundos ou milissegundos, e ninguém lê um *timestamp* numérico num log.
+
+O Google (AIP-142) usa o tipo `Timestamp` do Protocol Buffers, cuja forma JSON também é RFC 3339 em UTC. Para APIs antigas que usam números, a AIP exige que a unidade esteja no nome do campo (`send_time_millis`).
+
+O Bazar segue a Zalando: **todo instante sai em UTC, com `Z`**. Quem mostra o horário para uma pessoa é o app, no fuso dela.
+
+### Nomes de campos
+
+Os guias também dão nome aos campos de tempo, e discordam no detalhe:
+
+| | Zalando (regra 235) | Google (AIP-142) | Bazar |
+|---|---|---|---|
+| Instante | `created_at`, `modified_at` | `create_time`, `update_time` (sem passado: nunca `created_time`) | `criadoEm`, `atualizadoEm`, `canceladoEm` |
+| Data | `arrival_date` | sufixo `_date` | `dataDeVencimento`, `dataDeNascimento` |
+
+O objetivo é o mesmo: o nome diz que o campo é uma data, e distingue `cancelado` (um booleano?) de `canceladoEm` (quando). O Bazar usa o sufixo `Em` para instantes, o equivalente em português do `_at`.
+
+### Durações e intervalos
+
+Uma duração em JSON é uma string ISO 8601: `PT30M` (30 minutos), `PT2H`, `P3D` (3 dias). É o formato que o `Duration` do Java já produz e lê, e o que a Zalando recomenda (regra 127). Um número (`"prazoEmMinutos": 30`) também funciona, desde que **a unidade esteja no nome**; um `"prazo": 30` sozinho é uma armadilha.
+
+Para períodos (de quando a quando), a regra que evita a maioria dos bugs é o <Term id="intervalo-semiaberto">intervalo semiaberto</Term> `[início, fim)`: o início entra, o fim não.
+
+```
+?criadoDe=2026-10-25T03:00:00Z&criadoAte=2026-10-26T03:00:00Z
+```
+
+Com `[início, fim)`, os dias se encaixam sem buracos nem sobreposições: o fim de um é o início do seguinte, e um pedido feito exatamente à meia-noite pertence a um dia só. A alternativa fechada (`até 23:59:59`) perde o que acontece em `23:59:59.5`, e o PostgreSQL guarda microssegundos. O relatório de vendas do Bazar já funciona assim desde a [10.05](/persistencia-para-apis/projecoes-e-consultas-para-leitura):
+
+```sql
+where p.criado_em >= :de
+  and p.criado_em <  :ate
+```
+
+### "Os pedidos do dia 25": de data local a instantes
+
+O relatório do início da página recebe uma **data** (`2026-10-25`), mas o banco guarda **instantes**. A conversão precisa de um fuso, e ele deve ser **explícito**:
+
+```java
+var fuso = ZoneId.of("America/Sao_Paulo");
+var dia = LocalDate.parse("2026-10-25");
+Instant de = dia.atStartOfDay(fuso).toInstant();              // 2026-10-25T03:00:00Z
+Instant ate = dia.plusDays(1).atStartOfDay(fuso).toInstant(); // 2026-10-26T03:00:00Z
+```
+
+Duas escolhas importam aqui:
+
+- **O fuso é do negócio, e não do servidor.** `ZoneId.systemDefault()` dá a resposta certa no notebook do desenvolvedor e a errada no contêiner, que roda em UTC. O fuso de um relatório é o da loja; o de uma tela, o do usuário. O contrato diz qual vale, ou recebe um parâmetro `fuso=America/Sao_Paulo` (sempre um id da base IANA, nunca um *offset*, que não sabe de horário de verão).
+- **`atStartOfDay`, e não `atTime(0, 0)`.** A diferença aparece na próxima seção.
+
+### O Brasil e o horário de verão
+
+O Brasil teve horário de verão até 2019. A base de fusos da IANA, que vem dentro do JDK (a do JDK 25.0.4 é a `2026b`), registra a última transição de `America/Sao_Paulo` em 17 de fevereiro de 2019, e nenhuma depois. Mesmo assim, o horário de verão importa para uma API brasileira por três motivos.
+
+**Datas antigas.** Em 4 de novembro de 2018, os relógios de São Paulo pularam da meia-noite para a 1h. A meia-noite desse dia **não existiu**:
+
+```java
+LocalDate.of(2018, 11, 4).atStartOfDay(ZoneId.of("America/Sao_Paulo"))
+// 2018-11-04T01:00-02:00[America/Sao_Paulo]: o dia começou à 1h
+```
+
+O `atStartOfDay` sabe disso. Um `atTime(0, 0)` pediria um horário inexistente, e o Java teria que escolher outro (ele avança para a 1h, mas código escrito à mão com *offsets* fixos não avança). No fim do horário de verão, o contrário: em 16 de fevereiro de 2019, as horas entre 23h e meia-noite aconteceram **duas vezes**, uma com `-02:00` e outra com `-03:00`.
+
+**Outros países.** Um cliente em Lisboa ou em Nova York ainda muda de horário duas vezes por ano.
+
+**O futuro.** O horário de verão foi extinto por decreto, e o mesmo instrumento pode trazê-lo de volta (o assunto voltou a ser discutido em 2024). Se isso acontecer, o que precisa mudar é a base IANA do JDK, e não o código: quem guarda instantes em UTC e converte com `ZoneId` só precisa atualizar o Java. Quem guardou `-03:00` fixo em algum lugar terá horas erradas metade do ano.
+
+### O que guardar no banco
+
+No PostgreSQL, a escolha é entre dois tipos com nomes enganosos:
+
+| Tipo | O que guarda | Problema |
+|---|---|---|
+| `timestamp` (*without time zone*) | Data e hora de parede, sem fuso | O mesmo de um `LocalDateTime`: não é um instante. O valor depende de quem gravou |
+| `timestamptz` (*with time zone*) | Um **instante**, internamente em UTC | Nenhum, apesar do nome: ele **não** guarda o fuso. Converte na entrada e na saída |
+
+O `timestamptz` é o tipo de um `Instant`, e é o que todas as tabelas do Bazar usam desde a `V1` (`criado_em timestamptz not null`). O nome engana: o PostgreSQL converte o valor recebido para UTC e o devolve no fuso da sessão, sem lembrar o fuso original. Se o fuso original importa (o cliente estava em Tóquio?), ele vai numa coluna separada, como um id IANA.
+
+O Hibernate 7 mapeia `Instant` para `timestamptz` sem configuração. Em projetos antigos, com `java.util.Date` ou `LocalDateTime` em colunas `timestamp`, era comum a propriedade `hibernate.jdbc.time_zone=UTC` para que o valor gravado não dependesse do fuso da JVM. Com `Instant` e `timestamptz`, ela não é necessária.
+
+Um detalhe que o Bazar já trata: o `Instant` do Java tem nanossegundos, e o PostgreSQL guarda microssegundos. Sem truncar, o `criadoEm` da resposta do `POST` (com nanossegundos) é diferente do `criadoEm` de um `GET` posterior (lido do banco). Por isso as entidades fazem `truncatedTo(ChronoUnit.MICROS)`.
+
+### O Jackson 3 e as datas
+
+Quem vem do Spring Boot 2 ou 3 lembra de duas configurações obrigatórias: registrar o `JavaTimeModule` (o módulo JSR-310) e desligar `WRITE_DATES_AS_TIMESTAMPS`, senão um `Instant` saía como `1761399000.000000000`. **No Jackson 3, as duas são o padrão**: o suporte ao `java.time` faz parte do `jackson-databind`, e as datas saem como strings ISO 8601. As opções de data também mudaram de lugar: saíram do `SerializationFeature` e foram para o enum `DateTimeFeature` (`tools.jackson.databind.cfg.DateTimeFeature`).
+
+Verificamos o comportamento padrão do `JsonMapper` do Jackson 3.1.7, a versão do Spring Boot 4.1.2:
+
+| Tipo | Escrito como | Lido de `"2026-10-25T10:30:00-03:00"` |
+|---|---|---|
+| `Instant` | `"2026-10-25T13:30:00Z"` | `2026-10-25T13:30:00Z` |
+| `OffsetDateTime` | `"2026-10-25T10:30:00-03:00"` | **`2026-10-25T13:30Z`**: o *offset* original se perde |
+| `ZonedDateTime` | `"2026-10-25T10:30:00-03:00"`, sem o id do fuso | |
+| `LocalDate` | `"2026-10-25"` | |
+| `Duration` | `"PT30M"` | |
+
+E um `Instant` lido de `"2026-10-25T10:30:00"` (sem *offset*) é **recusado**, o que é o comportamento certo: não dá para saber que instante é.
+
+A linha do `OffsetDateTime` é a armadilha. O `DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE` vem ligado e converte o valor lido para o fuso do contexto (UTC). O instante continua certo, mas quem usou `OffsetDateTime` justamente para guardar o *offset* do cliente o perde sem aviso. Se o *offset* importa, desligue a opção:
+
+```yaml
+spring:
+  jackson:
+    datatype:
+      datetime:
+        adjust-dates-to-context-time-zone: false
+```
+
+O Bazar não precisa: ele só usa `Instant` na API.
+
+### O relógio injetável
+
+`Instant.now()` é uma dependência escondida: o código pergunta a hora a um relógio global, e o teste não tem como controlar a resposta. O `java.time` resolve com o `Clock`:
+
+- `Clock.systemUTC()` em produção;
+- `Clock.fixed(instante, ZoneOffset.UTC)` nos testes: o "agora" é sempre o mesmo;
+- `Clock.offset(...)` para simular "daqui a 31 dias" sem esperar 31 dias.
+
+Quem precisa de "agora" recebe um `Clock` e chama `Instant.now(relogio)`, ou `relogio.instant()`. É a mesma ideia de injetar um repositório: o tempo é uma dependência.
 
 ## Na prática
 
-<Draft title="Código previsto">
-`Pedido.criadoEm` como `Instant`; configuração do Jackson; teste com `Clock.fixed`.
-</Draft>
+### O relógio do Bazar
+
+```java title="src/main/java/com/bazar/compartilhado/ConfiguracaoDoRelogio.java"
+/**
+ * O relógio do Bazar (15.01). Quem precisa de "agora" recebe um Clock em vez de chamar Instant.now(): nos testes,
+ * um Clock.fixed torna a hora previsível. Em UTC, como todo instante que o Bazar guarda e devolve.
+ */
+@Configuration(proxyBeanMethods = false)
+public class ConfiguracaoDoRelogio {
+
+    @Bean
+    Clock relogio() {
+        return Clock.systemUTC();
+    }
+}
+```
+
+O pedido deixa de decidir que horas são. Quem decide é o serviço, com o relógio:
+
+```java title="src/main/java/com/bazar/pedidos/dominio/Pedido.java (trecho)"
+@Column(nullable = false, updatable = false)
+private Instant criadoEm;
+
+// O instante vem de fora (o Clock do serviço, 15.01): o pedido não decide que horas são.
+public Pedido(UUID clienteId, Instant criadoEm) {
+    ...
+    this.criadoEm = criadoEm.truncatedTo(ChronoUnit.MICROS);
+}
+
+public void cancelar(MotivoCancelamento motivo, @Nullable String observacao, Instant quando) {
+    mudarPara(StatusPedido.CANCELADO);
+    cancelamento = new Cancelamento(motivo, observacao, quando.truncatedTo(ChronoUnit.MICROS));
+}
+```
+
+```java title="src/main/java/com/bazar/pedidos/dominio/PedidoService.java (trecho)"
+var pedido = new Pedido(clienteId, relogio.instant());
+...
+pedido.cancelar(motivo, observacao, relogio.instant());
+```
+
+Passar o instante para a entidade, em vez de injetar o `Clock` nela, mantém a entidade como um objeto simples, que o JPA instancia sem saber de *beans*.
+
+### O teste com o relógio fixo
+
+```java title="src/test/java/com/bazar/pedidos/dominio/PedidoServiceTest.java (trecho)"
+// 25/10/2026, 10:30 em São Paulo: com o relógio fixo, "agora" é sempre o mesmo instante (15.01).
+static final Clock RELOGIO = Clock.fixed(Instant.parse("2026-10-25T13:30:00Z"), ZoneOffset.UTC);
+
+@BeforeEach
+void montarOServico() {
+    service = new PedidoService(pedidos, produtos, estoques, clientes, eventos, RELOGIO);
+    ...
+}
+
+@Test
+void criaOPedidoReservandoOEstoqueEPublicandoOEvento() {
+    ...
+    var pedido = service.criar(maria.id(), List.of(new ItemSolicitado(cleanCode.getId(), 2)));
+
+    assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CRIADO);
+    assertThat(pedido.getCriadoEm()).isEqualTo(Instant.parse("2026-10-25T13:30:00Z"));
+    ...
+}
+```
+
+A asserção compara com um valor exato. Sem o relógio, o máximo possível seria "entre o instante antes e o instante depois da chamada", e testes de regras como "o pedido pode ser cancelado até 7 dias depois" seriam impossíveis sem esperar 7 dias.
+
+### Pela API
+
+<HttpExchange
+  title="Um produto recém-criado: instantes em UTC, com Z"
+  request={{ method: 'POST', url: '/v1/produtos', headers: { 'Content-Type': 'application/json' }, body: { sku: 'LIV-0042', nome: 'Clean Code', precoEmCentavos: 12990, categoriaId: '0192f3a0-5555-7000-8000-000000000002' } }}
+  response={{ status: 201, headers: { Location: 'http://localhost:8080/v1/produtos/0192f39f-2222-7000-8000-000000000042', 'Content-Type': 'application/json' }, body: { id: '0192f39f-2222-7000-8000-000000000042', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 12990, categoriaId: '0192f3a0-5555-7000-8000-000000000002', status: 'RASCUNHO', atributos: {}, criadoEm: '2026-10-25T18:43:23.368769Z', atualizadoEm: '2026-10-25T18:43:23.368769Z' } }}
+>
+15h43 em São Paulo, escrito em UTC, com os microssegundos que o PostgreSQL guarda. O app converte para o fuso de quem está olhando.
+</HttpExchange>
+
+<HttpExchange
+  title="Filtro com um instante sem offset"
+  request={{ method: 'GET', url: '/v1/produtos?criadoApos=2026-10-25T10:30:00', headers: { 'Accept-Language': 'pt-BR' } }}
+  response={{ status: 400, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/requisicao-invalida', title: 'Requisição inválida', status: 400, detail: "O valor do parâmetro 'criadoApos' é inválido.", instance: '/v1/produtos', parametros: ['criadoApos'], codigo: 'REQUISICAO_INVALIDA', traceId: '98ac60402e2c2e5627e7737a40e48856' } }}
+>
+`criadoApos` é um `Instant`: sem `Z` ou *offset*, ele não aponta para nenhum momento, e o Bazar recusa em vez de adivinhar o fuso. `2026-10-25T10:30:00Z` e `2026-10-25T10:30:00-03:00` são aceitos.
+</HttpExchange>
+
+Um detalhe que o teste revelou: `criadoApos=1761399000000` também é aceito. O conversor de `Instant` do Spring, usado nos parâmetros de URL, lê um número como milissegundos desde 1970. É uma tolerância que o contrato não documenta, e que a regra 169 da Zalando desencoraja; para fechá-la, seria preciso um conversor próprio para o parâmetro.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="LocalDateTime para quando algo aconteceu" why="Um LocalDateTime não é um instante: '2026-10-25T10:30' é um momento diferente em cada fuso. Ele herda, sem avisar, o fuso de quem gravou ou de quem leu.">
+<Bad title="Data-hora sem fuso">
+
+```java
+private LocalDateTime criadoEm = LocalDateTime.now();   // o fuso da JVM, qualquer que seja
+// JSON: "criadoEm": "2026-10-25T10:30:00"
+```
+
+</Bad>
+<Good title="Um instante">
+
+```java
+private Instant criadoEm;                               // relogio.instant()
+// JSON: "criadoEm": "2026-10-25T13:30:00Z"
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="O fuso do servidor decidindo o dia" why="O contêiner de produção roda em UTC; o notebook do desenvolvedor, em São Paulo. O mesmo código dá relatórios diferentes nos dois.">
+<Bad title="systemDefault">
+
+```java
+var de = dia.atStartOfDay(ZoneId.systemDefault()).toInstant();
+```
+
+</Bad>
+<Good title="O fuso do negócio, explícito">
+
+```java
+static final ZoneId FUSO_DA_LOJA = ZoneId.of("America/Sao_Paulo");
+var de = dia.atStartOfDay(FUSO_DA_LOJA).toInstant();
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **Coluna `timestamp` (sem *time zone*)** para instantes.
+- **Filtro de período fechado** (`<= 23:59:59`), que perde as frações de segundo do fim do dia.
+- **Offset fixo (`-03:00`) no lugar de um fuso (`America/Sao_Paulo`)**, que quebra quando o horário de verão existe.
+- **`Instant.now()` espalhado pelo código**, que deixa os testes dependentes da hora em que rodam.
+- ***Timestamps* numéricos** sem a unidade no nome: segundos ou milissegundos?
+- **Formatar datas para pessoas na API** (`"25/10/2026 10:30"`). A API entrega o instante; o app formata no idioma e no fuso do usuário ([15.05](/design-de-apis-profissional/internacionalizacao-na-api)).
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Instantes em UTC, com `Z`**, no formato RFC 3339, em `Instant`.
+- **Datas sem hora em `LocalDate`**, com o fuso de referência documentado.
+- **Nada de `LocalDateTime` na API** sem um fuso ao lado.
+- **Fusos como ids IANA** (`America/Sao_Paulo`), nunca como *offsets* fixos.
+- **`timestamptz` no PostgreSQL.**
+- **Intervalos semiabertos `[início, fim)`**, e `atStartOfDay(fuso)` para o início de um dia.
+- **Durações em ISO 8601 (`PT30M`)** ou com a unidade no nome.
+- **Um `Clock` injetado** em quem precisa de "agora".
+- **Mantenha o JDK atualizado**: a base de fusos vem dentro dele.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="Um relógio injetável para os pedidos" module="pedidos" tag="pagina-15.01" files={[
+  { path: 'src/main/java/com/bazar/compartilhado/ConfiguracaoDoRelogio.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/pedidos/dominio/Pedido.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/pedidos/dominio/PedidoService.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/pedidos/dominio/PedidoServiceTest.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/pedidos/dominio/PedidoTest.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/pedidos/dominio/PedidoDeTeste.java', change: 'alterado' },
+]}>
+O Bazar ganha um *bean* `Clock` em UTC. O `PedidoService` o usa para o `criadoEm` e o `canceladoEm`, que a entidade recebe como parâmetro em vez de chamar `Instant.now()`. O `PedidoServiceTest` usa `Clock.fixed` e confere o instante exato de criação. O resto já estava no lugar: `Instant` nas entidades, `timestamptz` nas tabelas, datas em ISO 8601 pelo Jackson 3 sem configuração e o período semiaberto no relatório de vendas.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Instante, data local e fuso são ideias diferentes, com tipos diferentes no `java.time`.
+- Momentos em que algo aconteceu são `Instant`, escritos em RFC 3339 com `Z` (Zalando [169]). Datas sem hora são `LocalDate`. `LocalDateTime` não pertence a uma API.
+- "De que dia é?" só tem resposta com um fuso, e o fuso é do negócio, nunca do servidor. Use ids IANA.
+- Períodos são semiabertos, `[início, fim)`, e o início do dia é `atStartOfDay(fuso)`.
+- O Brasil não tem horário de verão desde 2019, mas datas antigas, clientes de outros países e uma possível volta ainda dependem das regras de fuso.
+- No PostgreSQL, `timestamptz` guarda um instante (e não um fuso).
+- No Jackson 3, o `java.time` e as datas como string são o padrão. Cuidado com o `OffsetDateTime`, cujo *offset* é ajustado para UTC na leitura.
+- Injete um `Clock` e use `Clock.fixed` nos testes.
+
+<Exercise title="O prazo de cancelamento" difficulty="medio">
+Uma nova regra: o cliente pode cancelar um pedido **até o fim do dia seguinte ao da compra**, no horário de São Paulo. Um pedido criado às 22h de 25/10 pode ser cancelado até as 23h59 de 26/10.
+
+1. Escreva o método `Instant prazoDeCancelamento(Instant criadoEm)`.
+2. Como a API deve mostrar o prazo ao app? Com que nome de campo e em que formato?
+3. Escreva dois testes com `Clock.fixed`: um cancelamento no último segundo do prazo e outro logo depois.
+
+<Hint>"Fim do dia seguinte" num intervalo semiaberto é "início do dia depois do seguinte". E qual é o "dia da compra" de um pedido criado às 01h UTC?</Hint>
+
+<Solution>
+
+1. ```java
+   static final ZoneId FUSO_DA_LOJA = ZoneId.of("America/Sao_Paulo");
+
+   Instant prazoDeCancelamento(Instant criadoEm) {
+       var diaDaCompra = criadoEm.atZone(FUSO_DA_LOJA).toLocalDate();
+       return diaDaCompra.plusDays(2).atStartOfDay(FUSO_DA_LOJA).toInstant();   // exclusivo
+   }
+   ```
+   O dia da compra é calculado **no fuso da loja**: um pedido criado em `2026-10-26T01:00:00Z` é do dia 25 em São Paulo. O prazo é o início do dia 27, exclusivo: pode cancelar enquanto `agora` for **antes** dele. É o intervalo semiaberto: não há "23:59:59" para errar.
+
+2. Um instante, em UTC, num campo com sufixo `Em` ou `Ate`: `"cancelavelAte": "2026-10-27T03:00:00Z"`. O app mostra "até 26/10, 23h59" no fuso do usuário. Não envie `"26/10/2026 23:59"`: o app de um cliente em Lisboa mostraria a hora errada, e o texto não pode ser comparado. Documente no contrato que o prazo é exclusivo.
+
+3. ```java
+   @Test
+   void cancelaNoUltimoInstanteDoPrazo() {
+       var relogio = Clock.fixed(Instant.parse("2026-10-27T02:59:59.999999Z"), ZoneOffset.UTC);
+       // pedido criado em 2026-10-26T01:00:00Z (25/10, 22h em São Paulo)
+       ... // cancelar → sucesso
+   }
+
+   @Test
+   void recusaOCancelamentoQuandoOPrazoAcaba() {
+       var relogio = Clock.fixed(Instant.parse("2026-10-27T03:00:00Z"), ZoneOffset.UTC);
+       ... // cancelar → 409 prazo-de-cancelamento-encerrado
+   }
+   ```
+   Os dois testes rodam a qualquer hora, em qualquer fuso, e testam exatamente a fronteira, que é onde os bugs de data moram.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Qual tipo do java.time representa "o momento em que o pedido foi criado" numa API?',
+    options: ['LocalDateTime', 'Instant', 'LocalDate', 'String formatada'],
+    answer: 1,
+    explanation: 'Um instante é um ponto na linha do tempo, igual em qualquer fuso, e é escrito em RFC 3339 com Z. LocalDateTime é data e hora de parede, sem fuso, e não aponta para nenhum instante.',
+  },
+  {
+    question: 'Por que o relatório "pedidos do dia 25/10" precisa de um fuso explícito?',
+    options: [
+      'Porque o PostgreSQL exige',
+      'Porque um dia começa e termina em instantes diferentes em cada fuso: o dia 25 em São Paulo vai de 03:00Z do dia 25 a 03:00Z do dia 26',
+      'Porque o Jackson não serializa LocalDate',
+      'Não precisa: UTC basta',
+    ],
+    answer: 1,
+    explanation: 'Uma data local só vira um intervalo de instantes com um fuso. O fuso é do negócio (o da loja), e não ZoneId.systemDefault(), que muda entre o notebook e o servidor.',
+  },
+  {
+    question: 'O que o tipo timestamptz do PostgreSQL guarda?',
+    options: [
+      'A data, a hora e o fuso original',
+      'Um instante, internamente em UTC; o fuso original não é guardado',
+      'Uma data-hora de parede, sem fuso',
+      'Um número de milissegundos desde 1970, em texto',
+    ],
+    answer: 1,
+    explanation: 'Apesar do nome, o timestamptz converte o valor para UTC na gravação e para o fuso da sessão na leitura. Se o fuso original importa, ele vai numa coluna separada.',
+  },
+  {
+    question: 'Com o padrão do Jackson 3, o que acontece ao ler "2026-10-25T10:30:00-03:00" num campo OffsetDateTime?',
+    options: [
+      'O valor fica com o offset -03:00',
+      'A leitura falha',
+      'O valor é ajustado para UTC (13:30Z): o instante está certo, mas o offset original se perde',
+      'O valor vira 10:30Z',
+    ],
+    answer: 2,
+    explanation: 'DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE vem ligado. Desligue-o se o offset do cliente importa; com Instant, a questão não existe.',
+  },
+]} />
 
 ## Referências
 

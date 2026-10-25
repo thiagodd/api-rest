@@ -123,4 +123,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'upsert', termo: 'Upsert', ingles: 'upsert', definicao: 'Escrita que cria o recurso se ele não existe e o substitui se existe. Em HTTP, é o PUT com o id escolhido pelo cliente, que é idempotente.', pagina: '14.01' },
   { id: 'accept-patch', termo: 'Accept-Patch', definicao: 'Header de resposta (RFC 5789) que lista os formatos de patch que um recurso aceita, como application/merge-patch+json.', pagina: '14.02' },
   { id: 'operacao-em-lote', termo: 'Operação em lote', ingles: 'batch / bulk', definicao: 'Uma requisição que aplica muitas operações de uma vez. Pode ser atômica (tudo ou nada) ou parcial, com um resultado por item (207 Multi-Status, na regra da Zalando).', pagina: '14.04' },
+  { id: 'rfc-3339', termo: 'RFC 3339', definicao: 'Perfil do ISO 8601 para a internet: data e hora como 2026-10-25T13:30:00Z, com segundos e offset (Z ou ±hh:mm) obrigatórios. É o formato de datas das APIs JSON.', pagina: '15.01' },
+  { id: 'intervalo-semiaberto', termo: 'Intervalo semiaberto', ingles: 'half-open interval', definicao: 'Período [início, fim) em que o início entra e o fim não. Períodos consecutivos se encaixam sem buracos nem sobreposições, e não é preciso escrever 23:59:59.', pagina: '15.01' },
 ]
