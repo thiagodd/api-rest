@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.StatusProduto;
+import com.bazar.compartilhado.Dinheiro;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -16,7 +18,9 @@ public record ProdutoResponse(
         String sku,
         String nome,
         @Nullable String descricao,
-        long precoEmCentavos,
+        // Expand-contract (18.01): o preco entrou ao lado do precoEmCentavos, que continua na v1 e sai na v2 (18.03).
+        @Schema(deprecated = true, description = "Use `preco`. Sai na v2.") long precoEmCentavos,
+        Dinheiro preco,
         UUID categoriaId,
         StatusProduto status,
         Map<String, String> atributos,
@@ -26,7 +30,7 @@ public record ProdutoResponse(
         @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable CategoriaResponse categoria) {
 
     ProdutoResponse comCategoria(CategoriaResponse categoria) {
-        return new ProdutoResponse(id, sku, nome, descricao, precoEmCentavos, categoriaId, status, atributos, criadoEm,
-                atualizadoEm, categoria);
+        return new ProdutoResponse(id, sku, nome, descricao, precoEmCentavos, preco, categoriaId, status, atributos,
+                criadoEm, atualizadoEm, categoria);
     }
 }

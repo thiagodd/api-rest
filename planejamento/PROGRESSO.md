@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 76 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 62
+**Total:** 143 páginas · **esqueleto:** 75 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 62
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -176,7 +176,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 18.01 | Compatibilidade retroativa: o que quebra um cliente | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-01-compatibilidade-retroativa-o-que-quebra-um-cliente.mdx` | esqueleto |
+| 18.01 | Compatibilidade retroativa: o que quebra um cliente | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-01-compatibilidade-retroativa-o-que-quebra-um-cliente.mdx` | revisao |
 | 18.02 | Estratégias de versionamento | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-02-estrategias-de-versionamento.mdx` | esqueleto |
 | 18.03 | Versionamento nativo no Spring Framework 7 | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-03-versionamento-nativo-no-spring-framework-7.mdx` | esqueleto |
 | 18.04 | Depreciação e desligamento de APIs | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-04-depreciacao-e-desligamento-de-apis.mdx` | esqueleto |

@@ -136,4 +136,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'openapi-generator', termo: 'openapi-generator', definicao: 'Ferramenta que gera código (interfaces de servidor, modelos, clientes) a partir de um contrato OpenAPI, com geradores para dezenas de linguagens e frameworks.', pagina: '17.03' },
   { id: 'servidor-de-mock', termo: 'Servidor de mock', ingles: 'mock server', definicao: 'Servidor que responde de acordo com um contrato, sem implementação real, para que o consumidor integre antes de a API existir. O Prism é um exemplo.', pagina: '17.03' },
   { id: 'linter', termo: 'Linter', definicao: 'Ferramenta que confere um artefato (código, contrato OpenAPI) contra um conjunto de regras de estilo e de correção, sem executá-lo. Para contratos, o Spectral é o mais usado.', pagina: '17.04' },
+  { id: 'compatibilidade-retroativa', termo: 'Compatibilidade retroativa', ingles: 'backward compatibility', definicao: 'Propriedade de uma mudança que deixa os clientes escritos contra a versão anterior funcionando sem nenhuma alteração: no código, no formato das mensagens e no significado.', pagina: '18.01' },
+  { id: 'lei-de-hyrum', termo: 'Lei de Hyrum', ingles: "Hyrum's Law", definicao: 'Com usuários suficientes, todo comportamento observável de uma API vira dependência de alguém, esteja ou não no contrato.', pagina: '18.01' },
 ]

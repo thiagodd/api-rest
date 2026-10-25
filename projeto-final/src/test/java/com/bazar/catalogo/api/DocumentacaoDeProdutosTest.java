@@ -61,7 +61,10 @@ class DocumentacaoDeProdutosTest {
                                 // Sem o tipo, o REST Docs o deduz do exemplo, e o null daria "Null". O optional aceita o null.
                                 fieldWithPath("descricao").type(JsonFieldType.STRING).optional()
                                         .description("A descrição longa. `null` quando não há."),
-                                fieldWithPath("precoEmCentavos").description("O preço em centavos de real."),
+                                fieldWithPath("precoEmCentavos")
+                                        .description("O preço em centavos de real. Depreciado: use `preco`."),
+                                fieldWithPath("preco.valor").description("O preço, decimal em texto (`129.90`)."),
+                                fieldWithPath("preco.moeda").description("A moeda, em ISO 4217 (`BRL`)."),
                                 fieldWithPath("categoriaId").description("A categoria do produto."),
                                 fieldWithPath("status")
                                         .description("`RASCUNHO`, `ATIVO` ou `DESCONTINUADO`. Lista extensível."),

@@ -2,87 +2,380 @@
 id: "18.01"
 titulo: "Compatibilidade retroativa: o que quebra um cliente"
 descricao: "Versionar é caro. Quem sabe evoluir sem quebrar raramente precisa de uma v2."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "google.aip.dev: 180"
+  - titulo: "Google AIP-180: Backwards compatibility"
     url: "https://google.aip.dev/180"
-  - titulo: "hyrumslaw.com"
+  - titulo: "Hyrum's Law"
     url: "https://www.hyrumslaw.com/"
-  - titulo: "opensource.zalando.com: restful-api-guidelines"
+  - titulo: "Zalando RESTful API Guidelines: Compatibility"
     url: "https://opensource.zalando.com/restful-api-guidelines/#compatibility"
+  - titulo: "Martin Fowler: Tolerant Reader"
+    url: "https://martinfowler.com/bliki/TolerantReader.html"
+  - titulo: "Martin Fowler: Parallel Change (expand-contract)"
+    url: "https://martinfowler.com/bliki/ParallelChange.html"
+  - titulo: "oasdiff: as verificações de breaking changes"
+    url: "https://github.com/oasdiff/oasdiff/blob/main/docs/BREAKING-CHANGES.md"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Versionar é caro. Quem sabe evoluir sem quebrar raramente precisa de uma v2.
+O `ProdutoResponse` do Bazar tem o campo `precoEmCentavos`, um número inteiro. Desde a [15.02](/design-de-apis-profissional/dinheiro-e-numeros-decimais), o guia de estilo pede dinheiro como um objeto com valor e moeda, o `Dinheiro`. A correção parece simples: trocar o `long precoEmCentavos` por `Dinheiro preco`, atualizar o mapper, rodar os testes. Tudo passa. No dia do deploy, o aplicativo do Bazar mostra "R$ NaN" em todos os produtos, o ERP de três lojistas para de sincronizar preços, e uma planilha que um parceiro montou lendo a API começa a mostrar células vazias. Nenhum desses clientes estava nos testes.
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+Uma API publicada tem clientes que o time não controla e, muitas vezes, nem conhece. Cada um foi escrito contra o comportamento que a API tinha no dia em que foi escrito. Uma mudança que parece uma melhoria do lado do servidor pode ser, do lado de cada cliente, um campo que sumiu.
+
+É a tomada da sua casa. A companhia elétrica pode trocar o transformador, a fiação da rua e a usina inteira sem avisar ninguém, desde que a tomada continue entregando a mesma tensão no mesmo formato. Se ela mudar o formato do plugue, todos os aparelhos param, por melhor que seja o novo formato. A compatibilidade não é sobre o que muda por dentro, e sim sobre o que muda na tomada.
+
+> **A pergunta desta página:** quais mudanças num contrato de API são seguras, quais quebram um cliente e quais dependem do cliente, e como evoluir o Bazar sem uma versão nova a cada melhoria?
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Catálogo de mudanças compatíveis × incompatíveis:
-  - campo novo
-  - campo obrigatório novo na entrada
-  - remover ou renomear campo
-  - mudar tipo
-  - novo valor de enum
-  - novo status code
-  - mudar valor padrão
-  - mudar ordenação padrão
-  - validação mais restrita
-- Lei de Hyrum
-- *Tolerant reader* (revisão)
-- Expand-contract no contrato (campo novo + antigo em paralelo)
-- Google AIP-180
-</Draft>
+### O que significa "compatível"
+
+Uma mudança é <Term id="compatibilidade-retroativa">compatível com versões anteriores</Term> quando um cliente escrito contra a versão anterior continua funcionando sem mudar uma linha. A [AIP-180](https://google.aip.dev/180) do Google, uma das referências mais completas sobre o tema, separa três sentidos de "continuar funcionando":
+
+- **Compatibilidade de código** (*source*): o código do cliente continua compilando contra o SDK novo. Importa para quem distribui SDKs gerados (17.03, 17.05).
+- **Compatibilidade de formato** (*wire*): as requisições do cliente continuam sendo aceitas, e as respostas continuam sendo lidas por ele.
+- **Compatibilidade de significado** (*semantic*): o cliente continua recebendo o que um desenvolvedor razoável esperaria. É a mais difícil de julgar e a que mais quebra em silêncio.
+
+Uma <Term id="breaking-change">breaking change</Term> viola qualquer uma das três.
+
+### O catálogo de mudanças
+
+A tabela abaixo classifica as mudanças mais comuns. A coluna "oasdiff" é o que a ferramenta da [17.04](/contratos-documentacao-e-ciclo-de-vida/governanca-linting-e-deteccao-de-breaking-changes) disse de cada uma, aplicada a uma cópia do contrato real do Bazar. A coluna "Na prática" é o veredito desta página, e as duas nem sempre concordam.
+
+| Mudança | oasdiff | Na prática |
+|---|---|---|
+| Campo novo na resposta | `info` | **Verde**, se o cliente é um *tolerant reader* |
+| Campo opcional novo na requisição | `info` | **Verde** |
+| Campo obrigatório novo na requisição | `error` | **Vermelho**: o cliente antigo não o envia |
+| Remover campo da resposta | `error` | **Vermelho** |
+| Renomear campo | `error` (remoção) + `info` (adição) | **Vermelho**: renomear é remover e acrescentar |
+| Mudar o tipo de um campo | `error` | **Vermelho**, mesmo de `integer` para `string` |
+| Campo da resposta passar a aceitar `null` | `error` | **Vermelho**: o cliente não esperava `null` |
+| Campo da requisição deixar de ser obrigatório | `info` | **Verde** |
+| Valor novo num enum fechado da resposta | `error` | **Vermelho** |
+| Valor novo numa lista extensível (15.04) | nenhuma mudança | **Verde**: o contrato avisou |
+| Status de erro novo | `info` | **Amarelo**: depende de o cliente tratar a classe (`4xx`) |
+| Status de sucesso trocado (`200` → `201`) | `error` | **Vermelho** |
+| Valor padrão de um parâmetro | `info` | **Amarelo**, quase sempre vermelho |
+| Ordenação padrão | invisível | **Amarelo**, quase sempre vermelho |
+| Validação mais restrita na entrada (`maxLength` menor) | `error` | **Vermelho** |
+| Validação mais frouxa na entrada | `info` | **Verde** para a API; amarelo para quem guarda o dado |
+
+As diferenças entre as colunas são o ponto desta página. A ferramenta vê o contrato; o cliente vê o comportamento.
+
+### Campos novos e o *tolerant reader*
+
+Acrescentar um campo à resposta só é seguro se o cliente ignora campos que não conhece. É a postura do <Term id="tolerant-reader">tolerant reader</Term>, vista na [15.04](/design-de-apis-profissional/enums-evolucao-e-tolerant-reader): o cliente lê o que precisa e ignora o resto. O Jackson 3 já faz isso por padrão (`FAIL_ON_UNKNOWN_PROPERTIES` desligado, [06.03](/construindo-apis-com-spring-boot/jackson-3-no-spring-boot-4)), e o guia de estilo do Bazar pede isso aos clientes (BZR-EVO-02).
+
+Mas "o cliente deve ser tolerante" é um pedido, e não uma garantia. Um cliente com validação estrita de esquema (`additionalProperties: false` num validador) quebra com um campo novo. O cliente está errado pelo guia, e quebra assim mesmo. Por isso a regra é escrita no contrato e na documentação (17.05), antes do primeiro cliente: o integrador precisa saber, desde o início, que campos novos vão aparecer.
+
+### Mudar tipo, mesmo para um tipo "maior"
+
+Trocar `precoEmCentavos` de `integer` para `string` parece inofensivo para quem escreve JavaScript, onde `"12990"` e `12990` às vezes se confundem. Para um cliente Java, Kotlin ou Go, com tipos estáticos, é uma falha de desserialização. O mesmo vale para trocar um objeto por uma lista, ou um número inteiro por um decimal. A AIP-180 é categórica: o tipo não muda, nem para um tipo compatível no fio, porque muda o código gerado.
+
+O caso mais sutil é o `null`. Um campo da resposta que sempre teve valor passar a vir `null` é uma mudança de tipo: de `string` para `string | null`. O cliente que fazia `produto.nome().toUpperCase()` passa a lançar `NullPointerException`. O oasdiff classifica isso como `error` (`response-property-became-nullable`).
+
+### Enums: fechado ou extensível
+
+Um valor novo num enum da resposta quebra o cliente que trata os valores com um `switch` sem ramo padrão, ou que desserializa para um `enum` Java sem tolerar desconhecidos. O oasdiff, num contrato com `enum` fechado, acusou o `ESGOTADO` acrescentado ao `status` do produto:
+
+```text
+error at e-mais.yaml, in API GET /v1/produtos/{id} added the new `ESGOTADO` enum value to the `status`
+response property for the response status `200` [response-property-enum-value-added]. The server may now
+return a value the previous contract excluded, so a client written against it may not handle the response.
+If the value set is meant to grow, declare it with x-extensible-enum.
+```
+
+No contrato real do Bazar, o mesmo `ESGOTADO` não produz nenhuma mudança: o `status` é uma lista extensível, descrita com `examples` e o aviso na descrição ([15.04](/design-de-apis-profissional/enums-evolucao-e-tolerant-reader), [17.02](/contratos-documentacao-e-ciclo-de-vida/springdoc-openapi-documentacao-a-partir-do-codigo)). O contrato avisou, desde o primeiro dia, que valores novos podem aparecer. A própria mensagem do oasdiff sugere a alternativa do Zalando, a extensão `x-extensible-enum`.
+
+Na **entrada**, a assimetria se inverte: aceitar um valor novo num enum da requisição é seguro (ninguém é obrigado a enviá-lo), e deixar de aceitar um valor quebra quem o enviava.
+
+### Status novos
+
+Um status de erro novo, como um `409` onde antes só havia `422`, é amarelo. Um cliente que trata as classes (todo `4xx` é "erro meu", [02.03](/comecando-e-fundamentos-de-http/status-codes-em-profundidade)) continua funcionando. Um cliente que lista os códigos um a um e lança uma exceção genérica para os desconhecidos também, com uma mensagem pior. Um cliente que só esperava `422` e lê o corpo como uma lista de erros de campo quebra.
+
+Trocar o status de **sucesso** é vermelho. Um cliente que confere `status == 200` depois de um `POST` passa a tratar o `201` como falha. Foi o que a correção da [17.03](/contratos-documentacao-e-ciclo-de-vida/api-first-o-contrato-como-fonte-da-verdade) mostrou no papel: o contrato do Bazar dizia `200`, e o oasdiff acusou a troca para `201`. Lá, a API sempre tinha respondido `201`, e só o contrato estava errado.
+
+### Padrões e ordenação: o que o contrato não diz
+
+Mudar o `default` do `limit` de 20 para 50 é `info` para o oasdiff: nenhum cliente precisa mudar o que envia. A AIP-180 diz o contrário, e com razão: "valores padrão não devem mudar". O cliente que nunca enviou `limit` passa a receber páginas de 50, e a tela que mostrava 20 itens por vez muda de comportamento sem que ninguém tenha mexido nela. A AIP-180 dá um exemplo pior: acrescentar paginação a uma listagem que devolvia tudo. O cliente antigo recebe a primeira página, não sabe que existe uma segunda, e conclui que tem todos os itens.
+
+A ordenação padrão é ainda mais traiçoeira, porque nem aparece no contrato. A listagem de produtos do Bazar sai por `nome` quando o cliente não envia `sort` ([13.02](/design-de-apis-profissional/ordenacao)). Um cliente que pega "o primeiro da lista" como o produto em destaque depende disso, mesmo que nenhum documento prometa. Mudar o padrão para `criadoEm` passa no oasdiff, passa no linter, passa nos testes do servidor, e muda a vitrine dele.
+
+### Validação: mais restrita ou mais frouxa
+
+Diminuir o `maxLength` do `nome` na criação de 200 para 100 é vermelho: o cliente que enviava nomes de 150 caracteres passa a receber `422`. Toda validação nova ou mais restrita na entrada quebra alguém que antes era aceito.
+
+O contrário parece sempre seguro, e quase é. Aceitar nomes de até 300 caracteres não quebra quem envia. Mas o nome aceito na entrada volta na resposta, e um cliente que guardava o nome numa coluna `varchar(200)`, confiando no contrato, passa a falhar ao gravar. A AIP-180 recomenda tratar o aumento de um limite como incompatível pelo mesmo motivo.
+
+### A Lei de Hyrum
+
+Tudo o que a seção anterior descreveu tem um nome. A <Term id="lei-de-hyrum">Lei de Hyrum</Term>, formulada por Hyrum Wright, engenheiro do Google:
+
+> Com um número suficiente de usuários de uma API, não importa o que você promete no contrato: todos os comportamentos observáveis do seu sistema serão usados por alguém.
+
+A ordem da listagem, o formato do `traceId`, a ordem dos campos no JSON, o tempo de resposta, o texto do `detail` de um erro: nada disso está no contrato do Bazar, e cada um pode estar no código de algum cliente. O texto do `detail` é o exemplo clássico. O guia do Bazar diz que o `detail` é para pessoas e que o código do cliente deve usar o `codigo` ([16.01](/design-de-apis-profissional/projetando-erros-catalogo-codigos-e-decisoes-dificeis)), justamente porque alguém vai fazer `if (detail.contains("não existe"))` se o `codigo` não existir.
+
+A Lei de Hyrum não diz que nada pode mudar. Diz que "não está no contrato" não é sinônimo de "posso mudar sem consequência", e que o contrato precisa dizer explicitamente o que **não** é garantido. A [16.02](/design-de-apis-profissional/escrevendo-o-guia-de-estilo-da-sua-api) fez isso para a ordem dos campos e para os textos.
+
+### *Expand-contract* no contrato
+
+Quando um campo precisa mudar, a saída não é mudá-lo, e sim fazer a mudança em etapas, cada uma compatível. É o <Term id="expand-contract">expand-contract</Term>, que a [10.02](/persistencia-para-apis/migrations-com-flyway) usou no banco, aplicado ao contrato:
+
+1. **Expandir**: acrescentar o campo novo ao lado do antigo. A resposta passa a ter os dois, com os mesmos dados em formatos diferentes. É compatível: um campo novo na resposta.
+2. **Migrar**: marcar o antigo como depreciado no contrato (`deprecated: true`), avisar os clientes e acompanhar quem ainda o lê.
+3. **Contrair**: remover o antigo. Essa etapa é incompatível, e por isso só acontece numa versão nova ([18.03](/contratos-documentacao-e-ciclo-de-vida/versionamento-nativo-no-spring-framework-7)) ou quando ninguém mais o usa ([18.04](/contratos-documentacao-e-ciclo-de-vida/depreciacao-e-desligamento-de-apis)).
+
+Para renomear um campo, é o mesmo caminho: o nome novo entra ao lado do antigo, e o antigo sai depois. A AIP-180 diz isso com todas as letras: o serviço pode acrescentar o componente novo, mas não pode remover o existente.
 
 ## Diagrama
 
-<Draft title="Diagramas previstos">
-tabela de mudanças com semáforo (verde, amarelo, vermelho).
-</Draft>
+```mermaid
+---
+title: O semáforo das mudanças de contrato
+---
+flowchart LR
+    subgraph V["Verde: compatível"]
+        direction TB
+        V1["Campo novo na resposta"]
+        V2["Campo opcional novo na entrada"]
+        V3["Entrada menos obrigatória"]
+        V4["Valor novo em lista extensível"]
+        V5["Endpoint novo"]
+    end
+    subgraph A["Amarelo: depende do cliente"]
+        direction TB
+        A1["Status de erro novo"]
+        A2["Validação mais frouxa"]
+        A3["Valor padrão diferente"]
+        A4["Ordenação padrão diferente"]
+    end
+    subgraph R["Vermelho: quebra"]
+        direction TB
+        R1["Remover ou renomear campo"]
+        R2["Mudar tipo ou aceitar null"]
+        R3["Campo obrigatório novo na entrada"]
+        R4["Valor novo em enum fechado"]
+        R5["Validação mais restrita"]
+        R6["Trocar o status de sucesso"]
+    end
+    V ~~~ A ~~~ R
+    classDef verde stroke:#16a34a,stroke-width:3px
+    classDef amarelo stroke:#ca8a04,stroke-width:3px
+    classDef vermelho stroke:#dc2626,stroke-width:3px
+    class V verde
+    class A amarelo
+    class R vermelho
+```
 
 ## Na prática
 
-<Draft title="Código previsto">
-exemplos de evolução do `ProdutoResponse`.
-</Draft>
+### O preço do produto em duas formas
+
+O Bazar aplica a primeira etapa do *expand-contract* ao `ProdutoResponse`: o `preco`, um `Dinheiro`, entra ao lado do `precoEmCentavos`, que é marcado como depreciado.
+
+```java title="ProdutoResponse.java"
+public record ProdutoResponse(
+        UUID id,
+        String sku,
+        String nome,
+        @Nullable String descricao,
+        // Expand-contract (18.01): o preco entrou ao lado do precoEmCentavos, que continua na v1 e sai na v2 (18.03).
+        @Schema(deprecated = true, description = "Use `preco`. Sai na v2.") long precoEmCentavos,
+        Dinheiro preco,
+        UUID categoriaId,
+        StatusProduto status,
+        Map<String, String> atributos,
+        Instant criadoEm,
+        Instant atualizadoEm,
+        // Só com ?embed=categoria (13.05); sem ele, o campo não aparece.
+        @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable CategoriaResponse categoria) {
+```
+
+O mapper não muda: o `Produto` já guarda um `Dinheiro` chamado `preco`, e o MapStruct liga os dois campos de mesmo nome sozinho. O `precoEmCentavos` continua saindo do mesmo `preco`, pelo `DinheiroMapper`. Os dois campos nunca divergem, porque vêm da mesma fonte.
+
+<HttpExchange
+  title="O produto com o campo antigo e o novo"
+  request={{ method: 'GET', url: '/v1/produtos/01a17551-13cf-761f-a3a0-ae6216fcdc56' }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json' }, body: { id: '01a17551-13cf-761f-a3a0-ae6216fcdc56', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 12990, preco: { valor: '129.90', moeda: 'BRL' }, categoriaId: '0192f3a0-5555-7000-8000-000000000003', status: 'RASCUNHO', atributos: { autor: 'Robert C. Martin' }, criadoEm: '2026-10-25T23:06:50.191423Z', atualizadoEm: '2026-10-25T23:06:50.191423Z' } }}
+>
+O aplicativo antigo continua lendo `precoEmCentavos` e ignora o `preco`, que não conhece. O aplicativo novo lê o `preco` e ignora o campo depreciado. Os dois funcionam ao mesmo tempo, com o mesmo servidor. A resposta é a que o teste do REST Docs gravou (17.05).
+</HttpExchange>
+
+O oasdiff confirma que a etapa é compatível. Comparando o contrato antes e depois:
+
+```text
+8 changes: 0 error, 0 warning, 8 info
+info	[response-property-deprecated]
+	in API GET /v1/produtos/{id}
+		response property `precoEmCentavos` deprecated
+
+info	[response-required-property-added]
+	in API GET /v1/produtos/{id}
+		added the required property `preco` to the response with the `200` status
+...
+```
+
+Oito mudanças, todas `info`: duas por operação que devolve o produto (`POST`, `GET`, `PUT` e `PATCH`). Nenhuma quebra. A listagem (`ProdutoResumoResponse`) continua só com `precoEmCentavos`; a v2 resolve as duas representações de uma vez.
+
+### A rede de testes funcionou
+
+A mudança tem cinco linhas, e três testes das páginas anteriores falharam assim que ela entrou, cada um por um motivo diferente:
+
+| Teste | O que acusou | Por quê |
+|---|---|---|
+| `ContratoOpenApiTest` (17.02) | "O contrato mudou" | O código gera um contrato diferente do versionado. A mudança precisa aparecer no diff do PR. |
+| `FluxoCompraE2ETest` (17.03) | Resposta com um campo fora do contrato | Com o contrato antigo, `preco` era uma propriedade não declarada. O validador confere a resposta real contra o arquivo. |
+| `DocumentacaoDeProdutosTest` (17.05) | "The following parts of the payload were not documented: preco" | O guia precisa descrever o campo novo. |
+
+Os três passaram depois de três ações deliberadas: regerar o contrato (`-Dcontrato.atualizar=true`), revisar o diff dele e descrever `preco.valor` e `preco.moeda` no teste de documentação. Uma mudança de contrato deixou de poder entrar sem ninguém notar. O `scripts/verificar-contrato.sh` da 17.04, contra a página anterior, passa: o lint não tem erros, e o oasdiff não vê quebras.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Renomear um campo no lugar" why="Para o cliente, renomear é remover um campo e acrescentar outro. O aplicativo que lia precoEmCentavos passa a ler um campo ausente, e numa linguagem dinâmica isso nem é um erro: vira undefined, NaN ou zero na tela. No expand-contract, os dois nomes convivem até o antigo poder sair numa versão nova.">
+<Bad title="Trocar o campo">
+
+```java
+public record ProdutoResponse(
+        UUID id,
+        String sku,
+        String nome,
+        @Nullable String descricao,
+        Dinheiro preco,        // era long precoEmCentavos
+        UUID categoriaId,
+        ...
+```
+
+</Bad>
+<Good title="Expandir, depreciar, contrair depois">
+
+```java
+public record ProdutoResponse(
+        UUID id,
+        String sku,
+        String nome,
+        @Nullable String descricao,
+        @Schema(deprecated = true, description = "Use `preco`. Sai na v2.") long precoEmCentavos,
+        Dinheiro preco,
+        UUID categoriaId,
+        ...
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **"Ninguém usa esse campo."** Sem métricas de uso por cliente, ninguém sabe ([18.04](/contratos-documentacao-e-ciclo-de-vida/depreciacao-e-desligamento-de-apis)).
+- **Confiar só na ferramenta.** O oasdiff não vê padrões, ordenação, textos nem tempos de resposta. Ele é a primeira barreira, e não a última.
+- **Enum fechado na resposta** para uma lista que vai crescer. Cada valor novo vira uma quebra.
+- **Validação nova sem pensar nos dados antigos.** Um `@Pattern` novo no `sku` recusa a atualização de produtos cadastrados antes dele.
+- **Corrigir um comportamento errado sem tratar como quebra.** Se clientes dependem do erro (Lei de Hyrum), a correção quebra esses clientes. Às vezes vale a pena; a decisão precisa ser consciente e comunicada.
+- **Exigir *tolerant reader* sem dizer isso.** A regra precisa estar na documentação desde o primeiro cliente.
+- **Mudar o significado sem mudar a forma.** `precoEmCentavos` passar a incluir o frete tem o mesmo tipo e o mesmo nome, e quebra todo cliente.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Prefira sempre a mudança aditiva**: campo novo, endpoint novo, valor novo numa lista extensível.
+- **Nunca remova, renomeie ou mude o tipo** dentro de uma versão. Use o *expand-contract*, e contraia só numa versão nova.
+- **Listas da resposta como extensíveis**, e enums fechados só para conjuntos completos por natureza.
+- **Nada de validação mais restrita na entrada** dentro de uma versão.
+- **Padrões e ordenação são contrato**, mesmo que o contrato não os mencione.
+- **Diga o que não é garantido**: ordem dos campos, textos para pessoas, ordem sem `sort`.
+- **Deixe a máquina pegar o mecânico** (oasdiff, testes de contrato) e revise o resto.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="O preço como Dinheiro, ao lado do campo antigo" module="catalogo" tag="pagina-18.01" files={[
+  { path: 'src/main/java/com/bazar/catalogo/api/ProdutoResponse.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/api/ProdutoJsonTest.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/api/DocumentacaoDeProdutosTest.java', change: 'alterado' },
+  { path: 'docs/openapi/bazar-api.yaml', change: 'alterado' },
+]}>
+O `ProdutoResponse` ganha o campo `preco` (`Dinheiro`), ao lado do `precoEmCentavos`, que fica marcado como depreciado no contrato. É a etapa de expansão: todas as mudanças são compatíveis, e o oasdiff as classifica como `info`. O `ProdutoJsonTest` passa a esperar os dois campos, o teste de documentação descreve `preco.valor` e `preco.moeda`, e o contrato versionado é regerado. A contração, a saída do `precoEmCentavos`, fica para a v2 do produto ([18.03](/contratos-documentacao-e-ciclo-de-vida/versionamento-nativo-no-spring-framework-7)).
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Uma mudança é compatível quando o cliente escrito contra a versão anterior continua funcionando sem mudar nada: no código, no formato e no significado.
+- Verde: campo novo na resposta, campo opcional novo na entrada, valor novo numa lista extensível, endpoint novo.
+- Vermelho: remover, renomear ou mudar o tipo de um campo, aceitar `null` onde não aceitava, campo obrigatório novo na entrada, valor novo em enum fechado, validação mais restrita, trocar o status de sucesso.
+- Amarelo: status de erro novo, validação mais frouxa, valor padrão e ordenação padrão. As ferramentas classificam os padrões como compatíveis; a AIP-180 e a experiência, não.
+- Lei de Hyrum: todo comportamento observável vira dependência de alguém. O contrato precisa dizer o que não é garantido.
+- O *tolerant reader* torna os campos novos seguros, e precisa ser pedido aos clientes desde o início.
+- *Expand-contract*: acrescentar o novo, depreciar o antigo e removê-lo só numa versão nova. O Bazar fez a expansão do `preco`.
+
+<Exercise title="Classifique as mudanças" difficulty="medio">
+Seis propostas chegaram para a próxima entrega do Bazar. Classifique cada uma como verde, amarela ou vermelha, e diga o que fazer com as que não são verdes.
+
+1. Acrescentar `urlImagem` (string, pode ser `null`) ao `ProdutoResponse`.
+2. Tornar `descricao` obrigatória na criação de produto.
+3. Mudar o padrão do `limit` de 20 para 50.
+4. Aceitar nomes de produto de até 300 caracteres (hoje, 200).
+5. Acrescentar o status `EM_SEPARACAO` ao pedido, entre `PAGO` e `ENVIADO`.
+6. Passar a responder `201` com `Location` no `POST /v1/categorias`, que hoje o contrato descreve com `200`.
+
+<Hint>Para cada uma, pergunte: um cliente escrito ontem, sem mudar nada, continua funcionando? Pense também no que o cliente faz com o dado depois de recebê-lo. Para a 6, olhe o que a API realmente responde hoje.</Hint>
+
+<Solution>
+
+1. **Verde.** Campo novo na resposta. O `null` não é problema porque o campo é novo: nenhum cliente o lia. O oasdiff classifica como `info`.
+2. **Vermelho.** Campo obrigatório novo na entrada: todo cliente que cria produtos sem `descricao` passa a receber `422`. Alternativas: manter opcional e exigir só na v2, ou usar um valor padrão para quem não envia.
+3. **Amarelo, tratado como vermelho.** O oasdiff diz `info`, mas o cliente que não envia `limit` muda de comportamento. Mantenha o padrão e documente o `limit=50` para quem quiser.
+4. **Amarelo.** Não quebra quem envia, mas quem guarda o nome que a API devolve pode ter uma coluna de 200 caracteres. Anuncie no changelog antes, com prazo.
+5. **Verde, no Bazar.** O status do pedido é uma lista extensível desde a 15.04 (os `examples` do contrato vão de `CRIADO` a `REEMBOLSADO`): o contrato avisou que valores novos aparecem, e o oasdiff não vê mudança. Com um `enum` fechado, seria vermelho. Mesmo verde, vale anunciar: um cliente que mostra "status desconhecido" funciona, mas mostra mal.
+6. **Depende do que a API faz hoje.** O `CategoriaController` cria com `ResponseEntity.created(...)`, então a API já responde `201` com `Location`, e o contrato está errado (como na 17.03). Corrigir o contrato é uma quebra no papel e nenhuma na prática: registre a exceção do oasdiff (`--err-ignore`) com o motivo. Se a API respondesse `200` de verdade, mudar para `201` seria vermelho.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'O oasdiff classificou a mudança do default do limit (20 para 50) como info. Por que esta página a trata como amarela, quase vermelha?',
+    options: [
+      'Porque o oasdiff tem um bug',
+      'Porque o cliente que nunca enviou limit muda de comportamento sem ter mudado nada; a AIP-180 trata a mudança de padrão como incompatível',
+      'Porque 50 é acima do máximo',
+      'Porque defaults não existem no OpenAPI',
+    ],
+    answer: 1,
+    explanation: 'A ferramenta olha o que o cliente precisa enviar; o cliente sente o que recebe. Padrões e ordenação são contrato mesmo quando o contrato não os destaca.',
+  },
+  {
+    question: 'Por que o ESGOTADO acrescentado ao status do produto não aparece no oasdiff do Bazar, mas aparece como error num contrato com enum fechado?',
+    options: [
+      'Porque o Bazar desligou o oasdiff para enums',
+      'Porque no Bazar o status é uma lista extensível (examples e o aviso na descrição): o contrato sempre disse que valores novos podem aparecer',
+      'Porque ESGOTADO já existia',
+      'Porque enums não são verificados na resposta',
+    ],
+    answer: 1,
+    explanation: 'A decisão da 15.04 transforma o que seria uma quebra numa evolução prevista. O oasdiff sugere a mesma ideia com x-extensible-enum.',
+  },
+  {
+    question: 'Qual é a ideia central da Lei de Hyrum?',
+    options: [
+      'APIs devem ter poucos usuários',
+      'Com usuários suficientes, todo comportamento observável vira dependência de alguém, esteja ou não no contrato',
+      'Todo campo deve ser opcional',
+      'Versões devem durar um ano',
+    ],
+    answer: 1,
+    explanation: 'Ordem dos itens, textos de erro e tempos de resposta acabam no código de algum cliente. Por isso o contrato precisa dizer explicitamente o que não é garantido.',
+  },
+  {
+    question: 'No expand-contract do preço, por que o precoEmCentavos não foi removido logo depois que o preco entrou?',
+    options: [
+      'Porque o MapStruct exige os dois',
+      'Porque remover é a etapa incompatível: clientes antigos ainda leem o campo, e a remoção só acontece numa versão nova ou quando ninguém mais o usa',
+      'Porque o springdoc não permite',
+      'Porque o Dinheiro ainda não é serializado',
+    ],
+    answer: 1,
+    explanation: 'Expandir e depreciar são compatíveis; contrair não é. A v2 do produto (18.03) é onde o precoEmCentavos sai.',
+  },
+]} />
 
 ## Referências
 
