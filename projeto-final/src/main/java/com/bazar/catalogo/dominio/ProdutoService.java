@@ -5,13 +5,17 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.Janelas;
+import com.bazar.compartilhado.Keyset;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.estoque.dominio.Estoque;
 import com.bazar.estoque.dominio.EstoqueRepository;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +32,23 @@ public class ProdutoService {
         this.estoques = estoques;
     }
 
-    // Sem entidades gerenciadas: a projeção seleciona só as colunas de ProdutoResumo.
+    /**
+     * Uma janela da listagem (13.04). Sem entidades gerenciadas: a projeção seleciona só as colunas de ProdutoResumo.
+     * A ordenação já chega com os nomes das propriedades da entidade e com o desempate pelo id (13.02); a posição
+     * tem um valor para cada uma dessas propriedades.
+     */
     @Transactional(readOnly = true)
-    // A ordenação já chega com os nomes das propriedades da entidade e com o desempate pelo id (13.02).
-    public List<ProdutoResumo> listar(FiltroDeProdutos filtro, Sort ordenacao) {
-        return produtos.findBy(ProdutoSpecifications.filtradoPor(filtro),
-                consulta -> consulta.as(ProdutoResumo.class).sortBy(ordenacao).all());
+    public Window<ProdutoResumo> listar(FiltroDeProdutos filtro, Sort ordenacao, KeysetScrollPosition posicao,
+            int limite) {
+        var condicao = ProdutoSpecifications.filtradoPor(filtro);
+        if (!posicao.isInitial()) {
+            condicao = condicao.and(Keyset.alemDe(ordenacao, posicao));
+        }
+        // Para trás, a busca anda na ordem inversa a partir da posição; o Window volta à ordem da listagem.
+        var ordem = posicao.scrollsBackward() ? ordenacao.reverse() : ordenacao;
+        var encontrados = produtos.findBy(condicao,
+                consulta -> consulta.as(ProdutoResumo.class).sortBy(ordem).limit(limite + 1).all());
+        return Janelas.de(encontrados, limite, posicao.scrollsBackward(), produto -> produto.chaves(ordenacao));
     }
 
     @Transactional(readOnly = true)

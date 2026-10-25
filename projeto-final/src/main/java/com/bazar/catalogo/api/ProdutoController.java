@@ -3,10 +3,13 @@ package com.bazar.catalogo.api;
 import java.util.Map;
 import java.util.UUID;
 
+import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.web.CamposOrdenaveis;
+import com.bazar.compartilhado.web.JanelaPedida;
+import com.bazar.compartilhado.web.LinksDeCursor;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Sort;
@@ -42,19 +45,33 @@ public class ProdutoController {
     }
 
     // Uma projeção, e não entidades: só as colunas da listagem (10.05).
-    // Os filtros chegam como parâmetros de query (13.01); a ordenação e a paginação, em 13.02–13.04.
+    // Os filtros chegam como parâmetros de query (13.01), a ordenação no sort (13.02) e a paginação por cursor em
+    // limit e cursor (13.04), com first, prev e next no header Link.
     @GetMapping
-    public Lista<ProdutoResumoResponse> listar(@Valid @ModelAttribute FiltroProduto filtro, Sort sort) {
-        return new Lista<>(servico.listar(filtro.paraDominio(), ORDENACAO.traduzir(sort)).stream()
-                .map(mapper::paraResumo).toList());
+    public ResponseEntity<Lista<ProdutoResumoResponse>> listar(@Valid @ModelAttribute FiltroProduto filtro, Sort sort,
+            @Valid @ModelAttribute JanelaPedida janela) {
+        return janela(filtro.paraDominio(), sort, janela);
     }
 
     // Uma consulta com corpo: não altera nada, mas usa POST porque os critérios não cabem bem numa URL (13.01).
+    // A ordenação e a paginação continuam na query; o cliente repete o corpo para seguir os links.
     @PostMapping("/buscas")
-    public Lista<ProdutoResumoResponse> buscar(@Valid @RequestBody BuscaDeProdutos busca, Sort sort) {
-        return new Lista<>(servico.listar(busca.paraDominio(), ORDENACAO.traduzir(sort)).stream()
-                .map(mapper::paraResumo).toList());
+    public ResponseEntity<Lista<ProdutoResumoResponse>> buscar(@Valid @RequestBody BuscaDeProdutos busca, Sort sort,
+            @Valid @ModelAttribute JanelaPedida janela) {
+        return janela(busca.paraDominio(), sort, janela);
     }
+
+    private ResponseEntity<Lista<ProdutoResumoResponse>> janela(FiltroDeProdutos filtro, Sort sort,
+            JanelaPedida janela) {
+        var ordenacao = ORDENACAO.traduzir(sort);
+        var posicao = CursorDeProdutos.posicao(janela.cursor(), filtro, ordenacao);
+        var produtos = servico.listar(filtro, ordenacao, posicao, janela.tamanho());
+        return ResponseEntity.ok()
+                .headers(LinksDeCursor.de(produtos, posicao,
+                        (chaves, paraTras) -> CursorDeProdutos.de(filtro, ordenacao, chaves, paraTras)))
+                .body(new Lista<>(produtos.stream().map(mapper::paraResumo).toList()));
+    }
+
     @PostMapping
     public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
         var produto = servico.criar(mapper.paraProduto(request));

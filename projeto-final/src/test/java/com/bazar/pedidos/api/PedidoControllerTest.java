@@ -1,7 +1,15 @@
 package com.bazar.pedidos.api;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import com.bazar.ContadorDeConsultas;
 import com.bazar.LimpezaDoBanco;
@@ -13,7 +21,9 @@ import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.Canal;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.estoque.dominio.EstoqueRepository;
+import com.jayway.jsonpath.JsonPath;
 import jakarta.persistence.EntityManagerFactory;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -21,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.logging.LogLevel;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.hateoas.MediaTypes;
@@ -29,6 +41,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,6 +70,9 @@ class PedidoControllerTest {
 
     @Autowired
     EntityManagerFactory emf;
+
+    @Autowired
+    LoggingSystem logs;
 
     UUID clienteId;
     UUID cleanCode;
@@ -294,5 +311,131 @@ class PedidoControllerTest {
         estoque.repor(quantidade);
         estoques.save(estoque);
         return produto.getId();
+    }
+
+    @Nested
+    class Paginacao {
+
+        // Sete pedidos, um por dia; o 3 e o 4 foram criados no mesmo instante, e quem desempata é o id.
+        // Na ordem da listagem (mais recentes primeiro): 7, 6, 5, 4, 3, 2, 1.
+        @BeforeEach
+        void criarPedidos() {
+            for (var n = 1; n <= 7; n++) {
+                inserirPedido(n, n == 3 ? "2026-10-04T10:00:00Z" : "2026-10-0" + n + "T10:00:00Z");
+            }
+        }
+
+        @Test
+        void percorreTodasAsPaginasPeloNextSemRepetirNemPular() {
+            var vistos = new ArrayList<UUID>();
+            URI pagina = URI.create("/v1/pedidos?clienteId=" + clienteId + "&limit=3");
+            var paginas = 0;
+            while (pagina != null) {
+                var resposta = mvc.get().uri(pagina).exchange();
+                assertThat(resposta).hasStatusOk();
+                vistos.addAll(ids(resposta));
+                pagina = link(resposta, "next");
+                paginas++;
+            }
+
+            assertThat(paginas).isEqualTo(3);
+            assertThat(vistos).containsExactly(id(7), id(6), id(5), id(4), id(3), id(2), id(1));
+        }
+
+        @Test
+        void umPedidoNovoEntreDuasPaginasNaoRepeteNemPulaNenhum() {
+            var primeira = mvc.get().uri("/v1/pedidos?clienteId={id}&limit=3", clienteId).exchange();
+            assertThat(ids(primeira)).containsExactly(id(7), id(6), id(5));
+
+            // Com offset, o 5 apareceria de novo no começo da página 2 (13.03).
+            inserirPedido(8, "2026-10-08T10:00:00Z");
+            var segunda = mvc.get().uri(link(primeira, "next")).exchange();
+
+            assertThat(ids(segunda)).containsExactly(id(4), id(3), id(2));
+        }
+
+        @Test
+        void voltaPeloPrevEAPrimeiraPaginaNaoTemPrev() {
+            var primeira = mvc.get().uri("/v1/pedidos?clienteId={id}&limit=3", clienteId).exchange();
+            var segunda = mvc.get().uri(link(primeira, "next")).exchange();
+            var deVolta = mvc.get().uri(link(segunda, "prev")).exchange();
+
+            assertThat(ids(deVolta)).containsExactly(id(7), id(6), id(5));
+            assertThat(link(deVolta, "prev")).isNull();
+            assertThat(link(deVolta, "next")).isNotNull();
+            assertThat(link(primeira, "prev")).isNull();
+        }
+
+        @Test
+        void aUltimaPaginaNaoTemNextEOFirstRecomecaSemCursor() {
+            var resposta = mvc.get().uri("/v1/pedidos?clienteId={id}&limit=10", clienteId).exchange();
+
+            assertThat(ids(resposta)).hasSize(7);
+            assertThat(link(resposta, "next")).isNull();
+            assertThat(link(resposta, "first")).hasToString(
+                    "http://localhost/v1/pedidos?clienteId=" + clienteId + "&limit=10");
+        }
+
+        @Test
+        void recusaUmCursorAlteradoOuDeOutroCliente() {
+            var primeira = mvc.get().uri("/v1/pedidos?clienteId={id}&limit=3", clienteId).exchange();
+            var cursor = UriComponentsBuilder.fromUri(link(primeira, "next")).build().getQueryParams().getFirst("cursor");
+
+            assertThat(mvc.get().uri("/v1/pedidos?clienteId={id}&cursor=abc", clienteId).exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.type").isEqualTo("https://api.bazar.example/problemas/cursor-invalido");
+            // O cursor é um JSON legível em Base64; trocar um campo por um nome que o formato não tem também é recusado.
+            var alterado = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                    new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8)
+                            .replace("\"id\"", "\"numero\"").getBytes(StandardCharsets.UTF_8));
+            assertThat(mvc.get().uri("/v1/pedidos?clienteId={id}&cursor={c}", clienteId, alterado).exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST);
+            assertThat(mvc.get().uri("/v1/pedidos?clienteId={id}&cursor={c}", UUID.randomUUID(), cursor).exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.type").isEqualTo("https://api.bazar.example/problemas/cursor-invalido");
+        }
+
+        // Com "criado_em < ? or (criado_em = ? and id < ?)", que é o que o Window do Spring Data gera, o PostgreSQL
+        // não limita a busca no índice: lê e descarta cada pedido antes da posição, como um offset.
+        @Test
+        void comparaAPosicaoComoUmaLinhaParaOIndiceComecarNela(CapturedOutput saida) {
+            var primeira = mvc.get().uri("/v1/pedidos?clienteId={id}&limit=3", clienteId).exchange();
+            logs.setLogLevel("org.hibernate.SQL", LogLevel.DEBUG);
+            try {
+                mvc.get().uri(link(primeira, "next")).exchange();
+            } finally {
+                logs.setLogLevel("org.hibernate.SQL", null);
+            }
+
+            assertThat(saida).contains(
+                    "where p1_0.cliente_id=? and (p1_0.criado_em,p1_0.id)<(?,?) order by p1_0.criado_em desc,p1_0.id desc");
+        }
+
+        private void inserirPedido(int n, String criadoEm) {
+            jdbc.sql("""
+                    insert into pedido (id, cliente_id, status, moeda, valor_itens, valor_frete, valor_total, versao,
+                                        criado_em)
+                    values (?, ?, 'CRIADO', 'BRL', 10, 0, 10, 0, ?)
+                    """)
+                    .params(id(n), clienteId, Timestamp.from(Instant.parse(criadoEm)))
+                    .update();
+        }
+
+        // Ids fixos e crescentes: 00000000-0000-0000-0000-00000000000n.
+        private static UUID id(int n) {
+            return new UUID(0, n);
+        }
+
+        private static List<UUID> ids(MvcTestResult resposta) {
+            List<String> ids = JsonPath.read(new String(resposta.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8),
+                    "$.itens[*].id");
+            return ids.stream().map(UUID::fromString).toList();
+        }
+
+        private static @Nullable URI link(MvcTestResult resposta, String relacao) {
+            var header = resposta.getResponse().getHeader(HttpHeaders.LINK);
+            var encontrado = Pattern.compile("<([^>]*)>; rel=\"" + relacao + "\"").matcher(header == null ? "" : header);
+            return encontrado.find() ? URI.create(encontrado.group(1)) : null;
+        }
     }
 }

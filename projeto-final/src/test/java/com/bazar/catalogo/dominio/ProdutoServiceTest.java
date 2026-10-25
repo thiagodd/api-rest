@@ -2,6 +2,7 @@ package com.bazar.catalogo.dominio;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -16,10 +17,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LogLevel;
-import org.springframework.data.domain.Sort;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,49 +63,55 @@ class ProdutoServiceTest {
         LimpezaDoBanco.limpar(jdbc);
     }
 
+    // A primeira página, grande o bastante para todos os produtos do teste: a paginação é testada na API (13.04).
+    private List<ProdutoResumo> listar(FiltroDeProdutos filtro, Sort ordenacao) {
+        return servico.listar(filtro, ordenacao, ScrollPosition.keyset(), 100).getContent();
+    }
+
     @Test
     void listaResumosOrdenadosPorNomeSemCarregarAsEntidades(CapturedOutput saida) {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum(), POR_NOME))
+        assertThat(listar(FiltroDeProdutos.nenhum(), POR_NOME))
                 .extracting(ProdutoResumo::sku)
                 .containsExactly("ELE-0001", "LIV-0042", "LIV-0043");
         assertThat(saida).contains(
-                "select p1_0.id,p1_0.sku,p1_0.nome,p1_0.preco_valor,p1_0.preco_moeda,p1_0.status,p1_0.categoria_id from produto p1_0");
+                "select p1_0.id,p1_0.sku,p1_0.nome,p1_0.preco_valor,p1_0.preco_moeda,p1_0.status,p1_0.categoria_id,"
+                        + "p1_0.criado_em from produto p1_0 order by 3,1 fetch first ? rows only");
     }
 
     @Test
     void combinaSoOsFiltrosInformados() {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO), POR_NOME))
+        assertThat(listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0042", "LIV-0043");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO).comStatus(StatusProduto.RASCUNHO)
+        assertThat(listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO).comStatus(StatusProduto.RASCUNHO)
                 .custando(new BigDecimal("130.00"), null), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0043");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().custando(null, new BigDecimal("129.90")).comTexto("c"), POR_NOME))
+        assertThat(listar(FiltroDeProdutos.nenhum().custando(null, new BigDecimal("129.90")).comTexto("c"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001", "LIV-0042");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comStatus(StatusProduto.ATIVO), POR_NOME)).isEmpty();
+        assertThat(listar(FiltroDeProdutos.nenhum().comStatus(StatusProduto.ATIVO), POR_NOME)).isEmpty();
     }
 
     @Test
     void trataOsCuringasDoTextoComoTextoComum() {
         // Sem o escape, "%" casaria com qualquer nome.
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("100%"), POR_NOME))
+        assertThat(listar(FiltroDeProdutos.nenhum().comTexto("100%"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("%"), POR_NOME)).hasSize(1);
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("_"), POR_NOME)).isEmpty();
+        assertThat(listar(FiltroDeProdutos.nenhum().comTexto("%"), POR_NOME)).hasSize(1);
+        assertThat(listar(FiltroDeProdutos.nenhum().comTexto("_"), POR_NOME)).isEmpty();
     }
 
     @Test
     void filtraPorAtributoNoJsonbComChaveEValorComoParametros(CapturedOutput saida) {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Robert C. Martin"), POR_NOME))
+        assertThat(listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Robert C. Martin"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0042");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Martin Fowler"), POR_NOME)).isEmpty();
+        assertThat(listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Martin Fowler"), POR_NOME)).isEmpty();
         // Os valores vão como parâmetros: uma aspa no valor não quebra a consulta, só não casa com nada.
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor'", "x' or '1'='1"), POR_NOME)).isEmpty();
+        assertThat(listar(FiltroDeProdutos.nenhum().comAtributo("autor'", "x' or '1'='1"), POR_NOME)).isEmpty();
         assertThat(saida).contains("jsonb_extract_path_text(p1_0.atributos,?)=?").doesNotContain("'1'='1");
     }
 
     @Test
     void umaListaDeCategoriasEhUmOu() {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO, ELETRONICOS), POR_NOME)).hasSize(3);
+        assertThat(listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO, ELETRONICOS), POR_NOME)).hasSize(3);
     }
 
     @Test
@@ -114,9 +122,9 @@ class ProdutoServiceTest {
         var criadosAposAntes = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, antes, Map.of());
         var criadosAposDepois = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, depois, Map.of());
 
-        assertThat(servico.listar(porSku, POR_NOME)).extracting(ProdutoResumo::nome).containsExactly("Refactoring");
-        assertThat(servico.listar(criadosAposAntes, POR_NOME)).hasSize(3);
-        assertThat(servico.listar(criadosAposDepois, POR_NOME)).isEmpty();
+        assertThat(listar(porSku, POR_NOME)).extracting(ProdutoResumo::nome).containsExactly("Refactoring");
+        assertThat(listar(criadosAposAntes, POR_NOME)).hasSize(3);
+        assertThat(listar(criadosAposDepois, POR_NOME)).isEmpty();
     }
 
     @Test
@@ -126,7 +134,7 @@ class ProdutoServiceTest {
         servico.criar(new Produto("LIV-0045", "Effective Java", null, Dinheiro.deCentavos(15900, "BRL"), PROGRAMACAO,
                 Map.of()));
 
-        var porPreco = servico.listar(FiltroDeProdutos.nenhum(), Sort.by(Sort.Order.desc("preco.valor"), Sort.Order.asc("id")));
+        var porPreco = listar(FiltroDeProdutos.nenhum(), Sort.by(Sort.Order.desc("preco.valor"), Sort.Order.asc("id")));
 
         assertThat(porPreco).extracting(ProdutoResumo::sku).endsWith("LIV-0042", "ELE-0001");
         // Três produtos custam R$ 159,00: entre eles, quem decide é o id. Os ids ainda são aleatórios (v4; o v7 chega

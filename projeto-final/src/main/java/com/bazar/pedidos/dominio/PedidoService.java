@@ -1,19 +1,24 @@
 package com.bazar.pedidos.dominio;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.clientes.dominio.ClienteRepository;
+import com.bazar.compartilhado.Janelas;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.estoque.dominio.EstoqueService;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Window;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,10 +85,27 @@ public class PedidoService {
         quantidades.forEach(estoques::reservar);
     }
 
-    // Os mais recentes primeiro. A paginação de verdade, com cursor, chega em 13.04.
+    /**
+     * Os pedidos do cliente, dos mais recentes para os mais antigos, uma janela por vez (13.04). A posição tem as
+     * chaves criadoEm e id de um pedido já visto; para trás, a janela traz os que vêm antes dele, na mesma ordem.
+     * O hasNext da janela diz se há mais pedidos na direção pedida.
+     */
     @Transactional(readOnly = true)
-    public List<Pedido> listarDoCliente(UUID clienteId, int limite) {
-        return pedidos.findComItensByClienteIdOrderByCriadoEmDesc(clienteId, Limit.of(limite));
+    public Window<Pedido> listarDoCliente(UUID clienteId, KeysetScrollPosition posicao, int limite) {
+        // Um a mais que o limite: se ele vier, há outra página na mesma direção, sem precisar de um count.
+        var umAMais = Limit.of(limite + 1);
+        List<Pedido> encontrados;
+        if (posicao.isInitial()) {
+            encontrados = pedidos.findComItensByClienteIdOrderByCriadoEmDescIdDesc(clienteId, umAMais);
+        } else {
+            var criadoEm = (Instant) posicao.getKeys().get("criadoEm");
+            var id = (UUID) posicao.getKeys().get("id");
+            encontrados = posicao.scrollsBackward()
+                    ? pedidos.buscarAntesDe(clienteId, criadoEm, id, umAMais)
+                    : pedidos.buscarDepoisDe(clienteId, criadoEm, id, umAMais);
+        }
+        return Janelas.de(encontrados, limite, posicao.scrollsBackward(),
+                pedido -> Map.of("criadoEm", pedido.getCriadoEm(), "id", pedido.getId()));
     }
 
     @Transactional(readOnly = true)
