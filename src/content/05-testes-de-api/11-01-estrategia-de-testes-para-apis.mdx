@@ -2,77 +2,389 @@
 id: "11.01"
 titulo: "Estratégia de testes para APIs"
 descricao: "Sem estratégia os testes ficam lentos, frágeis ou não pegam bugs reais. Esta página define o que testar em cada camada."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "docs.spring.io: reference / testing"
+  - titulo: "Spring Boot: Testing"
     url: "https://docs.spring.io/spring-boot/reference/testing/"
-  - titulo: "martinfowler.com: articles / practical-test-pyramid"
+  - titulo: "Martin Fowler (Ham Vocke): The Practical Test Pyramid"
     url: "https://martinfowler.com/articles/practical-test-pyramid.html"
+  - titulo: "Kent C. Dodds: The Testing Trophy and Testing Classifications"
+    url: "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications"
+  - titulo: "Spring Framework: Context Caching"
+    url: "https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/ctx-management/caching.html"
+  - titulo: "Spring Framework: Context Pausing"
+    url: "https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/ctx-management/context-pausing.html"
+  - titulo: "Spring Framework: Bean Overriding in Tests"
+    url: "https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/bean-overriding.html"
+  - titulo: "Martin Fowler: GivenWhenThen"
+    url: "https://martinfowler.com/bliki/GivenWhenThen.html"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Sem estratégia os testes ficam lentos, frágeis ou não pegam bugs reais. Esta página define o que testar em cada camada.
+O Bazar já tem 73 testes. Eles passam, mas foram escritos à medida que cada página precisava de um, sem um plano. Isso aparece em dois sintomas.
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+O primeiro é o custo. Para rodar os testes, a suíte sobe **7 contextos Spring** e **4 contêineres do PostgreSQL**, embora todos os testes com banco pudessem dividir um único contêiner. Com 73 testes isso ainda cabe em 20 segundos. Com 700, o time passa a rodar a suíte só no CI, e o CI vira o lugar onde se descobre que algo quebrou.
+
+O segundo sintoma é o oposto: teste que passa e não prova nada. Um teste que troca o repositório por um *mock* não descobre que a consulta SQL está errada. Um teste que chama o método do controller direto, sem HTTP, não descobre que o JSON sai com o nome de campo errado. Nos dois casos o teste fica verde e o bug vai para produção.
+
+Pense na inspeção de um carro. Na bancada, o mecânico testa cada peça sozinha: rápido, barato e com o defeito apontado na hora. No dinamômetro, testa o motor montado: mais lento, mas pega peças que funcionam sozinhas e não funcionam juntas. No fim, um *test drive* curto confirma que o carro anda. Ninguém faz cem *test drives* para achar uma vela ruim, e ninguém entrega o carro só porque as peças passaram na bancada.
+
+> **A pergunta desta página:** que tipo de teste escrever para cada parte de uma API Spring Boot, e como organizar a suíte para que ela seja rápida e pegue os bugs que importam?
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Pirâmide × "troféu" de testes
-- Testes unitários, *slice tests*, integração, ponta a ponta e contrato (ligação com 18.05)
-- O que cada um prova
-- Velocidade e isolamento
-- Cache de contexto do Spring e como não destruí-lo (`@MockitoBean` com moderação)
-- Nomenclatura, *Given-When-Then*, dados de teste com *builders*
-</Draft>
+### Os tipos de teste de uma API
+
+Cada tipo de teste prova uma coisa diferente. O que define o tipo é o tamanho da fatia de código que roda de verdade, e não a ferramenta.
+
+| Tipo | O que roda de verdade | O que ele prova | O que ele **não** prova | Tempo típico no Bazar |
+|---|---|---|---|---|
+| **Unitário** | Uma classe (ou poucas), sem Spring | A regra de negócio: total do pedido, transições de status, validação de CPF | Que o Spring, o JSON ou o banco estão configurados | milissegundos |
+| **Slice** | Uma camada do Spring (web, JSON ou JPA) | O contrato da camada: rota, status, headers, formato do JSON, mensagens de erro | Que a camada de baixo funciona (o serviço é um *mock*) | 0,2 a 0,5 s para subir a fatia |
+| **Integração** | A aplicação inteira com um banco real | SQL, *migrations*, transações, *locking* e a ligação entre as camadas | Que um cliente HTTP real consegue usar a API | 1,5 s para subir o contexto, mais o contêiner |
+| **Ponta a ponta** | A aplicação num servidor real, chamada por HTTP | Um fluxo de negócio completo, do jeito que um cliente o faria | Por que falhou (a falha aparece longe da causa) | segundos por cenário |
+| **Contrato** | O provedor contra o que o consumidor espera | Que uma mudança não quebrou um cliente conhecido | Regras de negócio | depende da ferramenta |
+
+O <Term id="slice-test">*slice test*</Term> é o tipo que mais aparece em projetos Spring e o que mais falta em projetos que só têm unitários e `@SpringBootTest`. O Spring Boot tem uma anotação para cada fatia: `@WebMvcTest` sobe só a camada web (controllers, conversores, `@ControllerAdvice`, filtros), `@JsonTest` sobe só o Jackson e `@DataJpaTest` sobe só a JPA. Os *beans* que ficam de fora, como os serviços, entram como dublês.
+
+O teste de contrato é assunto da página [18.05](/contratos-documentacao-e-ciclo-de-vida/testes-de-contrato). Ele só faz sentido quando a API tem consumidores conhecidos, o que o Bazar ainda não tem.
+
+### Dublês de teste
+
+Um <Term id="dubles-de-teste">dublê de teste</Term> substitui uma dependência real durante o teste, como o dublê que substitui o ator numa cena perigosa. Os três que você vai usar:
+
+- ***Stub*:** devolve respostas prontas ("quando buscarem o produto X, devolva este produto"). Serve para colocar o código testado num estado.
+- ***Mock*:** um *stub* que também registra as chamadas, para o teste verificar depois ("o evento foi publicado uma vez?"). O Mockito cria os dois.
+- ***Fake*:** uma implementação simples que funciona de verdade, como um repositório num `HashMap`. Serve quando o teste depende do comportamento, e não de uma resposta pronta.
+
+A página [11.02](/testes-de-api/testes-unitarios-de-dominio-e-servicos) mostra os três no código e, principalmente, quando **não** usar nenhum deles.
+
+### Pirâmide × troféu
+
+A forma mais conhecida de distribuir os testes é a **pirâmide**, de Mike Cohn, popularizada no artigo de Ham Vocke publicado por Martin Fowler: muitos testes unitários na base, alguns de integração no meio, poucos de ponta a ponta no topo. O motivo é custo: quanto mais alto, mais lento, mais frágil e mais difícil de diagnosticar.
+
+O **troféu**, de Kent C. Dodds, critica a pirâmide: a base são as verificações estáticas (compilador, *linters*), os unitários ficam menores, e a parte mais larga é a de integração. O argumento é que um teste vale pela confiança que dá, e muitos unitários testam detalhes de implementação que nenhum cliente vê.
+
+Para uma API Spring Boot, os dois têm razão em partes diferentes do código:
+
+- A **regra de negócio** (total do pedido, quais transições de status são válidas) é lógica pura. Testes unitários são a ferramenta certa: rápidos e precisos.
+- A **maior parte dos bugs de uma API mora nas fronteiras**: o JSON que entra e sai, a validação, o status e o Problem Details, o SQL, a transação. Nenhum teste unitário enxerga essas fronteiras, porque elas são configuração do Spring, anotações e banco.
+
+Por isso a distribuição que funciona para APIs tem uma "cintura" larga de *slice tests* e de integração. É o troféu, com unitários onde há regra de verdade.
+
+<Comparison
+  title="O que cada nível deve cobrir no Bazar"
+  columns={['Unitário', 'Slice (web/JSON)', 'Integração', 'Ponta a ponta']}
+  highlight={1}
+  rows={[
+    { label: 'Regras do domínio (total, status, CPF)', values: [true, false, false, false] },
+    { label: 'Status, headers e corpo de cada endpoint', values: [false, true, false, false] },
+    { label: 'Validação e Problem Details', values: [false, true, false, false] },
+    { label: 'Consultas, migrations e constraints', values: [false, false, true, false] },
+    { label: 'Transações e concorrência', values: [false, false, true, false] },
+    { label: 'Fluxos de negócio completos', values: [false, false, null, true] },
+    { label: 'Quantidade relativa', values: ['muitos', 'muitos', 'alguns', 'poucos'] },
+  ]}
+/>
+
+### Velocidade e isolamento
+
+Duas propriedades decidem se uma suíte continua sendo rodada:
+
+- **Velocidade.** Ninguém espera dois minutos a cada mudança. Um teste unitário roda em milissegundos. Um `@WebMvcTest` sobe a camada web em cerca de 0,3 s. Um `@SpringBootTest` sobe a aplicação inteira em 1,5 s, e o primeiro ainda espera o contêiner do PostgreSQL. O custo de subir o contexto é pago uma vez por **configuração**, não por teste, como mostra a seção seguinte.
+- **Isolamento.** Um teste não pode depender de outro: nem da ordem em que rodam nem dos dados que o outro deixou. Testes com banco compartilham o mesmo PostgreSQL, então cada um limpa o que criou. No Bazar, isso é o `LimpezaDoBanco.limpar(jdbc)` chamado no `@AfterEach`. A página [11.04](/testes-de-api/testes-de-integracao-com-springboottest-e-testcontainers) discute as alternativas e por que `@Transactional` no teste engana.
+
+Um teste que falha às vezes, sem mudança no código, é chamado de <Term id="teste-flaky">*flaky*</Term>. Quase sempre a causa é falta de isolamento (dados de outro teste, relógio, ordem de execução) ou concorrência mal sincronizada. Um teste *flaky* é pior que nenhum: o time aprende a ignorar falhas.
+
+### O cache de contexto do Spring
+
+Subir um `ApplicationContext` é a parte cara de um teste Spring. Por isso o Spring TestContext guarda cada contexto num cache estático, que dura enquanto a JVM dos testes estiver viva. Quando a próxima classe de teste pede um contexto **com a mesma configuração**, recebe o que já está no cache, sem subir nada.
+
+O que define "a mesma configuração" é a **chave do cache**. Ela é montada a partir de tudo o que pode mudar os *beans* do contexto, entre outros:
+
+- as classes de configuração (`@SpringBootTest(classes = ...)`, `@Import`);
+- os *profiles* ativos (`@ActiveProfiles`);
+- as propriedades declaradas no teste (`@SpringBootTest(properties = ...)`, `@TestPropertySource`);
+- os customizadores registrados pelas anotações do Spring Boot, como `@AutoConfigureMockMvc`;
+- os *beans* substituídos, como os de `@MockitoBean` e `@MockitoSpyBean`.
+
+Qualquer diferença em qualquer item gera um contexto novo. É assim que o Bazar chegou a 7 contextos:
+
+| Contexto | Classes de teste | Por que é diferente |
+|---|---|---|
+| 1 | `BazarApplicationTests`, `ConsultaDeVendasTest`, `ReservaConcorrenteTest` | `@SpringBootTest` + `TestcontainersConfiguration` |
+| 2 | `ProdutoServiceTest` | Igual ao 1, mais a propriedade `logging.level.org.hibernate.SQL=debug` |
+| 3 | `CategoriaControllerTest`, `ProdutoControllerTest`, `EstoqueControllerTest` | Igual ao 1, mais `@AutoConfigureMockMvc` |
+| 4 | `PedidoControllerTest` | Igual ao 3, mais `hibernate.generate_statistics=true` |
+| 5 a 7 | `ClienteControllerTest`, `CategoriaRotasFuncionaisTest`, `ProdutoJsonTest` | *Slices* diferentes (`@WebMvcTest` de outro controller, `@JsonTest`) |
+
+Os contextos 5 a 7 são esperados: cada *slice* é pequeno e sobe em menos de meio segundo. Os contextos 1 a 4 são o desperdício. Cada um sobe a aplicação inteira **e o seu próprio contêiner do PostgreSQL**, porque o contêiner é um *bean* da `TestcontainersConfiguration`, e cada contexto cria os seus *beans*. Duas propriedades de diagnóstico e uma anotação custaram três aplicações e três bancos a mais. A página 11.04 junta os quatro num contexto só.
+
+<Callout type="warning" title="@MockitoBean com moderação">
+Cada combinação diferente de `@MockitoBean` é uma chave de cache diferente. Uma suíte em que cada classe `@SpringBootTest` substitui um *bean* diferente sobe a aplicação inteira para cada classe. Use `@MockitoBean` nos *slices*, onde o contexto é pequeno e substituir os serviços é o objetivo. Num teste de integração, prefira os *beans* reais. Se precisar de um dublê, declare o mesmo conjunto de dublês numa configuração compartilhada por todas as classes.
+</Callout>
+
+`@MockitoBean` e `@MockitoSpyBean` são do Spring Framework (pacote `org.springframework.test.context.bean.override.mockito`) desde a versão 6.2. Em código legado você vai encontrar `@MockBean` e `@SpyBean`, do Spring Boot: foram depreciadas no Boot 3.4 e **removidas no Boot 4**.
+
+Outra forma comum de destruir o cache é `@DirtiesContext`. Ela fecha o contexto depois do teste e obriga o próximo a subir outro. Às vezes é necessária, por exemplo quando o teste muda o estado de um *singleton* que não tem como ser restaurado. Mas, na maioria das vezes, ela aparece para esconder um problema de isolamento de dados que deveria ser resolvido com limpeza.
+
+### Nomes, estrutura e dados de teste
+
+**Nomes.** O nome do teste é a primeira coisa que você lê quando ele falha, então descreva o comportamento esperado, e não o método testado. O Bazar usa frases em português, em *camelCase*: `responde404ComProblemDetails`, `naoRemoveUmaCategoriaComProdutos`, `rejeitaUmProdutoSemPreco`. Compare com `testDelete2`: quando ele falha, você ainda não sabe o que quebrou. A classe de teste leva o nome da classe testada com o sufixo `Test` (`PedidoTest`, `ProdutoControllerTest`), que é o padrão que o Maven Surefire procura.
+
+**Estrutura.** Todo teste tem três partes, no formato <Term id="given-when-then">*Given-When-Then*</Term>: dado um estado (*given*), quando algo acontece (*when*), então o resultado é este (*then*). É o mesmo *Arrange-Act-Assert*, com outros nomes. Deixe as três partes visíveis, com linhas em branco ou comentários. Um teste com dois *when* testa duas coisas; quebre-o em dois.
+
+```java title="Estrutura de um teste (antecipação da 11.02)"
+@Test
+void naoPermiteEnviarUmPedidoQueAindaNaoFoiPago() {
+    // given
+    var pedido = umPedido().build();
+
+    // when
+    var erro = catchThrowable(pedido::enviar);
+
+    // then
+    assertThat(erro).isInstanceOf(TransicaoInvalidaException.class);
+}
+```
+
+**Dados de teste.** Criar um `Produto` exige SKU, nome, preço, categoria e atributos. Se cada teste monta tudo isso, duas coisas acontecem: o teste fica longo e você não sabe qual dos dez campos importa para ele, e uma mudança no construtor quebra cinquenta testes. A solução é um <Term id="test-data-builder">*test data builder*</Term>: uma classe que cria um objeto válido com valores padrão e deixa o teste mudar só o que importa.
+
+```java
+var produto = umProduto().comPreco(129_90).build();     // só o preço importa para este teste
+var pedido = umPedido().com(produto, 2).build();
+```
+
+O valor padrão de cada campo é qualquer valor válido. O que o teste muda explicitamente é exatamente o que ele está testando. Os *builders* do Bazar chegam na 11.02.
 
 ## Diagrama
 
-<Draft title="Diagramas previstos">
-pirâmide anotada com as ferramentas de cada nível.
-</Draft>
+```mermaid title="A suíte do Bazar por nível, com as ferramentas de cada um"
+flowchart TB
+    E2E["<b>Ponta a ponta</b> · poucos<br/>RestAssured contra a app em porta aleatória<br/><i>11.05</i>"]
+    INT["<b>Integração</b> · alguns<br/>@SpringBootTest + Testcontainers (PostgreSQL 18)<br/>RestTestClient, JdbcClient<br/><i>11.04</i>"]
+    SLICE["<b>Slice</b> · muitos<br/>@WebMvcTest + MockMvcTester · @JsonTest · @DataJpaTest<br/>@MockitoBean para os serviços<br/><i>11.03</i>"]
+    UNIT["<b>Unitário</b> · muitos<br/>JUnit 6 + AssertJ + Mockito, sem Spring<br/>Pedido, Dinheiro, CpfValidator<br/><i>11.02</i>"]
+    CONTRATO["<b>Contrato</b> (ao lado da pirâmide)<br/>provedor × consumidor<br/><i>18.05</i>"]
+    E2E --- INT --- SLICE --- UNIT
+    INT -.- CONTRATO
+```
+
+Quanto mais alto o nível, mais código roda de verdade e mais confiança cada teste dá. Também é mais lento, e a falha aparece mais longe da causa. Na base, um teste que falha aponta a linha. No topo, aponta um fluxo.
 
 ## Na prática
 
-<Draft title="Código previsto">
-nenhum (é uma página conceitual com a estrutura de pastas de teste).
-</Draft>
+Esta página não muda o código do Bazar. Ela define onde cada teste mora, e as próximas páginas aplicam a estrutura.
+
+### A estrutura de pastas
+
+Os testes espelham os pacotes de produção. Assim, o teste de uma classe *package-private* fica no mesmo pacote e consegue acessá-la. O tipo do teste aparece no nome da classe, e não numa pasta separada:
+
+<FileTree title="src/test/java do Bazar ao fim da Parte 5" tree={`
+src/test/java/com/bazar/
+  TestBazarApplication.java # 11.04: sobe a app local com contêineres
+  TestcontainersConfiguration.java # o PostgreSQL dos testes
+  TesteDeIntegracao.java # 11.04: anotação que garante um contexto só
+  LimpezaDoBanco.java # apaga o que os testes criaram
+  ContadorDeConsultas.java # conta as consultas SQL (10.04)
+  catalogo/
+    api/
+      ProdutoControllerTest.java # slice: @WebMvcTest (11.03)
+      ProdutoJsonTest.java # slice: @JsonTest
+    dominio/
+      ProdutoServiceTest.java # integração
+      ProdutoDeTeste.java # builder (11.02)
+  pedidos/
+    dominio/
+      PedidoTest.java # unitário: máquina de estados (11.02)
+      PedidoServiceTest.java # unitário com mocks (11.02)
+  e2e/
+    FluxoCompraE2ETest.java # ponta a ponta (11.05)
+`} />
+
+| Sufixo e anotação | Tipo | Precisa de Docker |
+|---|---|---|
+| `*Test`, sem anotação do Spring | Unitário | Não |
+| `*Test` com `@WebMvcTest` ou `@JsonTest` | *Slice* | Não |
+| `*Test` com `@TesteDeIntegracao` | Integração | Sim |
+| `*E2ETest` | Ponta a ponta | Sim |
+
+Por enquanto, todos rodam juntos no `./mvnw verify`. Separar unitários e *slices* (fase `test`, Surefire) de integração e ponta a ponta (fase `integration-test`, Failsafe) é uma decisão de CI, discutida na página [29.06](/producao-e-deploy/ci-cd-para-apis).
+
+### Onde cada teste do Bazar vai morar
+
+Aplicando a tabela de tipos ao que o Bazar já tem:
+
+- **Regras do pedido** (total, transições de status): unitário, `PedidoTest`, em 11.02.
+- **Criação do pedido** (cliente inexistente, reserva de estoque, evento publicado): unitário com dublês, `PedidoServiceTest`, em 11.02. A parte que depende do SQL de reserva continua coberta por `ReservaConcorrenteTest`, que é integração.
+- **Contrato HTTP de produtos** (201 com `Location`, 422 com `erros[]`, 404 com Problem Details): *slice*, `ProdutoControllerTest` com `@WebMvcTest`, em 11.03. Hoje esse teste sobe a aplicação inteira e um banco para verificar coisas que não dependem do banco.
+- **Persistência de produtos** (constraint de SKU único, consultas com filtros): integração, em 11.04.
+- **Compra completa** (cadastrar cliente e produto, definir estoque, criar pedido): ponta a ponta, em 11.05.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Testar o contrato HTTP" why="O contrato HTTP (status, JSON, erros) não depende do banco. Subir a aplicação inteira para verificá-lo deixa o teste lento, e o teste quebra quando o banco muda.">
+<Bad title="@SpringBootTest para tudo">
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
+class ProdutoControllerTest {
+    // 13 testes de status, headers e Problem Details,
+    // cada um gravando no PostgreSQL para ter o que consultar
+}
+```
+
+</Bad>
+<Good title="Slice para o contrato, integração para o banco">
+
+```java
+@WebMvcTest(ProdutoController.class)
+class ProdutoControllerTest {
+    @MockitoBean ProdutoService produtos;  // a camada web isolada
+}
+
+@TesteDeIntegracao                         // um contexto só
+class ProdutoIntegracaoTest {
+    // poucos testes, do que depende do banco
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="Mockar o que você está testando" why="Um mock do repositório num teste de consulta testa o mock. Mocke as dependências da unidade testada, nunca a própria unidade nem a fronteira que o teste deveria exercitar.">
+<Bad title="O mock devolve o que o teste espera">
+
+```java
+when(produtos.findBy(any(), any())).thenReturn(List.of(clean));
+assertThat(service.listar(filtroPorCategoria)).containsExactly(clean);
+// passa mesmo se a Specification estiver errada
+```
+
+</Bad>
+<Good title="A consulta roda no PostgreSQL">
+
+```java
+// integração: grava três produtos e confere quais voltam
+assertThat(service.listar(filtroPorCategoria))
+        .extracting(ProdutoResumo::sku)
+        .containsExactly("LIV-0042");
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **H2 no lugar do PostgreSQL.** O H2 aceita SQL que o PostgreSQL rejeita, e o contrário também acontece. Ele não tem `for no key update`, `skip locked` nem o mesmo comportamento de *locks*. O teste passa e a produção falha. Use o banco de produção num contêiner (11.04).
+- **Testes que dependem da ordem.** O teste B só passa porque o A deixou um produto no banco. Rode-os em outra ordem e ele falha. Cada teste cria os seus dados e limpa ao terminar.
+- **Asserções frouxas.** `assertThat(resposta.getStatus()).isLessThan(500)` não pega um 200 que deveria ser 201. Afirme o valor exato.
+- **Testar a implementação, não o comportamento.** `verify(repository).save(any())` quebra quando você troca `save` por *dirty checking* (10.03), embora nada observável tenha mudado. Verifique interações só quando a interação é o comportamento, como publicar um evento.
+- **`Thread.sleep` para esperar algo assíncrono.** O teste fica lento e, mesmo assim, *flaky* numa máquina mais lenta. Espere a condição, não o tempo: com um *latch* (como em `ReservaConcorrenteTest`) ou com Awaitility (Parte 8).
+- **Um contexto por classe.** Propriedades, `@MockitoBean` e `@DirtiesContext` espalhados multiplicam os contextos. Junte a configuração de integração numa anotação só.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
+- **Escolha o tipo pelo que precisa ser provado:** regra de negócio no unitário, contrato HTTP no *slice*, SQL e transação na integração, fluxo no ponta a ponta.
+- **Use o banco de produção nos testes**, num contêiner, e nunca um substituto em memória.
+- **Mantenha uma configuração de integração única** e trate um contexto novo no log como uma regressão.
+- **Restrinja `@MockitoBean` aos *slices*.** Nos testes de integração, use os *beans* reais.
+- **Dê ao teste o nome do comportamento** e mostre as três partes *given*, *when* e *then*.
+- **Crie dados com *builders***, mudando só o que o teste verifica.
+- **Torne cada teste independente:** os seus dados, a sua limpeza, nenhuma suposição sobre a ordem.
+- **Conserte ou apague um teste *flaky* no mesmo dia.** Um teste que falha às vezes ensina o time a ignorar falhas.
 
 ## Por baixo dos panos
 
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+<DeepDive title="Como ver o cache de contexto funcionando">
+O Spring registra as estatísticas do cache na categoria `org.springframework.test.context.cache`, em nível `DEBUG`. Rodando a suíte do Bazar com ela ligada:
 
-## No projeto Bazar
+```bash
+./mvnw test -Dlogging.level.org.springframework.test.context.cache=debug
+```
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+a última linha mostra o estado do cache ao fim dos testes:
+
+```text noCopy
+Spring test ApplicationContext cache statistics: [DefaultContextCache@16c230c size = 7,
+  maxSize = 32, contextUsageCount = 1, parentContextCount = 0, hitCount = 638,
+  missCount = 7, failureCount = 0]
+```
+
+- `missCount = 7`: sete vezes um teste pediu uma configuração que ainda não estava no cache, e um contexto foi criado.
+- `hitCount = 638`: nas outras 638 vezes o contexto veio do cache. O Spring consulta o cache várias vezes por teste, então o número é bem maior que a quantidade de testes.
+- `maxSize = 32`: o limite padrão. Ao passar dele, o contexto usado há mais tempo é fechado (LRU). O limite muda com a propriedade de sistema `spring.test.context.cache.maxSize`.
+
+O cache vive na JVM. Se o Surefire estiver configurado para abrir uma JVM por classe de teste (`reuseForks=false`), não há reaproveitamento algum.
+
+**Contextos pausados (Spring Framework 7).** Um contexto parado no cache continua com os seus componentes ativos: tarefas agendadas, *listeners* de fila. Até o Spring Framework 6, um `@Scheduled` de um contexto que nenhum teste estava usando continuava rodando e podia interferir nos testes de outro contexto. O Spring Framework 7 **pausa** o contexto quando o próximo teste pede um contexto diferente: os *beans* que implementam `Lifecycle` ou `SmartLifecycle` são parados e voltam a rodar quando o contexto sai do cache de novo. O comportamento é controlado pela propriedade de sistema `spring.test.context.cache.pause`, com `on_context_switch` (o padrão), `always` ou `never`.
+</DeepDive>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Cada tipo de teste prova uma coisa: o unitário, a regra; o *slice*, o contrato da camada; a integração, o banco e a transação; o ponta a ponta, o fluxo.
+- Em APIs, a maior parte dos bugs está nas fronteiras (JSON, validação, SQL). Por isso a suíte precisa de uma faixa larga de *slices* e integração, e não só de unitários.
+- O Spring guarda os contextos num cache cuja chave inclui classes, *profiles*, propriedades e `@MockitoBean`. Cada diferença sobe uma aplicação nova, e no Bazar sobe também um PostgreSQL novo.
+- Testes independentes, nomes que descrevem o comportamento, *Given-When-Then* e *builders* tornam a suíte legível e confiável.
+
+<Exercise title="Classifique os testes do Bazar" difficulty="facil">
+Para cada verificação abaixo, diga qual tipo de teste é o mais adequado (unitário, *slice*, integração ou ponta a ponta) e por quê:
+
+1. `Dinheiro.deCentavos(12990, "BRL")` tem valor `129.90`.
+2. `GET /v1/produtos/abc` responde `400` com `detail` "O valor do parâmetro 'id' é inválido.".
+3. Dois produtos com o mesmo SKU: o segundo deve ser recusado com `409`.
+4. Um cliente se cadastra, o produto recebe estoque, o pedido é criado e o estoque disponível diminui.
+5. O `FiltroDeProdutos` com preço máximo de R$ 100,00 não traz produtos de R$ 129,90.
+
+<Hint>Pergunte, para cada item: quem decide o resultado? Uma classe Java sozinha, a configuração do Spring MVC, o PostgreSQL ou a soma de vários endpoints?</Hint>
+
+<Solution>
+1. **Unitário.** `Dinheiro` é um *value object* sem dependências. Nada de Spring.
+2. ***Slice* (`@WebMvcTest`).** Quem decide a resposta é a conversão de tipo do Spring MVC e o `TratadorGlobalDeErros`. Nenhum serviço é chamado.
+3. **Integração.** Quem garante a unicidade é a *constraint* `unique` da coluna `sku`, criada na migration `V1` (10.02). Um *mock* do repositório não teria como provar isso. A página 11.04 escreve esse teste e descobre que hoje o Bazar responde `500`, e não `409`.
+4. **Ponta a ponta.** O fluxo atravessa quatro endpoints e três módulos. É exatamente o cenário da 11.05.
+5. **Integração.** O filtro vira SQL pela `Specification`. Um *mock* do repositório devolveria o que o teste mandasse. Também é possível testar a montagem da `Specification` isolada, mas só o banco prova que o `WHERE` gerado está certo.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Uma classe @SpringBootTest acrescenta properties = "logging.level.org.hibernate.SQL=debug". O que acontece com o cache de contexto?',
+    options: [
+      'Nada: propriedades de log não afetam os beans, então o Spring reaproveita o contexto',
+      'Uma nova chave de cache é criada, e a aplicação inteira sobe de novo para essa classe',
+      'O contexto existente é reiniciado com a nova propriedade e depois volta ao normal',
+      'O Spring ignora a propriedade porque ela já está no application.yml',
+    ],
+    answer: 1,
+    explanation: 'As propriedades declaradas no teste fazem parte da chave do cache, qualquer que seja o assunto delas. O Spring não sabe que uma propriedade de log "não muda nada". Ele cria outro contexto e não reinicia nem altera o que já existe. No Bazar, esse contexto novo trouxe também um segundo PostgreSQL.',
+  },
+  {
+    question: 'Qual teste prova que a resposta de erro de validação tem o formato Problem Details com erros[]?',
+    options: [
+      'Um teste unitário do TratadorGlobalDeErros chamando o método do handler',
+      'Um teste ponta a ponta do fluxo de compra',
+      'Um @WebMvcTest que envia o JSON inválido e verifica o corpo da resposta',
+      'Um @DataJpaTest com a entidade inválida',
+    ],
+    answer: 2,
+    explanation: 'O formato do erro depende da validação, do Jackson e do @RestControllerAdvice trabalhando juntos dentro do Spring MVC. Isso é exatamente o que o slice web sobe. O teste unitário do handler pula a validação e a serialização. O ponta a ponta prova muito mais do que o necessário e fica lento. O @DataJpaTest não tem camada web.',
+  },
+  {
+    question: 'Por que a distribuição de testes de uma API Spring costuma ter mais slices e integração do que a pirâmide clássica sugere?',
+    options: [
+      'Porque testes unitários não funcionam com Spring',
+      'Porque grande parte do comportamento de uma API é configuração e fronteira (JSON, validação, SQL), que só aparece com o Spring ou o banco rodando',
+      'Porque testes de integração são mais rápidos que unitários',
+      'Porque a pirâmide foi abandonada pela comunidade',
+    ],
+    answer: 1,
+    explanation: 'Anotações de validação, nomes de campos JSON, status e SQL não são lógica que um teste unitário execute. Os unitários continuam valendo para as regras de negócio. Eles funcionam bem com Spring (basta não subir o contexto), não são mais lentos que a integração, e a pirâmide continua sendo uma referência útil, não um modelo abandonado.',
+  },
+]} />
 
 ## Referências
 
