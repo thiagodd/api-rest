@@ -3,12 +3,14 @@ package com.bazar.catalogo.api;
 import java.util.Map;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
-import com.bazar.compartilhado.DinheiroMapperImpl;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
+import com.bazar.TestcontainersConfiguration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,12 +21,23 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@WebMvcTest(ProdutoController.class)
-@Import({ProdutoRepository.class, ProdutoMapperImpl.class, DinheiroMapperImpl.class})
+// Desde 10.01 os produtos estão no PostgreSQL: o teste sobe a aplicação inteira com um banco num contêiner.
+// A Parte 5 (11.03 e 11.04) separa os testes da camada web dos testes com banco.
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
 class ProdutoControllerTest {
 
     @Autowired
     MockMvcTester mvc;
+
+    @Autowired
+    ProdutoRepository repository;
+
+    @AfterEach
+    void limparOBanco() {
+        repository.deleteAll();
+    }
 
     @Test
     void criaUmProdutoComoRascunho() {

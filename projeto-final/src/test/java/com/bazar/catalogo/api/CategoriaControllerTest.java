@@ -1,12 +1,9 @@
 package com.bazar.catalogo.api;
 
-import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
-import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoRepository;
-import com.bazar.compartilhado.Dinheiro;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -18,27 +15,30 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 // Testes da camada web: a explicação completa está em 11.03.
 @WebMvcTest(CategoriaController.class)
 @ExtendWith(OutputCaptureExtension.class)
-@Import({ CategoriaRepository.class, ProdutoRepository.class })
+@Import(CategoriaRepository.class)
 class CategoriaControllerTest {
 
     @Autowired
     MockMvcTester mvc;
 
-    @Autowired
+    // Os produtos estão no banco (10.01); aqui basta simular a contagem.
+    @MockitoBean
     ProdutoRepository produtos;
 
     @Test
     void naoRemoveUmaCategoriaComProdutos() {
         var programacao = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
-        produtos.save(new Produto("LIV-0042", "Clean Code", null, Dinheiro.deCentavos(12990, "BRL"), programacao, Map.of()));
+        given(produtos.countByCategoriaId(programacao)).willReturn(1L);
 
         assertThat(mvc.delete().uri("/v1/categorias/{id}", programacao).header("Accept-Language", "pt-BR"))
                 .hasStatus(HttpStatus.CONFLICT)

@@ -1,4 +1,17 @@
 # Serviços de infraestrutura para o desenvolvimento local.
-# O spring-boot-docker-compose sobe este arquivo junto com a aplicação.
-# O PostgreSQL entra na Parte 4 (10.01).
-services: {}
+# O spring-boot-docker-compose sobe este arquivo junto com a aplicação e cria a conexão sozinho.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: bazar
+      POSTGRES_USER: bazar
+      POSTGRES_PASSWORD: bazar   # só para o ambiente local
+    ports:
+      - "5432"   # porta aleatória no host: o Spring Boot descobre qual
+    volumes:
+      # No PostgreSQL 18, os dados ficam em /var/lib/postgresql/18/docker; monta-se o diretório pai.
+      - bazar-postgres:/var/lib/postgresql
+
+volumes:
+  bazar-postgres:

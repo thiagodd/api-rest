@@ -3,6 +3,7 @@ package com.bazar.catalogo.api;
 import java.util.Locale;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
+import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.function.RouterFunction;
@@ -30,9 +32,11 @@ import static org.springframework.web.servlet.function.RouterFunctions.route;
  * esta versão vive só no teste, que mostra o que muda.
  */
 @WebMvcTest(CategoriaController.class)
-@Import({ CategoriaRepository.class, com.bazar.catalogo.dominio.ProdutoRepository.class,
-        CategoriaRotasFuncionaisTest.Rotas.class })
+@Import({ CategoriaRepository.class, CategoriaRotasFuncionaisTest.Rotas.class })
 class CategoriaRotasFuncionaisTest {
+
+    @MockitoBean
+    ProdutoRepository produtos;
 
     static final ParameterizedTypeReference<Lista<CategoriaResponse>> LISTA_DE_CATEGORIAS =
             new ParameterizedTypeReference<>() { };

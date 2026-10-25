@@ -11,6 +11,12 @@ spring:
   web:
     # Sem Accept-Language, o Bazar responde em português.
     locale: pt_BR
+  jpa:
+    # Sem Open Session in View: nenhuma consulta escondida acontece depois do controller (10.01).
+    open-in-view: false
+    hibernate:
+      # Provisório: o Hibernate cria as tabelas a cada inicialização. O Flyway assume em 10.02.
+      ddl-auto: create-drop
 
 server:
   port: 8080

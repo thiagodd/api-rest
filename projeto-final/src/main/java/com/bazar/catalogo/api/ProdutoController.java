@@ -33,7 +33,7 @@ public class ProdutoController {
     // Lista completa por enquanto; filtros, ordenação e paginação chegam em 13.01–13.04.
     @GetMapping
     public Lista<ProdutoResponse> listar() {
-        return new Lista<>(repository.findAll().stream().map(mapper::paraResponse).toList());
+        return new Lista<>(repository.findAllByOrderByNomeAsc().stream().map(mapper::paraResponse).toList());
     }
 
     @PostMapping
