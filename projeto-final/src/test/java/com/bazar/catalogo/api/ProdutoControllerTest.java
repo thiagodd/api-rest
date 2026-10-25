@@ -140,9 +140,8 @@ class ProdutoControllerTest {
         var csv = mvc.get().uri("/v1/produtos").accept(ListaCsvHttpMessageConverter.TEXT_CSV).exchange();
         assertThat(csv).hasStatusOk().hasContentType(ListaCsvHttpMessageConverter.TEXT_CSV);
         assertThat(csv).bodyText()
-                .startsWith("id,sku,nome,descricao,precoEmCentavos,categoriaId,status,atributos,criadoEm,atualizadoEm\r\n")
-                .contains(",LIV-0042,\"Clean Code, 2ª edição\",\"O clássico de \"\"Uncle Bob\"\"\",12990,")
-                .contains(",RASCUNHO,autor=Robert C. Martin; idioma=pt-BR,");
+                .startsWith("id,sku,nome,precoEmCentavos,categoriaId,status\r\n")
+                .contains(",LIV-0042,\"Clean Code, 2ª edição\",12990,0192f3a0-5555-7000-8000-000000000003,RASCUNHO\r\n");
     }
 
     @Test

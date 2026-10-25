@@ -2,6 +2,7 @@ package com.bazar.catalogo.api;
 
 import java.util.UUID;
 
+import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
@@ -33,10 +34,11 @@ public class ProdutoController {
         this.mapper = mapper;
     }
 
-    // Lista completa por enquanto; filtros, ordenação e paginação chegam em 13.01–13.04.
+    // Uma projeção, e não entidades: só as colunas da listagem (10.05).
+    // Os filtros já existem no serviço; os parâmetros HTTP, a ordenação e a paginação chegam em 13.01–13.04.
     @GetMapping
-    public Lista<ProdutoResponse> listar() {
-        return new Lista<>(repository.findAllByOrderByNomeAsc().stream().map(mapper::paraResponse).toList());
+    public Lista<ProdutoResumoResponse> listar() {
+        return new Lista<>(servico.listar(FiltroDeProdutos.nenhum()).stream().map(mapper::paraResumo).toList());
     }
 
     @PostMapping

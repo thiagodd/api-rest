@@ -1,5 +1,6 @@
 package com.bazar.catalogo.dominio;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ import com.bazar.estoque.dominio.Estoque;
 import com.bazar.estoque.dominio.EstoqueRepository;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,13 @@ public class ProdutoService {
         this.produtos = produtos;
         this.categorias = categorias;
         this.estoques = estoques;
+    }
+
+    // Sem entidades gerenciadas: a projeção seleciona só as colunas de ProdutoResumo.
+    @Transactional(readOnly = true)
+    public List<ProdutoResumo> listar(FiltroDeProdutos filtro) {
+        return produtos.findBy(ProdutoSpecifications.filtradoPor(filtro),
+                consulta -> consulta.as(ProdutoResumo.class).sortBy(Sort.by("nome")).all());
     }
 
     // O produto e o seu estoque (zerado) nascem juntos, ou nenhum dos dois.

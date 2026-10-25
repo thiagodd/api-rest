@@ -1,6 +1,7 @@
 package com.bazar.catalogo.api;
 
 import com.bazar.catalogo.dominio.Produto;
+import com.bazar.catalogo.dominio.ProdutoResumo;
 import com.bazar.compartilhado.ConfiguracaoMapStruct;
 import com.bazar.compartilhado.DinheiroMapper;
 
@@ -15,4 +16,7 @@ interface ProdutoMapper {
 
     @Mapping(target = "precoEmCentavos", source = "preco")
     ProdutoResponse paraResponse(Produto produto);
+
+    @Mapping(target = "precoEmCentavos", source = "preco")
+    ProdutoResumoResponse paraResumo(ProdutoResumo resumo);
 }
