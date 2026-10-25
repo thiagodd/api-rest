@@ -1,7 +1,11 @@
 package com.bazar.pedidos.dominio;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
- * Os estados do pedido. As transições (pagar, cancelar, enviar...) chegam em 12.04.
+ * Os estados do pedido e as transições permitidas entre eles. As ações da API que disparam as transições
+ * (pagar, cancelar, enviar...) chegam em 12.04.
  */
 public enum StatusPedido {
     CRIADO,
@@ -10,5 +14,20 @@ public enum StatusPedido {
     ENVIADO,
     ENTREGUE,
     CANCELADO,
-    REEMBOLSADO
+    REEMBOLSADO;
+
+    // ENTREGUE, CANCELADO e REEMBOLSADO são finais: não saem para nenhum outro estado.
+    public boolean podeIrPara(StatusPedido destino) {
+        return destinosPermitidos().contains(destino);
+    }
+
+    private Set<StatusPedido> destinosPermitidos() {
+        return switch (this) {
+            case CRIADO -> EnumSet.of(PAGAMENTO_PENDENTE, CANCELADO);
+            case PAGAMENTO_PENDENTE -> EnumSet.of(PAGO, CANCELADO);
+            case PAGO -> EnumSet.of(ENVIADO, REEMBOLSADO);
+            case ENVIADO -> EnumSet.of(ENTREGUE);
+            case ENTREGUE, CANCELADO, REEMBOLSADO -> EnumSet.noneOf(StatusPedido.class);
+        };
+    }
 }

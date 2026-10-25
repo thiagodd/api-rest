@@ -102,4 +102,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'teste-flaky', termo: 'Teste flaky', definicao: 'Teste que às vezes passa e às vezes falha sem mudança no código, quase sempre por falta de isolamento, dependência de tempo ou concorrência.', pagina: '11.01' },
   { id: 'given-when-then', termo: 'Given-When-Then', definicao: 'Estrutura de um teste em três partes: o estado inicial (given), a ação (when) e o resultado esperado (then). Equivale ao Arrange-Act-Assert.', pagina: '11.01' },
   { id: 'test-data-builder', termo: 'Test data builder', definicao: 'Classe que cria objetos válidos para testes com valores padrão, deixando cada teste mudar só os campos que importam para ele.', pagina: '11.01' },
+  { id: 'teste-parametrizado', termo: 'Teste parametrizado', definicao: 'Um mesmo teste executado várias vezes com entradas diferentes, cada execução relatada como um caso separado. No JUnit: @ParameterizedTest com @CsvSource, @EnumSource, @MethodSource etc.', pagina: '11.02' },
 ]

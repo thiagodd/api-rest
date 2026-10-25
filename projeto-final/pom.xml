@@ -20,6 +20,8 @@
     <properties>
         <java.version>25</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <!-- Vazio por padrão; o Surefire acrescenta o agente do Mockito (11.02). -->
+        <argLine></argLine>
     </properties>
 
     <dependencies>
@@ -109,6 +111,26 @@
                             <version>${mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <!-- Do Java 21 em diante, o JDK restringe agentes carregados em tempo de execução. O Mockito passa a ser
+                 carregado como agente na JVM dos testes, como recomenda a documentação dele (11.02). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
             <plugin>

@@ -90,6 +90,38 @@ public class Pedido {
         valorTotal = valorItens.add(valorFrete);
     }
 
+    // Cada ação muda o status só se a transição for permitida (StatusPedido.podeIrPara).
+    public void iniciarPagamento() {
+        mudarPara(StatusPedido.PAGAMENTO_PENDENTE);
+    }
+
+    public void confirmarPagamento() {
+        mudarPara(StatusPedido.PAGO);
+    }
+
+    public void enviar() {
+        mudarPara(StatusPedido.ENVIADO);
+    }
+
+    public void confirmarEntrega() {
+        mudarPara(StatusPedido.ENTREGUE);
+    }
+
+    public void cancelar() {
+        mudarPara(StatusPedido.CANCELADO);
+    }
+
+    public void reembolsar() {
+        mudarPara(StatusPedido.REEMBOLSADO);
+    }
+
+    private void mudarPara(StatusPedido destino) {
+        if (!status.podeIrPara(destino)) {
+            throw new TransicaoInvalidaException(id, status, destino);
+        }
+        status = destino;
+    }
+
     public UUID getId() {
         return id;
     }
