@@ -1,47 +1,62 @@
 package com.bazar.catalogo.api;
 
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import com.bazar.catalogo.dominio.Produto;
+import com.bazar.catalogo.dominio.ProdutoResumo;
+import com.bazar.catalogo.dominio.ProdutoService;
+import com.bazar.catalogo.dominio.StatusProduto;
+import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.DinheiroMapperImpl;
+import com.bazar.compartilhado.erros.CampoInvalidoException;
+import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
-import com.bazar.LimpezaDoBanco;
-import com.bazar.TestcontainersConfiguration;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import static com.bazar.catalogo.dominio.ProdutoDeTeste.PROGRAMACAO;
+import static com.bazar.catalogo.dominio.ProdutoDeTeste.umProduto;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-// Desde 10.01 os produtos estão no PostgreSQL: o teste sobe a aplicação inteira com um banco num contêiner.
-// A Parte 5 (11.03 e 11.04) separa os testes da camada web dos testes com banco.
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+// Um slice test: só a camada web sobe (controller, Jackson, validação, TratadorGlobalDeErros, filtros).
+// O serviço é um dublê; nada aqui toca no banco. O que depende do PostgreSQL está em ProdutoIntegracaoTest (11.04).
+@WebMvcTest(ProdutoController.class)
+@AutoConfigureRestTestClient
+@Import({ ProdutoMapperImpl.class, DinheiroMapperImpl.class })
 class ProdutoControllerTest {
 
     @Autowired
     MockMvcTester mvc;
 
-    @Autowired
-    JdbcClient jdbc;
-
-    @AfterEach
-    void limparOBanco() {
-        LimpezaDoBanco.limpar(jdbc);
-    }
+    @MockitoBean
+    ProdutoService produtos;
 
     @Test
     void criaUmProdutoComoRascunho() {
+        when(produtos.criar(any())).thenAnswer(chamada -> chamada.getArgument(0));
+
         var resposta = mvc.post().uri("/v1/produtos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -52,16 +67,20 @@ class ProdutoControllerTest {
                 .exchange();
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
-        assertThat(resposta.getResponse().getHeader("Location")).startsWith("http://localhost/v1/produtos/");
         assertThat(resposta).bodyJson().isLenientlyEqualTo("""
                 { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
                   "status": "RASCUNHO", "atributos": { "autor": "Robert C. Martin" } }
                 """);
         assertThat(resposta).bodyJson().doesNotHavePath("$.versao");
+        var criado = ArgumentCaptor.forClass(Produto.class);
+        verify(produtos).criar(criado.capture());
+        assertThat(resposta).hasHeader(HttpHeaders.LOCATION, "http://localhost/v1/produtos/" + criado.getValue().getId());
     }
 
     @Test
     void ignoraOsCamposQueOClienteNaoControla() {
+        when(produtos.criar(any())).thenAnswer(chamada -> chamada.getArgument(0));
+
         var resposta = mvc.post().uri("/v1/produtos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -79,17 +98,13 @@ class ProdutoControllerTest {
     }
 
     @Test
-    void atualizaUmProdutoSemMudarOSku() {
-        var location = mvc.post().uri("/v1/produtos")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        { "sku": "LIV-0044", "nome": "DDD", "precoEmCentavos": 19900,
-                          "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
-                        """)
-                .exchange().getResponse().getHeader("Location");
-        var caminho = location.substring("http://localhost".length());
+    void repassaAoServicoOsCamposDaAtualizacao() {
+        var ddd = umProduto().comSku("LIV-0044").comNome("Domain-Driven Design").comPreco(17990).build();
+        when(produtos.atualizar(eq(ddd.getId()), eq("Domain-Driven Design"), isNull(),
+                eq(Dinheiro.deCentavos(17990, "BRL")), eq(PROGRAMACAO), eq(Map.of("autor", "Eric Evans"))))
+                .thenReturn(ddd);
 
-        assertThat(mvc.put().uri(caminho)
+        assertThat(mvc.put().uri("/v1/produtos/{id}", ddd.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         { "nome": "Domain-Driven Design", "descricao": null, "precoEmCentavos": 17990,
@@ -102,7 +117,7 @@ class ProdutoControllerTest {
     }
 
     @Test
-    void rejeitaUmProdutoInvalidoComOsErrosDeCadaCampo() {
+    void rejeitaUmProdutoInvalidoSemChamarOServico() {
         var resposta = mvc.post().uri("/v1/produtos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -115,6 +130,7 @@ class ProdutoControllerTest {
         assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(MethodArgumentNotValidException.class);
         var erros = ((MethodArgumentNotValidException) resposta.getMvcResult().getResolvedException()).getFieldErrors();
         assertThat(erros).extracting(FieldError::getField).containsOnly("sku", "precoEmCentavos");
+        verifyNoInteractions(produtos);
     }
 
     @Test
@@ -129,35 +145,37 @@ class ProdutoControllerTest {
 
     @Test
     void listaEmJsonPorPadraoEEmCsvQuandoPedido() {
-        mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).content("""
-                { "sku": "LIV-0042", "nome": "Clean Code, 2ª edição", "descricao": "O clássico de \\"Uncle Bob\\"",
-                  "precoEmCentavos": 12990, "categoriaId": "0192f3a0-5555-7000-8000-000000000003",
-                  "atributos": { "idioma": "pt-BR", "autor": "Robert C. Martin" } }
-                """).exchange();
+        var id = UUID.fromString("0192f39f-2222-7000-8000-000000000042");
+        when(produtos.listar(any())).thenReturn(List.of(new ProdutoResumo(id, "LIV-0042", "Clean Code, 2ª edição",
+                Dinheiro.deCentavos(12990, "BRL"), StatusProduto.RASCUNHO, PROGRAMACAO)));
 
-        assertThat(mvc.get().uri("/v1/produtos")).hasContentType(MediaType.APPLICATION_JSON);
+        assertThat(mvc.get().uri("/v1/produtos"))
+                .hasContentType(MediaType.APPLICATION_JSON)
+                .bodyJson().extractingPath("$.itens[0].precoEmCentavos").isEqualTo(12990);
 
         var csv = mvc.get().uri("/v1/produtos").accept(ListaCsvHttpMessageConverter.TEXT_CSV).exchange();
         assertThat(csv).hasStatusOk().hasContentType(ListaCsvHttpMessageConverter.TEXT_CSV);
-        assertThat(csv).bodyText()
-                .startsWith("id,sku,nome,precoEmCentavos,categoriaId,status\r\n")
-                .contains(",LIV-0042,\"Clean Code, 2ª edição\",12990,0192f3a0-5555-7000-8000-000000000003,RASCUNHO\r\n");
+        assertThat(csv).bodyText().isEqualTo("""
+                id,sku,nome,precoEmCentavos,categoriaId,status\r
+                0192f39f-2222-7000-8000-000000000042,LIV-0042,"Clean Code, 2ª edição",12990,\
+                0192f3a0-5555-7000-8000-000000000003,RASCUNHO\r
+                """);
     }
 
     @Test
     void responde406QuandoPedeCsvDeUmItem() {
-        var location = mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).content("""
-                { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
-                  "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
-                """).exchange().getResponse().getHeader(HttpHeaders.LOCATION);
+        var cleanCode = umProduto().build();
+        when(produtos.detalhar(cleanCode.getId())).thenReturn(cleanCode);
 
         // O CSV só existe para listas: para um item, nenhum conversor escreve text/csv.
-        assertThat(mvc.get().uri(location).accept(ListaCsvHttpMessageConverter.TEXT_CSV))
+        assertThat(mvc.get().uri("/v1/produtos/{id}", cleanCode.getId()).accept(ListaCsvHttpMessageConverter.TEXT_CSV))
                 .hasStatus(HttpStatus.NOT_ACCEPTABLE);
     }
 
     @Test
     void recusaUmaCategoriaQueNaoExisteCom422() {
+        when(produtos.criar(any())).thenThrow(new CampoInvalidoException("categoriaId", "bazar.produto.categoria-inexistente"));
+
         assertThat(mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).header("Accept-Language", "pt-BR")
                 .content("""
                         { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
@@ -172,8 +190,10 @@ class ProdutoControllerTest {
 
     @Test
     void responde404ComProblemDetails() {
-        assertThat(mvc.get().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")
-                .header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))
+        var id = UUID.fromString("0192f39f-2222-7000-8000-000000000999");
+        when(produtos.detalhar(id)).thenThrow(new RecursoNaoEncontradoException("produto-nao-encontrado", id));
+
+        assertThat(mvc.get().uri("/v1/produtos/{id}", id).header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .bodyJson()
@@ -233,5 +253,54 @@ class ProdutoControllerTest {
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson()
                 .hasPathSatisfying("$.codigo", v -> assertThat(v).isEqualTo("REQUISICAO_INVALIDA"));
+    }
+
+    // Os mesmos contratos, escritos com o RestTestClient. Aqui ele usa o MockMvc por baixo; em 11.04 o mesmo
+    // código fala com um servidor de verdade.
+    @Nested
+    class ComRestTestClient {
+
+        @Autowired
+        RestTestClient cliente;
+
+        @Test
+        void criaUmProdutoCom201ELocation() {
+            when(produtos.criar(any())).thenAnswer(chamada -> chamada.getArgument(0));
+
+            cliente.post().uri("/v1/produtos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("""
+                            { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
+                              "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                            """)
+                    .exchange()
+                    .expectStatus().isCreated()
+                    .expectHeader().valueMatches(HttpHeaders.LOCATION, "http://localhost/v1/produtos/[0-9a-f-]{36}")
+                    .expectBody()
+                    .jsonPath("$.sku").isEqualTo("LIV-0042")
+                    .jsonPath("$.status").isEqualTo("RASCUNHO");
+        }
+
+        @Test
+        void responde422ComOsErrosDeCadaCampo() {
+            cliente.post().uri("/v1/produtos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR")
+                    .body("""
+                            { "sku": "liv-42", "nome": "Clean Code", "precoEmCentavos": -5,
+                              "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                            """)
+                    .exchange()
+                    .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                    .expectBody()
+                    .json("""
+                            { "type": "https://api.bazar.example/problemas/validacao", "codigo": "VALIDACAO",
+                              "erros": [
+                                { "campo": "precoEmCentavos", "mensagem": "deve ser maior que 0" },
+                                { "campo": "sku", "mensagem": "deve seguir o formato AAA-0000 (ex.: LIV-0042)" } ] }
+                            """);
+            verifyNoInteractions(produtos);
+        }
     }
 }

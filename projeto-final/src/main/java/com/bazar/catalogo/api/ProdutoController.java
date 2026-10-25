@@ -3,11 +3,9 @@ package com.bazar.catalogo.api;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.FiltroDeProdutos;
-import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
-import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -24,12 +22,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/v1/produtos")
 public class ProdutoController {
 
-    private final ProdutoRepository repository;
+    // O controller só conhece o serviço e o mapper: no @WebMvcTest, basta substituir o serviço (11.03).
     private final ProdutoService servico;
     private final ProdutoMapper mapper;
 
-    public ProdutoController(ProdutoRepository repository, ProdutoService servico, ProdutoMapper mapper) {
-        this.repository = repository;
+    public ProdutoController(ProdutoService servico, ProdutoMapper mapper) {
         this.servico = servico;
         this.mapper = mapper;
     }
@@ -53,9 +50,7 @@ public class ProdutoController {
 
     @GetMapping("/{id}")
     public ProdutoResponse detalhar(@PathVariable UUID id) {
-        return repository.findById(id)
-                .map(mapper::paraResponse)
-                .orElseThrow(() -> naoEncontrado(id));
+        return mapper.paraResponse(servico.detalhar(id));
     }
 
     @PutMapping("/{id}")
@@ -63,9 +58,5 @@ public class ProdutoController {
         var produto = servico.atualizar(id, request.nome(), request.descricao(),
                 Dinheiro.deCentavos(request.precoEmCentavos(), "BRL"), request.categoriaId(), request.atributos());
         return mapper.paraResponse(produto);
-    }
-
-    private static RecursoNaoEncontradoException naoEncontrado(UUID id) {
-        return new RecursoNaoEncontradoException("produto-nao-encontrado", id);
     }
 }

@@ -35,6 +35,11 @@ public class ProdutoService {
                 consulta -> consulta.as(ProdutoResumo.class).sortBy(Sort.by("nome")).all());
     }
 
+    @Transactional(readOnly = true)
+    public Produto detalhar(UUID id) {
+        return produtos.findById(id).orElseThrow(() -> naoEncontrado(id));
+    }
+
     // O produto e o seu estoque (zerado) nascem juntos, ou nenhum dos dois.
     @Transactional
     public Produto criar(Produto produto) {
@@ -48,11 +53,14 @@ public class ProdutoService {
     @Transactional
     public Produto atualizar(UUID id, String nome, @Nullable String descricao, Dinheiro preco, UUID categoriaId,
             Map<String, String> atributos) {
-        var produto = produtos.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("produto-nao-encontrado", id));
+        var produto = produtos.findById(id).orElseThrow(() -> naoEncontrado(id));
         exigirCategoria(categoriaId);
         produto.atualizar(nome, descricao, preco, categoriaId, atributos);
         return produto;
+    }
+
+    private static RecursoNaoEncontradoException naoEncontrado(UUID id) {
+        return new RecursoNaoEncontradoException("produto-nao-encontrado", id);
     }
 
     // A chave estrangeira do banco também recusaria, mas com um erro 500 e uma mensagem do PostgreSQL.
