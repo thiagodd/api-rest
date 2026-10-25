@@ -24,7 +24,8 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Testes da camada web: a explicação completa está em 11.03.
+// Um teste de integração (11.04): a aplicação inteira com o PostgreSQL. O contrato HTTP isolado, sem banco,
+// é testado com @WebMvcTest (11.03).
 // Desde 10.02 as categorias estão no PostgreSQL, com as três categorias iniciais inseridas pelo Flyway.
 @TesteDeIntegracao
 @ExtendWith(OutputCaptureExtension.class)
@@ -72,7 +73,7 @@ class CategoriaControllerTest {
 
         assertThat(mvc.delete().uri(location).header("Bazar-Canal", "app")).hasStatus(HttpStatus.NO_CONTENT);
 
-        // O @WebMvcTest inclui os filtros (@Component Filter) e a ConfiguracaoWeb com o interceptor.
+        // A aplicação inteira inclui os filtros (@Component Filter) e a ConfiguracaoWeb com o interceptor.
         assertThat(saida).contains("acao=categoria.remover metodo=DELETE caminho=/v1/categorias/" + id
                 + " status=204 canal=APP");
         assertThat(saida).containsPattern("DELETE /v1/categorias/" + id + " → 204 em \\d+ ms");

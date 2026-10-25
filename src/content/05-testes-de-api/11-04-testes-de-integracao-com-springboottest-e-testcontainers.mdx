@@ -2,7 +2,7 @@
 id: "11.04"
 titulo: "Testes de integração com @SpringBootTest e Testcontainers"
 descricao: "H2 não é PostgreSQL. Testes com o banco real pegam bugs de SQL, migrations e transações."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Testcontainers for Java"
     url: "https://java.testcontainers.org/"
@@ -258,7 +258,7 @@ sequenceDiagram
     J->>S: primeira classe @TesteDeIntegracao
     S->>D: cria o bean PostgreSQLContainer (antes dos outros beans)
     D-->>S: postgres:18 pronto (porta aleatória)
-    S->>S: DataSource via @ServiceConnection, Flyway V1..V8, Hibernate validate, Tomcat em porta aleatória
+    S->>S: DataSource (@ServiceConnection)<br/>Flyway V1..V8, Hibernate validate<br/>Tomcat em porta aleatória
     S-->>T: contexto pronto (missCount = 1)
     loop cada teste
         T->>T: given / when / then

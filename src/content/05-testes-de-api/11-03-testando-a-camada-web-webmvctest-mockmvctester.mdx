@@ -2,7 +2,7 @@
 id: "11.03"
 titulo: "Testando a camada web: @WebMvcTest, MockMvcTester e RestTestClient"
 descricao: "Verifica o contrato HTTP (status, headers, JSON, erros) em milissegundos, sem banco."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Framework: MockMvc AssertJ Integration"
     url: "https://docs.spring.io/spring-framework/reference/testing/mockmvc/assertj.html"
@@ -169,7 +169,7 @@ As diferenças práticas: `perform` declara `throws Exception`, os *matchers* v�
 ## Diagrama
 
 ```mermaid title="O que o @WebMvcTest(ProdutoController.class) carrega"
-flowchart LR
+flowchart TB
     subgraph SLICE["Contexto do slice"]
         direction TB
         MVC["MockMvc / MockMvcTester<br/>RestTestClient"]
@@ -194,6 +194,7 @@ flowchart LR
         PG[("PostgreSQL")]
         SVC --> REPO --> JPA --> PG
     end
+    MOCK -. "no lugar de" .-> SVC
 ```
 
 A requisição percorre o mesmo caminho que em produção até o controller. A partir do serviço, quem responde é o dublê, com a resposta combinada no teste.

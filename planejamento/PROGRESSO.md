@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 101 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 37
+**Total:** 143 páginas · **esqueleto:** 101 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -107,11 +107,11 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 11.01 | Estratégia de testes para APIs | basico | essencial | `src/content/05-testes-de-api/11-01-estrategia-de-testes-para-apis.mdx` | revisao |
-| 11.02 | Testes unitários de domínio e serviços | basico | essencial | `src/content/05-testes-de-api/11-02-testes-unitarios-de-dominio-e-servicos.mdx` | revisao |
-| 11.03 | Testando a camada web: @WebMvcTest, MockMvcTester e RestTestClient | intermediario | essencial | `src/content/05-testes-de-api/11-03-testando-a-camada-web-webmvctest-mockmvctester.mdx` | revisao |
-| 11.04 | Testes de integração com @SpringBootTest e Testcontainers | intermediario | essencial | `src/content/05-testes-de-api/11-04-testes-de-integracao-com-springboottest-e-testcontainers.mdx` | revisao |
-| 11.05 | Testes ponta a ponta com RestAssured | intermediario | importante | `src/content/05-testes-de-api/11-05-testes-ponta-a-ponta-com-restassured.mdx` | revisao |
+| 11.01 | Estratégia de testes para APIs | basico | essencial | `src/content/05-testes-de-api/11-01-estrategia-de-testes-para-apis.mdx` | pronta |
+| 11.02 | Testes unitários de domínio e serviços | basico | essencial | `src/content/05-testes-de-api/11-02-testes-unitarios-de-dominio-e-servicos.mdx` | pronta |
+| 11.03 | Testando a camada web: @WebMvcTest, MockMvcTester e RestTestClient | intermediario | essencial | `src/content/05-testes-de-api/11-03-testando-a-camada-web-webmvctest-mockmvctester.mdx` | pronta |
+| 11.04 | Testes de integração com @SpringBootTest e Testcontainers | intermediario | essencial | `src/content/05-testes-de-api/11-04-testes-de-integracao-com-springboottest-e-testcontainers.mdx` | pronta |
+| 11.05 | Testes ponta a ponta com RestAssured | intermediario | importante | `src/content/05-testes-de-api/11-05-testes-ponta-a-ponta-com-restassured.mdx` | pronta |
 
 ## Parte 6: Design de APIs profissional
 

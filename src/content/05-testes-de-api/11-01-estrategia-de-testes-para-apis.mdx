@@ -2,7 +2,7 @@
 id: "11.01"
 titulo: "Estratégia de testes para APIs"
 descricao: "Sem estratégia os testes ficam lentos, frágeis ou não pegam bugs reais. Esta página define o que testar em cada camada."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Boot: Testing"
     url: "https://docs.spring.io/spring-boot/reference/testing/"
@@ -186,9 +186,11 @@ src/test/java/com/bazar/
   TestBazarApplication.java # 11.04: sobe a app local com contêineres
   TestcontainersConfiguration.java # o PostgreSQL dos testes
   TesteDeIntegracao.java # 11.04: anotação que garante um contexto só
+  MigracoesTest.java # integração: migrations com dados antigos (11.04)
   LimpezaDoBanco.java # apaga o que os testes criaram
   ContadorDeConsultas.java # conta as consultas SQL (10.04)
   catalogo/
+    ProdutoIntegracaoTest.java # integração: HTTP real até o banco (11.04)
     api/
       ProdutoControllerTest.java # slice: @WebMvcTest (11.03)
       ProdutoJsonTest.java # slice: @JsonTest
@@ -199,6 +201,7 @@ src/test/java/com/bazar/
     dominio/
       PedidoTest.java # unitário: máquina de estados (11.02)
       PedidoServiceTest.java # unitário com mocks (11.02)
+      PedidoDeTeste.java # builder (11.02)
   e2e/
     FluxoCompraE2ETest.java # ponta a ponta (11.05)
 `} />
