@@ -125,4 +125,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'operacao-em-lote', termo: 'Operação em lote', ingles: 'batch / bulk', definicao: 'Uma requisição que aplica muitas operações de uma vez. Pode ser atômica (tudo ou nada) ou parcial, com um resultado por item (207 Multi-Status, na regra da Zalando).', pagina: '14.04' },
   { id: 'rfc-3339', termo: 'RFC 3339', definicao: 'Perfil do ISO 8601 para a internet: data e hora como 2026-10-25T13:30:00Z, com segundos e offset (Z ou ±hh:mm) obrigatórios. É o formato de datas das APIs JSON.', pagina: '15.01' },
   { id: 'intervalo-semiaberto', termo: 'Intervalo semiaberto', ingles: 'half-open interval', definicao: 'Período [início, fim) em que o início entra e o fim não. Períodos consecutivos se encaixam sem buracos nem sobreposições, e não é preciso escrever 23:59:59.', pagina: '15.01' },
+  { id: 'value-object', termo: 'Value object', definicao: 'Objeto definido pelos seus valores, e não por uma identidade: dois Dinheiro com 129,90 reais são iguais. Imutável, concentra as validações e as operações do conceito.', pagina: '15.02' },
 ]
