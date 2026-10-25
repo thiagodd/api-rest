@@ -3,6 +3,7 @@ package com.bazar.clientes.api;
 import java.util.UUID;
 
 import com.bazar.clientes.dominio.ClienteRepository;
+import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,9 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClienteResponse> detalhar(@PathVariable UUID id) {
-        return ResponseEntity.of(repository.findById(id).map(ClienteResponse::de));
+    public ClienteResponse detalhar(@PathVariable UUID id) {
+        return repository.findById(id)
+                .map(ClienteResponse::de)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("cliente-nao-encontrado", id));
     }
 }

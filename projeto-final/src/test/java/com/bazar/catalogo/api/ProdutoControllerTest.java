@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -95,7 +96,7 @@ class ProdutoControllerTest {
                         """)
                 .exchange();
 
-        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
         assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(MethodArgumentNotValidException.class);
         var erros = ((MethodArgumentNotValidException) resposta.getMvcResult().getResolvedException()).getFieldErrors();
         assertThat(erros).extracting(FieldError::getField).containsOnly("sku", "precoEmCentavos");
@@ -108,12 +109,71 @@ class ProdutoControllerTest {
                 .content("""
                         { "sku": "LIV-0042", "nome": "Clean Code", "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
                         """))
-                .hasStatus(HttpStatus.BAD_REQUEST);
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
-    void responde404ParaUmProdutoInexistente() {
-        assertThat(mvc.get().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999"))
-                .hasStatus(HttpStatus.NOT_FOUND);
+    void responde404ComProblemDetails() {
+        assertThat(mvc.get().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .hasPathSatisfying("$.type", v -> assertThat(v).isEqualTo("https://api.bazar.example/problemas/produto-nao-encontrado"))
+                .hasPathSatisfying("$.title", v -> assertThat(v).isEqualTo("Produto não encontrado"))
+                .hasPathSatisfying("$.detail", v -> assertThat(v)
+                        .isEqualTo("Não existe produto com id 0192f39f-2222-7000-8000-000000000999."))
+                .hasPathSatisfying("$.instance", v -> assertThat(v).isEqualTo("/v1/produtos/0192f39f-2222-7000-8000-000000000999"))
+                .hasPathSatisfying("$.codigo", v -> assertThat(v).isEqualTo("PRODUTO_NAO_ENCONTRADO"))
+                .hasPathSatisfying("$.traceId", v -> assertThat(v).asString().matches("[0-9a-f]{32}"));
+    }
+
+    @Test
+    void responde422ComUmErroPorCampoSemEcoarOValor() {
+        assertThat(mvc.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR")
+                .content("""
+                        { "sku": "liv-42", "nome": "Clean Code", "precoEmCentavos": -5,
+                          "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                        """))
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/validacao", "title": "Dados inválidos",
+                          "status": 422, "detail": "A requisição tem 2 campos inválidos.", "codigo": "VALIDACAO",
+                          "erros": [
+                            { "campo": "precoEmCentavos", "mensagem": "deve ser maior que 0" },
+                            { "campo": "sku", "mensagem": "deve seguir o formato AAA-0000 (ex.: LIV-0042)" } ] }
+                        """);
+    }
+
+    @Test
+    void responde400ParaUmIdMalformadoSemEcoarOValor() {
+        assertThat(mvc.get().uri("/v1/produtos/abc").header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .hasPathSatisfying("$.detail", v -> assertThat(v).isEqualTo("O valor do parâmetro 'id' é inválido."));
+    }
+
+    @Test
+    void responde405NoMesmoFormato() {
+        assertThat(mvc.patch().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999"))
+                .hasStatus(HttpStatus.METHOD_NOT_ALLOWED)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .hasPathSatisfying("$.codigo", v -> assertThat(v).isEqualTo("METHOD_NOT_ALLOWED"))
+                .hasPath("$.traceId");
+    }
+
+    @Test
+    void responde400ParaUmCorpoIlegivel() {
+        assertThat(mvc.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"sku\": "))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .hasPathSatisfying("$.codigo", v -> assertThat(v).isEqualTo("REQUISICAO_INVALIDA"));
     }
 }

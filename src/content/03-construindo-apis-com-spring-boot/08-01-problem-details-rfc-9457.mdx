@@ -98,7 +98,7 @@ O `type` é uma URI, e a escolha dela faz parte do contrato:
 - **De preferência, acessível.** A RFC não exige que a URI possa ser aberta, mas, quando pode, ela deve levar a uma documentação do problema para humanos: o que significa e como resolver. É o que o Bazar faz no portal de documentação (Parte 7).
 - **Não precisa ser HTTP.** Uma URN (`urn:bazar:problemas:produto-nao-encontrado`) também é válida, mas não pode ser aberta num navegador.
 
-Quando o problema não tem nada além do que o status já diz, o `type` é **`about:blank`**, que é também o valor assumido quando o campo está ausente. Nesse caso, o `title` deve ser o nome do status (`Not Found`), ou a tradução dele. O Spring usa `about:blank` por padrão em todos os erros que ele próprio gera.
+Quando o problema não tem nada além do que o status já diz, o `type` é **`about:blank`**, que é também o valor assumido quando o campo está ausente. Nesse caso, o `title` deve ser o nome do status (`Not Found`), ou a tradução dele. É o caso dos erros que o próprio Spring gera. No Spring 7, o `type` desses erros fica vazio (`null`) e o campo nem aparece no JSON, o que, pela RFC, equivale a `about:blank`.
 
 <Callout type="info" title="Quando criar um tipo novo">
   Crie um `type` próprio quando o cliente **precisa tratar o erro de forma diferente**. `produto-nao-encontrado` e `categoria-nao-encontrada` podem até compartilhar o tratamento (ambos são `404`), mas `categoria-com-produtos` (`409`) pede uma ação específica do usuário: mover os produtos antes. Erros genéricos, como um `405 Method Not Allowed`, ficam bem com `about:blank`.
@@ -281,7 +281,7 @@ O catálogo cresce com a API, e cada novo tipo ganha uma página na documentaç�
   request={{ method: 'POST', url: 'https://api.bazar.example/v1/produtos', headers: { 'Content-Type': 'application/json', 'Accept-Language': 'pt-BR' }, body: { sku: 'liv-42', nome: '', precoEmCentavos: -5, categoriaId: '0192f3a0-5555-7000-8000-000000000003' } }}
   response={{
     status: 422,
-    headers: { 'Content-Type': 'application/problem+json', 'Content-Language': 'pt-BR' },
+    headers: { 'Content-Type': 'application/problem+json' },
     body: {
       type: 'https://api.bazar.example/problemas/validacao',
       title: 'Dados inválidos',

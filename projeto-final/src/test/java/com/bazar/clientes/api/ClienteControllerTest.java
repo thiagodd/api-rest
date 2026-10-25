@@ -46,7 +46,7 @@ class ClienteControllerTest {
                         """)
                 .exchange();
 
-        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
         var excecao = (MethodArgumentNotValidException) resposta.getMvcResult().getResolvedException();
         assertThat(excecao.getFieldErrors()).singleElement().satisfies(erro -> {
             assertThat(erro.getField()).isEqualTo("cpf");

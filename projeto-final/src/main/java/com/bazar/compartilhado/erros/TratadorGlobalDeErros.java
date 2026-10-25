@@ -1,0 +1,192 @@
+package com.bazar.compartilhado.erros;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+/**
+ * Converte toda exceção que sai de um controller num Problem Details (RFC 9457) no formato do Bazar (08.01).
+ * As exceções do Spring MVC (405, 406, 415, corpo ilegível...) são tratadas pela classe-mãe.
+ */
+@RestControllerAdvice
+public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
+
+    static final String BASE_DOS_TIPOS = "https://api.bazar.example/problemas/";
+
+    private static final Logger log = LoggerFactory.getLogger(TratadorGlobalDeErros.class);
+
+    // Exceções do Spring que ganham um type do Bazar; as demais ficam com about:blank.
+    private static final Map<Class<? extends Exception>, String> TIPOS_DO_SPRING = Map.of(
+            HttpMessageNotReadableException.class, "requisicao-invalida",
+            TypeMismatchException.class, "requisicao-invalida",
+            HttpMediaTypeNotAcceptableException.class, "formato-nao-aceito",
+            HttpMediaTypeNotSupportedException.class, "formato-nao-suportado");
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    ResponseEntity<Object> recursoNaoEncontrado(RecursoNaoEncontradoException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(RegraDeNegocioException.class)
+    ResponseEntity<Object> regraDeNegocio(RegraDeNegocioException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.CONFLICT, request);
+    }
+
+    // Último recurso: nada de mensagem nem stack trace para o cliente; o detalhe fica no log, ligado pelo traceId.
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<Object> inesperado(Exception ex, WebRequest request) {
+        var problema = ErrorResponse.builder(ex, HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error.")
+                .detailMessageCode("problemDetail.erro-inesperado")
+                .build()
+                .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+        return handleExceptionInternal(ex, problema, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        var erros = ex.getBindingResult().getAllErrors().stream()
+                .map(erro -> new ErroDeCampo(
+                        erro instanceof FieldError campo ? campo.getField() : erro.getObjectName(),
+                        mensagem(erro.getDefaultMessage())))
+                .toList();
+        return validacao(ex, erros, headers, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHandlerMethodValidationException(
+            HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        var erros = new ArrayList<ErroDeCampo>();
+        for (var resultado : ex.getParameterValidationResults()) {
+            var parametro = resultado.getMethodParameter().getParameterName();
+            for (var erro : resultado.getResolvableErrors()) {
+                erros.add(new ErroDeCampo(String.valueOf(parametro), mensagem(erro.getDefaultMessage())));
+            }
+        }
+        return validacao(ex, erros, headers, request);
+    }
+
+    // Ponto por onde passam todas as respostas de erro: completa o Problem Details com o que é comum a todas.
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        // As exceções do Spring que já são ErrorResponse (405, 406, 415...) chegam sem corpo: ele é montado aqui.
+        if (body == null && ex instanceof ErrorResponse erro) {
+            body = erro.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+        }
+        if (body instanceof ProblemDetail problema) {
+            completar(problema, ex, status, request);
+        }
+        return super.handleExceptionInternal(ex, body, headers, status, request);
+    }
+
+    private ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, HttpStatus status, WebRequest request) {
+        var problema = ErrorResponse.builder(ex, status, ex.getTipo())
+                .type(URI.create(BASE_DOS_TIPOS + ex.getTipo()))
+                .titleMessageCode("problemDetail.title." + ex.getTipo())
+                .detailMessageCode("problemDetail." + ex.getTipo())
+                .detailMessageArguments(ex.getArgumentos())
+                .build()
+                .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+        ex.getExtensoes().forEach(problema::setProperty);
+        return handleExceptionInternal(ex, problema, new HttpHeaders(), status, request);
+    }
+
+    private ResponseEntity<Object> validacao(Exception ex, List<ErroDeCampo> erros, HttpHeaders headers, WebRequest request) {
+        var status = HttpStatus.UNPROCESSABLE_CONTENT;
+        var problema = ErrorResponse.builder(ex, status, erros.size() + " invalid field(s).")
+                .type(URI.create(BASE_DOS_TIPOS + "validacao"))
+                .titleMessageCode("problemDetail.title.validacao")
+                .detailMessageCode("problemDetail.validacao")
+                .detailMessageArguments(erros.size())
+                .build()
+                .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+        problema.setProperty("erros", erros.stream().sorted(Comparator.comparing(ErroDeCampo::campo)).toList());
+        return handleExceptionInternal(ex, problema, headers, status, request);
+    }
+
+    private void completar(ProblemDetail problema, Exception ex, HttpStatusCode status, WebRequest request) {
+        var tipoDoSpring = TIPOS_DO_SPRING.entrySet().stream()
+                .filter(e -> e.getKey().isInstance(ex))
+                .map(Map.Entry::getValue)
+                .findFirst();
+        if (tipoDoSpring.isPresent() && isAboutBlank(problema)) {
+            problema.setType(URI.create(BASE_DOS_TIPOS + tipoDoSpring.get()));
+        }
+        problema.setProperty("codigo", codigo(problema, status));
+        problema.setInstance(URI.create(caminho(request)));   // o Spring 7.1 deixa de preencher sozinho
+        var traceId = novoTraceId();
+        problema.setProperty("traceId", traceId);
+        if (status.is5xxServerError()) {
+            log.error("Erro inesperado [traceId={}]", traceId, ex);
+        }
+        else {
+            log.debug("{} {} [traceId={}]: {}", status.value(), problema.getType(), traceId, ex.getMessage());
+        }
+    }
+
+    // O codigo espelha o type: produto-nao-encontrado → PRODUTO_NAO_ENCONTRADO; about:blank usa o nome do status.
+    private static String codigo(ProblemDetail problema, HttpStatusCode status) {
+        if (isAboutBlank(problema)) {
+            var conhecido = HttpStatus.resolve(status.value());
+            return conhecido != null ? conhecido.name() : "HTTP_" + status.value();
+        }
+        var tipo = String.valueOf(problema.getType());
+        return tipo.substring(tipo.lastIndexOf('/') + 1).replace('-', '_').toUpperCase(Locale.ROOT);
+    }
+
+    // No Spring 7 o type padrão é null (ausente no JSON), que a RFC lê como about:blank.
+    private static boolean isAboutBlank(ProblemDetail problema) {
+        var tipo = problema.getType();
+        return tipo == null || "about:blank".equals(tipo.toString());
+    }
+
+    private static String caminho(WebRequest request) {
+        var servlet = ((NativeWebRequest) request).getNativeRequest(HttpServletRequest.class);
+        return servlet != null ? servlet.getRequestURI() : "";
+    }
+
+    // Provisório: em 28.02 o traceId passa a ser o do OpenTelemetry, o mesmo dos logs e dos traces.
+    static String novoTraceId() {
+        var bytes = new byte[16];
+        ThreadLocalRandom.current().nextBytes(bytes);
+        return HexFormat.of().formatHex(bytes);
+    }
+
+    private static String mensagem(@Nullable String mensagem) {
+        return mensagem != null ? mensagem : "";
+    }
+
+    public record ErroDeCampo(String campo, String mensagem) {
+    }
+}

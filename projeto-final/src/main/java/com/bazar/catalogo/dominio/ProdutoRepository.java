@@ -19,6 +19,10 @@ public class ProdutoRepository {
         return Optional.ofNullable(produtos.get(id));
     }
 
+    public long countByCategoriaId(UUID categoriaId) {
+        return produtos.values().stream().filter(p -> p.getCategoriaId().equals(categoriaId)).count();
+    }
+
     public Produto save(Produto produto) {
         produtos.put(produto.getId(), produto);
         return produto;

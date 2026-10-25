@@ -1,6 +1,12 @@
 package com.bazar.catalogo.api;
 
+import java.util.Map;
+import java.util.UUID;
+
 import com.bazar.catalogo.dominio.CategoriaRepository;
+import com.bazar.catalogo.dominio.Produto;
+import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.compartilhado.Dinheiro;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +21,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // Testes da camada web: a explicação completa está em 11.03.
 @WebMvcTest(CategoriaController.class)
-@Import(CategoriaRepository.class)
+@Import({ CategoriaRepository.class, ProdutoRepository.class })
 class CategoriaControllerTest {
 
     @Autowired
     MockMvcTester mvc;
+
+    @Autowired
+    ProdutoRepository produtos;
+
+    @Test
+    void naoRemoveUmaCategoriaComProdutos() {
+        var programacao = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
+        produtos.save(new Produto("LIV-0042", "Clean Code", null, Dinheiro.deCentavos(12990, "BRL"), programacao, Map.of()));
+
+        assertThat(mvc.delete().uri("/v1/categorias/{id}", programacao).header("Accept-Language", "pt-BR"))
+                .hasStatus(HttpStatus.CONFLICT)
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/categoria-com-produtos",
+                          "title": "A categoria possui produtos", "status": 409,
+                          "detail": "A categoria \\"Programação\\" tem 1 produto(s). Mova ou descontinue os produtos antes de removê-la.",
+                          "codigo": "CATEGORIA_COM_PRODUTOS", "quantidadeDeProdutos": 1 }
+                        """);
+    }
 
     @Test
     void listaAsCategoriasDentroDeItens() {
@@ -69,14 +94,14 @@ class CategoriaControllerTest {
                 .content("""
                         { "nome": "Games", "slug": "Jogos Eletrônicos" }
                         """))
-                .hasStatus(HttpStatus.BAD_REQUEST);
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
     void validaOParametroDeBuscaPeloMetodo() {
         var resposta = mvc.get().uri("/v1/categorias?q=a").exchange();
 
-        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
         assertThat(resposta.getMvcResult().getResolvedException()).isInstanceOf(HandlerMethodValidationException.class);
     }
 

@@ -5,6 +5,12 @@ spring:
     mapper:
       # A ordem dos campos no JSON segue a declaração (records e classes), não o alfabeto.
       sort-properties-alphabetically: false
+  messages:
+    # Idioma sem tradução usa o arquivo base (inglês), e não o idioma do servidor.
+    fallback-to-system-locale: false
+  web:
+    # Sem Accept-Language, o Bazar responde em português.
+    locale: pt_BR
 
 server:
   port: 8080
