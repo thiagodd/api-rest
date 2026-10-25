@@ -128,4 +128,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'value-object', termo: 'Value object', definicao: 'Objeto definido pelos seus valores, e não por uma identidade: dois Dinheiro com 129,90 reais são iguais. Imutável, concentra as validações e as operações do conceito.', pagina: '15.02' },
   { id: 'ulid', termo: 'ULID', definicao: 'Identificador de 128 bits com 48 bits de tempo e 80 aleatórios, escrito em 26 caracteres Base32. Ordenável pelo tempo, como o UUID v7, mas fora do padrão UUID.', pagina: '15.03' },
   { id: 'principio-da-robustez', termo: 'Princípio da robustez (lei de Postel)', definicao: 'Ser conservador no que se envia e liberal no que se aceita. Criticado pela RFC 9413 porque tolerar erros os esconde e os transforma em padrão de fato.', pagina: '15.04' },
+  { id: 'bcp-47', termo: 'BCP 47 (tag de idioma)', definicao: 'Formato padrão de identificação de idiomas (RFC 5646): idioma e, opcionalmente, região ou escrita, separados por hífen, como pt-BR, en e es-419.', pagina: '15.05' },
+  { id: 'locale-resolver', termo: 'LocaleResolver', definicao: 'Componente do Spring MVC que decide o idioma de cada requisição (por exemplo, pelo Accept-Language), usado pelas mensagens e pelos erros.', pagina: '15.05' },
 ]

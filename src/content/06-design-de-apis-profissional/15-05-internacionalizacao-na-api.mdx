@@ -2,74 +2,443 @@
 id: "15.05"
 titulo: "Internacionalização na API"
 descricao: "Mensagens de erro e conteúdos traduzidos dependem de negociar o idioma corretamente."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "RFC 9110 §12.5.4"
-  - titulo: "docs.spring.io: mvc-servlet / localeresolver"
+  - titulo: "RFC 9110 §12.5.4: Accept-Language"
+    url: "https://www.rfc-editor.org/rfc/rfc9110.html#name-accept-language"
+  - titulo: "RFC 9110 §8.5: Content-Language"
+    url: "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-language"
+  - titulo: "RFC 4647: Matching of Language Tags"
+    url: "https://www.rfc-editor.org/rfc/rfc4647.html"
+  - titulo: "RFC 5646: Tags for Identifying Languages (BCP 47)"
+    url: "https://www.rfc-editor.org/rfc/rfc5646.html"
+  - titulo: "Spring Framework: LocaleResolver"
     url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet/localeresolver.html"
+  - titulo: "Zalando RESTful API Guidelines: #216 (maps with additionalProperties)"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#216"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Mensagens de erro e conteúdos traduzidos dependem de negociar o idioma corretamente.
+O Bazar responde erros em português e em inglês desde a [08.02](/construindo-apis-com-spring-boot/problemdetail-no-spring-tratamento-global-de-erros). Um parceiro da Argentina integrou com a API, e o navegador da equipe dele envia:
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+```http
+Accept-Language: es-AR, es;q=0.9, pt;q=0.8, en;q=0.7
+```
+
+O Bazar não fala espanhol, mas fala português, a terceira opção da lista. A resposta veio em **inglês**, a quarta. Medimos o comportamento antes desta página:
+
+| `Accept-Language` | Idioma da resposta | O que deveria ser |
+|---|---|---|
+| (ausente) | Português | Português |
+| `es, pt;q=0.8` | **Inglês** | Português |
+| `fr` | Inglês | O padrão da API |
+| `*` | Inglês (o idioma da JVM) | O padrão da API |
+
+E nenhuma resposta dizia em que idioma estava, nem avisava um *cache* que a resposta mudava com o `Accept-Language`. Para piorar, o `title` do `415` saía em português e o `detail`, na mesma resposta, em inglês.
+
+Internacionalizar uma API é menos sobre traduzir textos e mais sobre três decisões: **o que** é traduzido (e o que nunca deve ser), **como** o idioma é negociado, e como a resposta **declara** o idioma escolhido.
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- `Accept-Language` e `Content-Language`; `LocaleResolver` (`AcceptHeaderLocaleResolver`)
-- Mensagens de erro e de validação traduzidas
-- Conteúdo multilíngue (nome do produto por idioma)
-- Formatar ou não números e datas na API (não formatar)
-</Draft>
+### O que uma API traduz, e o que não traduz
 
-## Diagrama
+Uma resposta de API tem dois públicos: o **programa** que a lê e, às vezes, a **pessoa** que vai ver parte dela numa tela.
 
-<Draft title="Diagramas previstos">
-Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
-</Draft>
+| Conteúdo | Traduzir? | Por quê |
+|---|---|---|
+| `title`, `detail` e mensagens de erro de campo | **Sim** | São para pessoas: o desenvolvedor que depura, o usuário que vê a mensagem |
+| `type` e `codigo` do erro | **Não** | São para programas: o cliente decide o que fazer por eles |
+| Nomes de campos (`precoEmCentavos`) | Não | São o contrato |
+| Valores de enum (`CANCELADO`) | Não | São o contrato ([15.04](/design-de-apis-profissional/enums-evolucao-e-tolerant-reader)) |
+| Números, valores monetários, datas | **Não formatar** | O cliente formata para o idioma de quem vê |
+| Conteúdo de negócio (nome do produto) | Depende | É dado, e não mensagem: veja abaixo |
+
+A regra que mais se quebra é a segunda. Um cliente que faz `if (erro.title === "Produto não encontrado")` quebra quando o usuário troca o idioma do navegador. É por isso que todo erro do Bazar tem um `codigo` estável (`PRODUTO_NAO_ENCONTRADO`) ao lado dos textos traduzidos ([16.01](/design-de-apis-profissional/projetando-erros-catalogo-codigos-e-decisoes-dificeis)).
+
+### Não formate números nem datas
+
+Uma API que devolve `"valorTotal": "R$ 1.299,90"` escolheu, pelo cliente, o separador decimal, o de milhar, o símbolo e a posição dele. Um aplicativo em inglês precisa desfazer tudo isso para mostrar `R$1,299.90`, e um que soma valores precisa converter o texto de volta em número.
+
+O Bazar devolve `{"valor": "1299.90", "moeda": "BRL"}` ([15.02](/design-de-apis-profissional/dinheiro-e-numeros-decimais)) e datas em RFC 3339 em UTC ([15.01](/design-de-apis-profissional/datas-horas-e-fusos-horarios)). Formatar é trabalho do cliente, que sabe o idioma e o fuso de quem vai ler: no navegador, `Intl.NumberFormat` e `Intl.DateTimeFormat`; no Java, `NumberFormat.getCurrencyInstance(locale)` e `DateTimeFormatter.ofLocalizedDateTime`.
+
+Um campo extra "para exibição" (`valorFormatado`) parece uma gentileza, mas vira contrato: alguém vai depender do formato exato, e ele não pode mais mudar.
+
+### `Accept-Language`: o cliente diz o que prefere
+
+O `Accept-Language` ([RFC 9110 §12.5.4](https://www.rfc-editor.org/rfc/rfc9110.html#name-accept-language)) é uma lista de idiomas com pesos, como o `Accept` da [02.05](/comecando-e-fundamentos-de-http/content-negotiation-e-media-types). O exemplo da própria RFC:
+
+```http
+Accept-Language: da, en-gb;q=0.8, en;q=0.7
+```
+
+significa, nas palavras dela, *"I prefer Danish, but will accept British English and other types of English"*. Sem `q`, o peso é 1.
+
+Os idiomas são <Term id="bcp-47">tags BCP 47</Term> (RFC 5646): um idioma (`pt`), opcionalmente seguido de uma região (`pt-BR`), um sistema de escrita (`az-Arab`) ou uma região numérica (`es-419`, o espanhol da América Latina). O separador é o **hífen**: `pt_BR`, o formato do `Locale.toString()` do Java, não é uma tag válida, e um cabeçalho com ela é inválido.
+
+A RFC não fixa um algoritmo de escolha: ela aponta os esquemas da RFC 4647 e deixa a implementação escolher o mais adequado. Para uma API com poucos idiomas, a escolha razoável é:
+
+1. percorrer a lista do cliente **em ordem de peso**;
+2. para cada idioma, aceitar uma correspondência exata (`pt-BR`) ou só pelo idioma (`pt-PT` → o português que a API tem);
+3. se nada da lista for atendido, usar o **idioma padrão** da API.
+
+E se nada for atendido, um `406`? A RFC permite ao servidor ignorar uma preferência que não pode atender, e é o que quase toda API faz: uma resposta num idioma que o cliente não pediu é mais útil que nenhuma resposta, sobretudo numa mensagem de erro.
+
+### `Content-Language` e `Vary`: a resposta diz o que escolheu
+
+O `Content-Language` ([RFC 9110 §8.5](https://www.rfc-editor.org/rfc/rfc9110.html#name-content-language)) *"describes the natural language(s) of the intended audience for the representation"*. Sem ele, diz a RFC, *"the default is that the content is intended for all language audiences"*. É exatamente o caso de uma resposta de sucesso do Bazar: um produto em JSON não está em idioma nenhum, e por isso **não** leva `Content-Language`.
+
+Uma resposta de erro está num idioma, e diz qual: `Content-Language: pt-BR`. E, como o idioma veio do `Accept-Language`, ela leva também `Vary: Accept-Language` ([02.04](/comecando-e-fundamentos-de-http/headers-essenciais)): o `Vary` *"describes what parts of a request message (...) might have influenced the origin server's process for selecting the content of this response"*. Sem ele, um *cache* compartilhado ([20.01](/padroes-avancados-de-http/cache-http-rfc-9111)) pode guardar o `404` em português e entregá-lo a quem pediu inglês.
+
+### No Spring: `LocaleResolver`
+
+O Spring MVC resolve o idioma de cada requisição com um <Term id="locale-resolver">`LocaleResolver`</Term>, e o resultado fica disponível em `LocaleContextHolder.getLocale()`. É desse `Locale` que dependem o `MessageSource`, as mensagens de validação ([07.02](/construindo-apis-com-spring-boot/validacao-avancada)) e os `ProblemDetail` do `ResponseEntityExceptionHandler`. A [documentação](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet/localeresolver.html) lista as implementações:
+
+| Implementação | De onde vem o idioma | Uso típico |
+|---|---|---|
+| `AcceptHeaderLocaleResolver` | `Accept-Language` | APIs (o padrão) |
+| `FixedLocaleResolver` | Configuração fixa | Uma API de um idioma só |
+| `CookieLocaleResolver` | Um *cookie* | Aplicações web com seletor de idioma |
+| `SessionLocaleResolver` | A sessão HTTP | Aplicações web com sessão |
+
+Numa API *stateless*, o `AcceptHeaderLocaleResolver` é a escolha natural. O Spring Boot o registra sozinho, com o idioma padrão vindo da propriedade `spring.web.locale`. O que o Bazar tinha até aqui era isso, e os defeitos da tabela do início vêm de como ele funciona:
+
+- **Sem uma lista de idiomas suportados**, ele devolve o primeiro idioma do cabeçalho, seja ele qual for. `es, pt;q=0.8` vira espanhol, o `MessageSource` não acha `messages_es` e cai no arquivo base, em inglês. O português, segunda opção do cliente, nunca é considerado.
+- **Com a lista**, ele percorre as preferências por peso e casa pelo idioma, mas só com uma entrada **sem região** da lista: com `pt-BR` na lista, um pedido de `pt-PT` não casa. A lista precisa de `pt` também.
+- **Com `*` ou um cabeçalho inválido**, o servlet devolve o idioma padrão da **JVM**. A resposta muda conforme a máquina em que a aplicação roda.
+
+### Conteúdo multilíngue
+
+Mensagens de erro são geradas pela API, e o `Accept-Language` escolhe a tradução. O nome e a descrição de um produto são **dados**, cadastrados por alguém, e aí há três desenhos:
+
+| Desenho | Exemplo | Vantagens | Custos |
+|---|---|---|---|
+| **Negociado** | `GET /produtos/1` com `Accept-Language: en` → `"nome": "Clean Code (English edition)"` | O cliente não muda | Escrita ambígua (um `PUT` grava qual idioma?); `Vary` em todas as respostas; o cliente não sabe se recebeu uma tradução ou o original |
+| **Todas as traduções** | `"nome": {"pt-BR": "Código Limpo", "en": "Clean Code"}` | Explícito; ler e escrever usam a mesma forma | Respostas maiores; o cliente escolhe o idioma |
+| **Sub-recurso** | `GET /produtos/1/traducoes/en` | Cada tradução tem seu ciclo de vida (revisão, aprovação) | Mais requisições |
+
+Para dados, o Bazar recomenda o segundo desenho, um mapa com tags BCP 47 como chaves. O Zalando usa exatamente esse exemplo para ilustrar mapas no OpenAPI ([#216](https://opensource.zalando.com/restful-api-guidelines/#216)): uma propriedade `translations` cujas chaves são *"IETF BCP-47 language tags"*. O primeiro desenho é tentador para leitura, mas mistura negociação com dados, e é na escrita que ele cobra o preço. Hoje o catálogo do Bazar tem um idioma só, e a página fica no desenho.
 
 ## Na prática
 
-<Draft title="Código previsto">
-ProblemDetail em pt-BR e en-US conforme o header.
-</Draft>
+### Os idiomas do Bazar
+
+```java title="src/main/java/com/bazar/compartilhado/web/ResolvedorDeIdioma.java"
+/**
+ * Os idiomas do Bazar (15.05): português do Brasil, o padrão, e inglês. O Accept-Language escolhe entre os dois,
+ * respeitando os pesos (q): "es, pt;q=0.8" é português, e não o primeiro idioma da lista. Um pedido que nenhum dos
+ * dois atende ("fr"), "*" ou um cabeçalho inválido recebem o padrão.
+ */
+public class ResolvedorDeIdioma extends AcceptHeaderLocaleResolver {
+
+    public static final Locale PORTUGUES = Locale.forLanguageTag("pt-BR");
+    public static final Locale INGLES = Locale.ENGLISH;
+
+    public ResolvedorDeIdioma() {
+        // O "pt" sem país é o que permite casar pt-PT e pt com o português: o Spring só casa pelo idioma com uma
+        // entrada sem país. O mesmo vale para "en", que casa en-US e en-GB.
+        setSupportedLocales(List.of(PORTUGUES, Locale.of("pt"), INGLES));
+        setDefaultLocale(PORTUGUES);
+    }
+
+    // Uma resposta só existe em dois idiomas, e o Locale da requisição diz qual: pt-PT recebe o texto em pt-BR, e é
+    // isso que o Content-Language deve dizer.
+    @Override
+    public Locale resolveLocale(HttpServletRequest request) {
+        if (!pedeAlgumIdioma(request.getHeader(HttpHeaders.ACCEPT_LANGUAGE))) {
+            return PORTUGUES;
+        }
+        var idioma = super.resolveLocale(request);
+        return idioma.getLanguage().equals(INGLES.getLanguage()) ? INGLES : PORTUGUES;
+    }
+
+    // Com "*" ou um cabeçalho inválido, o servlet devolve o idioma da JVM, e a resposta mudaria de um servidor para
+    // outro. Os dois casos recebem o padrão, como uma requisição sem Accept-Language.
+    private static boolean pedeAlgumIdioma(@Nullable String cabecalho) {
+        if (!StringUtils.hasText(cabecalho)) {
+            return false;
+        }
+        try {
+            return Locale.LanguageRange.parse(cabecalho).stream().anyMatch(faixa -> !faixa.getRange().equals("*"));
+        } catch (IllegalArgumentException invalido) {
+            return false;
+        }
+    }
+}
+```
+
+O `Locale.LanguageRange.parse` do JDK implementa a sintaxe da RFC 4647 e recusa `en_US` com `IllegalArgumentException`. O bean precisa se chamar `localeResolver`, o nome que o `DispatcherServlet` procura e que faz o Spring Boot desistir do seu:
+
+```java title="src/main/java/com/bazar/compartilhado/web/ConfiguracaoWeb.java (trecho)"
+// O nome localeResolver substitui o LocaleResolver do Spring Boot (15.05).
+@Bean
+LocaleResolver localeResolver() {
+    return new ResolvedorDeIdioma();
+}
+```
+
+A propriedade `spring.web.locale: pt_BR` saiu do `application.yml`: com o bean próprio, ela não teria efeito, e uma configuração sem efeito engana quem a lê.
+
+### `Content-Language` e `Vary` nos erros
+
+Todas as respostas de erro passam pelo `handleExceptionInternal` do tratador global ([08.02](/construindo-apis-com-spring-boot/problemdetail-no-spring-tratamento-global-de-erros)), e é ali que os cabeçalhos entram:
+
+```java title="src/main/java/com/bazar/compartilhado/erros/TratadorGlobalDeErros.java (trecho)"
+// O title, o detail e as mensagens dos erros estão no idioma pedido: a resposta diz qual é, e um cache sabe
+// que ela muda com o Accept-Language (15.05).
+var cabecalhos = new HttpHeaders();
+cabecalhos.addAll(headers);
+cabecalhos.setContentLanguage(LocaleContextHolder.getLocale());
+cabecalhos.add(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
+return super.handleExceptionInternal(ex, body, cabecalhos, status, request);
+```
+
+### As mensagens do próprio Spring
+
+As exceções do Spring MVC (`405`, `406`, `415`, a rota inexistente) montam o `ProblemDetail` com textos fixos em inglês, mas procuram antes duas chaves no `MessageSource`: `problemDetail.title.<classe>` e `problemDetail.<classe>`. O Bazar tinha traduzido só os títulos, e um `415` saía metade em português, metade em inglês. Os argumentos de cada mensagem vêm do método `getDetailMessageArguments()` da exceção: para o `415`, o `{0}` é o `Content-Type` recebido.
+
+```properties title="src/main/resources/messages_pt.properties (trecho)"
+# 15.05: os detail das exceções do Spring. Sem estas chaves, o detail sai com o texto fixo do Spring, em inglês, mesmo
+# com o title traduzido. O inglês fica com o texto do próprio Spring.
+problemDetail.org.springframework.web.servlet.resource.NoResourceFoundException=Não existe nada em ''{0}''.
+problemDetail.org.springframework.web.HttpRequestMethodNotSupportedException=O método ''{0}'' não é aceito neste recurso.
+problemDetail.org.springframework.web.HttpMediaTypeNotAcceptableException=Formatos disponíveis: {0}.
+problemDetail.org.springframework.web.HttpMediaTypeNotSupportedException=O Content-Type ''{0}'' não é aceito.
+```
+
+O apóstrofo dobrado (`''{0}''`) é a regra do `MessageFormat`: um apóstrofo simples abre um trecho literal, e o `{0}` não seria substituído.
+
+### Pela API
+
+<HttpExchange
+  title="O parceiro pede espanhol, depois português: recebe português"
+  request={{ method: 'POST', url: '/v1/produtos', headers: { 'Content-Type': 'text/plain', 'Accept-Language': 'es, pt;q=0.8' }, body: 'x' }}
+  response={{ status: 415, headers: { Accept: 'application/json, application/*+json', 'Content-Language': 'pt-BR', Vary: 'Accept-Language', 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/formato-nao-suportado', title: 'Formato não suportado', status: 415, detail: "O Content-Type 'text/plain;charset=UTF-8' não é aceito.", instance: '/v1/produtos', codigo: 'FORMATO_NAO_SUPORTADO', traceId: 'b7f1e51a93d36ab70be00abf3fc6596c' } }}
+>
+O `title` e o `detail` estão no mesmo idioma, e a resposta diz qual. O `codigo` não muda com o idioma: é ele que o cliente usa para decidir o que fazer.
+</HttpExchange>
+
+<HttpExchange
+  title="Inglês britânico, com português como segunda opção"
+  request={{ method: 'GET', url: '/v1/produtos/01a1746b-9dfb-7b92-885d-7bf7152ef90a', headers: { 'Accept-Language': 'en-GB, pt;q=0.5' } }}
+  response={{ status: 404, headers: { 'Content-Language': 'en', Vary: 'Accept-Language', 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/produto-nao-encontrado', title: 'Product not found', status: 404, detail: 'There is no product with id 01a1746b-9dfb-7b92-885d-7bf7152ef90a.', instance: '/v1/produtos/01a1746b-9dfb-7b92-885d-7bf7152ef90a', codigo: 'PRODUTO_NAO_ENCONTRADO', traceId: '87c30cd18f8a86663d6a2c1cb1efd9d6' } }}
+>
+O Bazar não tem inglês britânico, mas tem inglês: `en-GB` casa pelo idioma. O `Content-Language` diz o que foi entregue (`en`), e não repete o que foi pedido.
+</HttpExchange>
+
+### O teste
+
+```java title="src/test/java/com/bazar/compartilhado/web/IdiomaDaRespostaTest.java (trecho)"
+@ParameterizedTest(name = "Accept-Language: \"{0}\" → {1}")
+@CsvSource(delimiter = '|', nullValues = "ausente", textBlock = """
+        ausente                | pt-BR | Produto não encontrado
+        pt-BR                  | pt-BR | Produto não encontrado
+        pt-PT                  | pt-BR | Produto não encontrado
+        en-US                  | en    | Product not found
+        en-GB, pt;q=0.5        | en    | Product not found
+        es, pt;q=0.8           | pt-BR | Produto não encontrado
+        fr;q=0.9, en;q=0.8     | en    | Product not found
+        en;q=0.1, pt-BR;q=0.9  | pt-BR | Produto não encontrado
+        fr                     | pt-BR | Produto não encontrado
+        *                      | pt-BR | Produto não encontrado
+        en_US                  | pt-BR | Produto não encontrado
+        """)
+void escolheOIdiomaEDizQualFoiEscolhido(String aceito, String idioma, String titulo) {
+    var requisicao = mvc.get().uri("/produtos/1");
+    if (aceito != null) {
+        requisicao.header(HttpHeaders.ACCEPT_LANGUAGE, aceito);
+    }
+
+    assertThat(requisicao.exchange())
+            .hasStatus(HttpStatus.NOT_FOUND)
+            .hasHeader(HttpHeaders.CONTENT_LANGUAGE, idioma)
+            .hasHeader(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE)
+            .bodyJson().extractingPath("$.title").isEqualTo(titulo);
+}
+```
+
+A tabela é a especificação da negociação. O teste usa um `MockMvc` *standalone*, só com o tratador de erros, o `ResolvedorDeIdioma` e o `messages.properties`, sem subir a aplicação. Os mesmos casos foram conferidos no Tomcat, com a aplicação rodando: é lá que o `*` cairia no idioma da JVM.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Cliente que decide pelo texto traduzido" why="O texto muda com o idioma do usuário (e com qualquer revisão de redação). O código é o contrato.">
+<Bad title="Pelo title">
+
+```javascript
+if (erro.title === "Produto não encontrado") {
+  mostrarProdutoRemovido();
+}
+```
+
+</Bad>
+<Good title="Pelo codigo (ou pelo type)">
+
+```javascript
+if (erro.codigo === "PRODUTO_NAO_ENCONTRADO") {
+  mostrarProdutoRemovido();
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="Valores formatados para um idioma" why="O formato escolhe pelo cliente o separador decimal, o de milhar e o símbolo, e um cliente que calcula precisa converter o texto de volta.">
+<Bad title="Formatado no servidor">
+
+```json
+{ "valorTotal": "R$ 1.299,90", "criadoEm": "25/10/2026 10:30" }
+```
+
+</Bad>
+<Good title="Dados; o cliente formata">
+
+```json
+{ "valorTotal": { "valor": "1299.90", "moeda": "BRL" },
+  "criadoEm": "2026-10-25T13:30:00Z" }
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **`AcceptHeaderLocaleResolver` sem idiomas suportados**, que ignora os pesos e entrega o arquivo base para qualquer idioma desconhecido.
+- **Idioma padrão da JVM vazando** na resposta (`*`, cabeçalho inválido, `fallbackToSystemLocale` ligado no `MessageSource`, ou o `ResourceBundle` da validação da [07.02](/construindo-apis-com-spring-boot/validacao-avancada)).
+- **Respostas localizadas sem `Vary: Accept-Language`**, que um *cache* entrega no idioma errado.
+- **`Content-Language` em respostas que não estão em idioma nenhum**, como um produto em JSON.
+- **Traduzir o contrato**: nomes de campos, valores de enum, códigos de erro.
+- **`406` porque o idioma não existe**, em vez de responder no idioma padrão.
+- **`pt_BR` no cabeçalho**: a tag BCP 47 usa hífen.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Traduza só o que é para pessoas**: `title`, `detail`, mensagens de campo.
+- **Mantenha um código estável** em cada erro, para os programas.
+- **Não formate números, valores nem datas**: devolva dados, e o cliente formata.
+- **Declare os idiomas suportados** e um padrão; negocie por peso e por idioma.
+- **`Content-Language` e `Vary: Accept-Language`** em toda resposta cujo texto depende do idioma.
+- **Para conteúdo de negócio multilíngue**, um mapa de traduções com chaves BCP 47.
+- **Teste a negociação com uma tabela** de cabeçalhos e resultados esperados.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="Negociação de idioma, Content-Language e mensagens do Spring em português" module="compartilhado" tag="pagina-15.05" files={[
+  { path: 'src/main/java/com/bazar/compartilhado/web/ResolvedorDeIdioma.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/web/ConfiguracaoWeb.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/TratadorGlobalDeErros.java', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/main/resources/application.yml', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/compartilhado/web/IdiomaDaRespostaTest.java', change: 'novo' },
+]}>
+O `ResolvedorDeIdioma` substitui o `LocaleResolver` do Spring Boot: português do Brasil (padrão) e inglês, escolhidos pelo peso do `Accept-Language`, com `*` e cabeçalhos inválidos tratados como ausentes. As respostas de erro ganham `Content-Language` e `Vary: Accept-Language`, e os `detail` das exceções do Spring (`404`, `405`, `406`, `415`) passam a sair em português. A propriedade `spring.web.locale` sai do `application.yml`. A suíte tem 256 testes.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Traduza o que é para pessoas (`title`, `detail`, mensagens de campo); nunca o contrato (campos, enums, códigos).
+- Não formate números, dinheiro nem datas: o cliente formata para o idioma de quem lê.
+- O `Accept-Language` é uma lista com pesos de tags BCP 47 (`pt-BR`, com hífen). Negocie pelo peso, aceite correspondência só pelo idioma e use um padrão quando nada for atendido.
+- O `AcceptHeaderLocaleResolver` do Spring precisa da lista de idiomas suportados, com entradas sem região para casar pelo idioma.
+- `*` e cabeçalhos inválidos não podem cair no idioma da JVM.
+- Respostas localizadas levam `Content-Language` e `Vary: Accept-Language`; respostas que não estão em idioma nenhum não levam `Content-Language`.
+- As mensagens do Spring são traduzidas com as chaves `problemDetail.title.<classe>` e `problemDetail.<classe>`.
+- Conteúdo de negócio multilíngue é dado: um mapa de traduções, e não negociação.
+
+<Exercise title="Um terceiro idioma" difficulty="medio">
+O Bazar vai abrir para a Argentina e passa a falar espanhol.
+
+1. O que muda no `ResolvedorDeIdioma` e nos arquivos de mensagens? Com que nome fica o arquivo novo?
+2. Qual é a resposta para `Accept-Language: es-AR`? E para `es-419`? E para `ca, es;q=0.5` (catalão, depois espanhol)?
+3. Os produtos vão ganhar nome em espanhol. Desenhe o JSON de um produto e diga como o lojista envia só a tradução em espanhol de um produto existente.
+
+<Hint>Lembre da regra do Spring para casar só pelo idioma, e do desenho do mapa de traduções com o PATCH da [14.02](/design-de-apis-profissional/put-patch-json-merge-patch-e-json-patch).</Hint>
+
+<Solution>
+
+1. A lista de suportados ganha `es` (sem região, para casar `es-AR`, `es-419` e `es-ES` pelo idioma), e o `resolveLocale` passa a devolver três idiomas, e não dois:
+
+   ```java
+   setSupportedLocales(List.of(PORTUGUES, Locale.of("pt"), INGLES, ESPANHOL));
+   // ...
+   return switch (idioma.getLanguage()) {
+       case "en" -> INGLES;
+       case "es" -> ESPANHOL;   // Locale.of("es")
+       default -> PORTUGUES;
+   };
+   ```
+
+   O arquivo novo é o `messages_es.properties`, com as mesmas chaves dos outros dois. As chaves que faltarem caem no arquivo base, em inglês, e por isso vale um teste que compara as chaves dos três arquivos.
+
+2. `es-AR` e `es-419` casam com `es` pelo idioma, e a resposta sai em espanhol com `Content-Language: es`. Em `ca, es;q=0.5`, o catalão não é atendido; o Spring segue para o próximo da lista, e a resposta sai em espanhol.
+
+3. Um mapa de traduções com chaves BCP 47:
+
+   ```json
+   {
+     "id": "01a1746b-9dfb-7b92-885d-7bf7152ef90a",
+     "nome": { "pt-BR": "Código Limpo", "en": "Clean Code", "es": "Código Limpio" }
+   }
+   ```
+
+   Com JSON Merge Patch, enviar só a tradução nova é natural: o *merge* é recursivo, e as outras chaves do mapa ficam como estão.
+
+   ```http
+   PATCH /v1/produtos/01a1746b-9dfb-7b92-885d-7bf7152ef90a
+   Content-Type: application/merge-patch+json
+
+   { "nome": { "es": "Código Limpio" } }
+   ```
+
+   E `{ "nome": { "es": null } }` remove a tradução.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Um cliente envia Accept-Language: es, pt;q=0.8, e a API fala pt-BR e en. Em que idioma deve vir a resposta?',
+    options: [
+      'Em inglês, o arquivo base das mensagens',
+      'Em português: o espanhol não é atendido, e o português é a próxima preferência do cliente',
+      'Em espanhol, traduzido automaticamente',
+      'Um 406 Not Acceptable',
+    ],
+    answer: 1,
+    explanation: 'A negociação percorre as preferências por peso. Sem uma lista de idiomas suportados, o AcceptHeaderLocaleResolver do Spring devolveria es, e o MessageSource cairia no arquivo base em inglês.',
+  },
+  {
+    question: 'Qual destas respostas do Bazar deve levar Content-Language?',
+    options: [
+      'Todas',
+      'Só as de erro (e qualquer outra cujo texto dependa do idioma)',
+      'Só as de sucesso',
+      'Nenhuma: o Content-Type já diz o idioma',
+    ],
+    answer: 1,
+    explanation: 'Sem Content-Language, o conteúdo é para todos os públicos (RFC 9110 §8.5). Um produto em JSON não está em idioma nenhum; um ProblemDetail em português está.',
+  },
+  {
+    question: 'Por que o Bazar inclui "pt" (sem região) na lista de idiomas suportados, além de "pt-BR"?',
+    options: [
+      'Porque o MessageSource não acha messages_pt sem ele',
+      'Porque o AcceptHeaderLocaleResolver só casa pelo idioma com uma entrada sem região: sem "pt", um pedido de pt-PT não casaria com o português',
+      'Porque o BCP 47 exige',
+      'Por compatibilidade com o Jackson',
+    ],
+    answer: 1,
+    explanation: 'O mesmo vale para "en", que casa en-US e en-GB. O ResolvedorDeIdioma normaliza o resultado para pt-BR, que é o texto realmente entregue.',
+  },
+  {
+    question: 'O que um cliente deve usar para decidir o que fazer diante de um erro?',
+    options: [
+      'O title',
+      'O detail',
+      'O codigo (ou o type), que não muda com o idioma',
+      'O Content-Language',
+    ],
+    answer: 2,
+    explanation: 'title e detail são para pessoas e mudam com o idioma e com revisões de texto. O codigo e o type são o contrato.',
+  },
+]} />
 
 ## Referências
 

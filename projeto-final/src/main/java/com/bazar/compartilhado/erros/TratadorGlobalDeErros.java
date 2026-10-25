@@ -230,7 +230,13 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         if (body instanceof ProblemDetail problema) {
             completar(problema, ex, status, request);
         }
-        return super.handleExceptionInternal(ex, body, headers, status, request);
+        // O title, o detail e as mensagens dos erros estão no idioma pedido: a resposta diz qual é, e um cache sabe
+        // que ela muda com o Accept-Language (15.05).
+        var cabecalhos = new HttpHeaders();
+        cabecalhos.addAll(headers);
+        cabecalhos.setContentLanguage(LocaleContextHolder.getLocale());
+        cabecalhos.add(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
+        return super.handleExceptionInternal(ex, body, cabecalhos, status, request);
     }
 
     private ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, HttpStatus status, WebRequest request) {

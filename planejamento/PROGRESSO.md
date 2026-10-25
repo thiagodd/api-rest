@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 84 · **rascunho:** 0 · **revisão:** 17 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 83 · **rascunho:** 0 · **revisão:** 18 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -151,7 +151,7 @@
 | 15.02 | Dinheiro e números decimais | intermediario | essencial | `src/content/06-design-de-apis-profissional/15-02-dinheiro-e-numeros-decimais.mdx` | revisao |
 | 15.03 | Identificadores: sequenciais, UUID v7 e ULID | intermediario | importante | `src/content/06-design-de-apis-profissional/15-03-identificadores-sequenciais-uuid-v7-e-ulid.mdx` | revisao |
 | 15.04 | Enums, evolução e tolerant reader | intermediario | importante | `src/content/06-design-de-apis-profissional/15-04-enums-evolucao-e-tolerant-reader.mdx` | revisao |
-| 15.05 | Internacionalização na API | intermediario | complementar | `src/content/06-design-de-apis-profissional/15-05-internacionalizacao-na-api.mdx` | esqueleto |
+| 15.05 | Internacionalização na API | intermediario | complementar | `src/content/06-design-de-apis-profissional/15-05-internacionalizacao-na-api.mdx` | revisao |
 
 ### M16: Consistência e guia de estilo
 

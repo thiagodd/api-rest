@@ -12,6 +12,7 @@ import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -29,6 +30,12 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AuditoriaInterceptor()).addPathPatterns("/v1/**");
         registry.addInterceptor(new ParametrosDeConsultaInterceptor()).addPathPatterns("/v1/**");
+    }
+
+    // O nome localeResolver substitui o LocaleResolver do Spring Boot (15.05).
+    @Bean
+    LocaleResolver localeResolver() {
+        return new ResolvedorDeIdioma();
     }
 
     // A CURIE "bazar" das relações próprias (03.04). Aparece em _links.curies sempre que um link usa bazar:...

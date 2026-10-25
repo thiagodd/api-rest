@@ -8,9 +8,6 @@ spring:
   messages:
     # Idioma sem tradução usa o arquivo base (inglês), e não o idioma do servidor.
     fallback-to-system-locale: false
-  web:
-    # Sem Accept-Language, o Bazar responde em português.
-    locale: pt_BR
   data:
     web:
       pageable:
