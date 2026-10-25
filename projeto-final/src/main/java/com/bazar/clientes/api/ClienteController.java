@@ -7,6 +7,11 @@ import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.ContextoRequisicao;
+import com.bazar.compartilhado.web.RespostasDeErro;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -32,6 +37,10 @@ public class ClienteController {
 
     @Auditavel("cliente.cadastrar")
     @PostMapping
+    @Operation(operationId = "cadastrarCliente", summary = "Cadastra um cliente")
+    @ApiResponse(responseCode = "201", description = "O cliente foi cadastrado", headers = @Header(name = "Location",
+            description = "A URI do cliente", schema = @Schema(type = "string")))
+    @ApiResponse(responseCode = "422", ref = RespostasDeErro.VALIDACAO)
     public ResponseEntity<ClienteResponse> cadastrar(@Valid @RequestBody CriarClienteRequest request,
             ContextoRequisicao contexto) {
         var cliente = repository.save(request.paraCliente(contexto.canal()));

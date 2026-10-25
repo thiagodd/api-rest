@@ -200,14 +200,23 @@ paths:
               $ref: "#/components/schemas/CriarClienteRequest"
         required: true
       responses:
-        "200":
+        "201":
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ClienteResponse"
-          description: OK
+          description: O cliente foi cadastrado
+          headers:
+            Location:
+              description: A URI do cliente
+              schema:
+                type: string
+              style: simple
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Cadastra um cliente
       tags:
       - clientes
   /v1/clientes/{clienteId}/enderecos:
@@ -402,6 +411,8 @@ paths:
       tags:
       - pedidos
     post:
+      description: "Um cliente ou produto inexistente dá `422`; estoque insuficiente,\
+        \ `409` (10.03)."
       operationId: criarPedido
       requestBody:
         content:
@@ -410,14 +421,28 @@ paths:
               $ref: "#/components/schemas/CriarPedidoRequest"
         required: true
       responses:
-        "200":
+        "201":
           content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
             application/json:
               schema:
                 $ref: "#/components/schemas/EntityModelPedidoResponse"
-          description: OK
+          description: O pedido foi criado
+          headers:
+            Location:
+              description: A URI do pedido
+              schema:
+                type: string
+              style: simple
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
+        "409":
+          $ref: "#/components/responses/Conflito"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Cria um pedido e reserva o estoque
       tags:
       - pedidos
   /v1/pedidos/{id}:
@@ -433,6 +458,9 @@ paths:
       responses:
         "200":
           content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
             application/json:
               schema:
                 $ref: "#/components/schemas/EntityModelPedidoResponse"
@@ -460,6 +488,9 @@ paths:
       responses:
         "200":
           content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
             application/json:
               schema:
                 $ref: "#/components/schemas/EntityModelPedidoResponse"
@@ -1445,38 +1476,26 @@ components:
     Link:
       type: object
       properties:
-        deprecation:
-          type:
-          - string
-          - "null"
         href:
           type: string
-        hreflang:
-          type:
-          - string
-          - "null"
         name:
-          type:
-          - string
-          - "null"
-        profile:
-          type:
-          - string
-          - "null"
+          type: string
         templated:
           type: boolean
         title:
-          type:
-          - string
-          - "null"
-        type:
-          type:
-          - string
-          - "null"
+          type: string
+      required:
+      - href
     Links:
       type: object
       additionalProperties:
-        $ref: "#/components/schemas/Link"
+        anyOf:
+        - $ref: "#/components/schemas/Link"
+        - type: array
+          items:
+            $ref: "#/components/schemas/Link"
+      description: "Os links HAL (12.04): cada relação tem um link, ou uma lista de\
+        \ links."
     ListaEnderecoResponse:
       type: object
       properties:
@@ -1589,7 +1608,10 @@ components:
       - valorTotal
     Problema:
       type: object
-      description: "Problem Details (RFC 9457) com as extensões do Bazar (08.02, 16.01)."
+      additionalProperties: true
+      description: "Problem Details (RFC 9457) com as extensões do Bazar (08.02, 16.01).\
+        \ Alguns tipos têm membros próprios, como `quantidadeDisponivel` no estoque\
+        \ insuficiente: veja o catálogo em /problemas."
       properties:
         codigo:
           type: string

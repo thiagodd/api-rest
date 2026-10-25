@@ -23,7 +23,13 @@ import org.springdoc.core.utils.SpringDocUtils;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.ResolvableType;
+import org.springframework.hateoas.Links;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.method.HandlerMethod;
 
 /**
  * O contrato OpenAPI gerado pelo springdoc (17.02). As anotações dos controllers descrevem cada operação; esta classe
@@ -35,6 +41,8 @@ public class ConfiguracaoOpenApi {
 
     static final String PROBLEMA = "#/components/schemas/Problema";
     static final String DINHEIRO = "#/components/schemas/Dinheiro";
+    static final String LINKS = "#/components/schemas/Links";
+    static final String LINK = "#/components/schemas/Link";
 
     static {
         SpringDocUtils.getConfig()
@@ -44,6 +52,9 @@ public class ConfiguracaoOpenApi {
                 // O ProblemDetail guarda as extensões num mapa, que o Jackson espalha no JSON. Pela classe, o contrato
                 // teria um campo "properties" que não existe.
                 .replaceWithSchema(ProblemDetail.class, new Schema<>().$ref(PROBLEMA))
+                // No HAL, uma relação é um link ou uma lista de links (curies é sempre uma lista). Pela classe Links,
+                // o springdoc só aceitaria um link por relação.
+                .replaceWithSchema(Links.class, new Schema<>().$ref(LINKS))
                 // Preenchido pelo ContextoRequisicaoResolver a partir de headers, e não um parâmetro de query.
                 .addRequestWrapperToIgnore(ContextoRequisicao.class);
     }
@@ -91,6 +102,20 @@ public class ConfiguracaoOpenApi {
     }
 
     /**
+     * Substitui o bean de mesmo nome do springdoc, que descreve os links HAL com um link só por relação: o _links de um
+     * pedido, com curies em lista, não passaria na validação contra o contrato (17.03).
+     */
+    @Bean
+    GlobalOpenApiCustomizer linksSchemaCustomizer() {
+        return openApi -> {
+            if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
+                openApi.getComponents().addSchemas("Links", links());
+                openApi.getComponents().addSchemas("Link", link());
+            }
+        };
+    }
+
+    /**
      * Sem @Operation(operationId = ...), o springdoc usa o nome do método e desempata com sufixos (detalhar_1,
      * detalhar_2), que mudam quando um controller novo aparece. Aqui o nome é o método mais o recurso do controller:
      * detalharCategoria, cancelarPedido.
@@ -103,6 +128,9 @@ public class ConfiguracaoOpenApi {
                 var recurso = metodo.getBeanType().getSimpleName().replace("Controller", "");
                 operacao.setOperationId(metodo.getMethod().getName() + recurso);
             }
+            if (devolveHal(metodo)) {
+                aceitarHal(operacao);
+            }
             for (var parametro : metodo.getMethodParameters()) {
                 if (parametro.getParameterType().equals(ContextoRequisicao.class)) {
                     operacao.addParametersItem(new HeaderParameter()
@@ -113,6 +141,40 @@ public class ConfiguracaoOpenApi {
             }
             return operacao;
         };
+    }
+
+    // Um EntityModel (12.04) sai como application/hal+json para Accept: */* ou application/hal+json, e como
+    // application/json para Accept: application/json. O contrato lista os dois.
+    private static boolean devolveHal(HandlerMethod metodo) {
+        var tipo = ResolvableType.forMethodReturnType(metodo.getMethod());
+        var corpo = ResponseEntity.class.isAssignableFrom(tipo.toClass()) ? tipo.getGeneric(0) : tipo;
+        return RepresentationModel.class.isAssignableFrom(corpo.toClass());
+    }
+
+    private static void aceitarHal(io.swagger.v3.oas.models.Operation operacao) {
+        operacao.getResponses().forEach((status, resposta) -> {
+            var conteudo = resposta.getContent();
+            if (status.startsWith("2") && conteudo != null && conteudo.containsKey("application/json")) {
+                conteudo.addMediaType(MediaTypes.HAL_JSON_VALUE, conteudo.get("application/json"));
+            }
+        });
+    }
+
+    private static Schema<?> links() {
+        return tipo("object")
+                .description("Os links HAL (12.04): cada relação tem um link, ou uma lista de links.")
+                .additionalProperties(new Schema<>().anyOf(List.of(
+                        new Schema<>().$ref(LINK),
+                        tipo("array").items(new Schema<>().$ref(LINK)))));
+    }
+
+    private static Schema<?> link() {
+        return tipo("object")
+                .required(List.of("href"))
+                .addProperty("href", texto())
+                .addProperty("templated", tipo("boolean"))
+                .addProperty("name", texto())
+                .addProperty("title", texto());
     }
 
     private static Schema<?> dinheiro() {
@@ -130,7 +192,10 @@ public class ConfiguracaoOpenApi {
                 .required(List.of("campo", "mensagem"))
                 .properties(Map.of("campo", texto(), "mensagem", texto()));
         return tipo("object")
-                .description("Problem Details (RFC 9457) com as extensões do Bazar (08.02, 16.01).")
+                .description("""
+                        Problem Details (RFC 9457) com as extensões do Bazar (08.02, 16.01). Alguns tipos têm membros \
+                        próprios, como `quantidadeDisponivel` no estoque insuficiente: veja o catálogo em /problemas.""")
+                .additionalProperties(true)
                 .required(List.of("type", "title", "status", "codigo", "traceId"))
                 .addProperty("type", texto().format("uri"))
                 .addProperty("title", texto())

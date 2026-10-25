@@ -46,15 +46,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import static com.bazar.compartilhado.web.RespostasDeErro.CONFLITO;
+import static com.bazar.compartilhado.web.RespostasDeErro.NAO_ENCONTRADO;
+import static com.bazar.compartilhado.web.RespostasDeErro.VALIDACAO;
+
 @RestController
 @RequestMapping("/v1/produtos")
 @Tag(name = "produtos", description = "O catálogo de produtos")
 public class ProdutoController {
-
-    // As respostas de erro reutilizáveis, definidas em ConfiguracaoOpenApi (17.02).
-    static final String NAO_ENCONTRADO = "#/components/responses/NaoEncontrado";
-    static final String CONFLITO = "#/components/responses/Conflito";
-    static final String VALIDACAO = "#/components/responses/Validacao";
 
     static final String ORDENACAO_NO_CONTRATO = "`campo,direcao`, repetível. Campos: `nome`, `precoEmCentavos`, "
             + "`sku` e `criadoEm`. Sem `sort`, a ordem é pelo nome (13.02).";

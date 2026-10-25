@@ -133,4 +133,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'catalogo-de-problemas', termo: 'Catálogo de problemas', definicao: 'Lista de todos os tipos de erro de uma API, cada um com URI do type, código, status HTTP e o que o cliente deve fazer ao recebê-lo.', pagina: '16.01' },
   { id: 'adr', termo: 'ADR (Architecture Decision Record)', definicao: 'Documento curto e numerado que registra uma decisão de arquitetura ou de design: o contexto, a decisão e as consequências, inclusive as ruins.', pagina: '16.02' },
   { id: 'springdoc', termo: 'springdoc-openapi', definicao: 'Biblioteca que gera o contrato OpenAPI de uma aplicação Spring a partir dos controllers e das classes, com a aplicação no ar, e publica a Swagger UI.', pagina: '17.02' },
+  { id: 'openapi-generator', termo: 'openapi-generator', definicao: 'Ferramenta que gera código (interfaces de servidor, modelos, clientes) a partir de um contrato OpenAPI, com geradores para dezenas de linguagens e frameworks.', pagina: '17.03' },
+  { id: 'servidor-de-mock', termo: 'Servidor de mock', ingles: 'mock server', definicao: 'Servidor que responde de acordo com um contrato, sem implementação real, para que o consumidor integre antes de a API existir. O Prism é um exemplo.', pagina: '17.03' },
 ]

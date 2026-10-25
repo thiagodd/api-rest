@@ -135,10 +135,12 @@
             <version>${rest-assured.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Confere as respostas dos testes ponta a ponta contra o contrato versionado (17.03). É o antigo
+             swagger-request-validator, renomeado na 3.0.0. -->
         <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>json-schema-validator</artifactId>
-            <version>${rest-assured.version}</version>
+            <groupId>com.atlassian.oai</groupId>
+            <artifactId>openapi-request-validator-restassured</artifactId>
+            <version>3.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

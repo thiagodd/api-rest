@@ -7,7 +7,12 @@ import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
+import com.bazar.compartilhado.web.RespostasDeErro;
 import com.bazar.pedidos.dominio.PedidoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -38,6 +43,12 @@ public class PedidoController {
     }
 
     @PostMapping
+    @Operation(operationId = "criarPedido", summary = "Cria um pedido e reserva o estoque",
+            description = "Um cliente ou produto inexistente dá `422`; estoque insuficiente, `409` (10.03).")
+    @ApiResponse(responseCode = "201", description = "O pedido foi criado", headers = @Header(name = "Location",
+            description = "A URI do pedido", schema = @Schema(type = "string")))
+    @ApiResponse(responseCode = "409", ref = RespostasDeErro.CONFLITO)
+    @ApiResponse(responseCode = "422", ref = RespostasDeErro.VALIDACAO)
     public ResponseEntity<EntityModel<PedidoResponse>> criar(@Valid @RequestBody CriarPedidoRequest request) {
         var pedido = servico.criar(request.clienteId(), request.itensSolicitados());
         var location = ServletUriComponentsBuilder.fromCurrentRequest()

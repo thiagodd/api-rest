@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.atlassian.oai.validator.OpenApiInteractionValidator;
+import com.atlassian.oai.validator.report.LevelResolver;
+import com.atlassian.oai.validator.report.ValidationReport;
+import com.atlassian.oai.validator.restassured.OpenApiValidationFilter;
 import com.bazar.LimpezaDoBanco;
 import com.bazar.TesteDeIntegracao;
 import io.restassured.builder.RequestSpecBuilder;
@@ -20,7 +24,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -48,6 +51,15 @@ class FluxoCompraE2ETest {
     @Autowired
     JdbcClient jdbc;
 
+    // Toda resposta destes testes é conferida contra o contrato versionado (17.03). As requisições não: alguns
+    // cenários mandam requisições inválidas de propósito, para ver o erro.
+    static final OpenApiValidationFilter CONTRATO = new OpenApiValidationFilter(
+            OpenApiInteractionValidator.createForSpecificationUrl("docs/openapi/bazar-api.yaml")
+                    .withLevelResolver(LevelResolver.create()
+                            .withLevel("validation.request", ValidationReport.Level.IGNORE)
+                            .build())
+                    .build());
+
     RequestSpecification api;
 
     @BeforeEach
@@ -58,6 +70,7 @@ class FluxoCompraE2ETest {
                 .setBasePath("/v1")
                 .setContentType(ContentType.JSON)
                 .addHeader("Accept-Language", "pt-BR")
+                .addFilter(CONTRATO)
                 .build();
     }
 
@@ -80,7 +93,6 @@ class FluxoCompraE2ETest {
         .then()
                 .statusCode(201)
                 .header("Location", matchesPattern("http://localhost:\\d+/v1/pedidos/[0-9a-f-]{36}"))
-                .body(matchesJsonSchemaInClasspath("esquemas/pedido.json"))
                 .body("status", equalTo("CRIADO"))
                 .body("itens[0].sku", equalTo(sku))
                 .body("itens[0].precoUnitario.valor", equalTo("129.90"))
