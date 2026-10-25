@@ -1,5 +1,6 @@
 package com.bazar.compartilhado.web;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import org.jspecify.annotations.Nullable;
 
@@ -10,7 +11,11 @@ import org.jspecify.annotations.Nullable;
  * @param limit quantos itens por página; acima do máximo, vale o máximo
  * @param cursor a posição de onde continuar; ausente, a listagem começa do início
  */
-public record JanelaPedida(@Nullable @Min(1) Integer limit, @Nullable String cursor) {
+public record JanelaPedida(
+        @Schema(description = "Itens por página. Acima de 100, vale 100.", defaultValue = "20")
+        @Nullable @Min(1) Integer limit,
+        @Schema(description = "Opaco. Use o valor que veio no header `Link`, sem alterar.")
+        @Nullable String cursor) {
 
     // ?cursor= vazio é o mesmo que não mandar o cursor, como o q da busca (13.01).
     public JanelaPedida {

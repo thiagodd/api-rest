@@ -8,6 +8,7 @@ import com.bazar.compartilhado.Dinheiro;
 import com.bazar.pedidos.dominio.MotivoCancelamento;
 import com.bazar.pedidos.dominio.Pedido;
 import com.bazar.pedidos.dominio.StatusPedido;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -29,6 +30,10 @@ public record PedidoResponse(
     public record Cancelamento(MotivoCancelamento motivo, @Nullable String observacao, Instant canceladoEm) {
     }
 
+
+    // Sem o nome, os quatro records Item do Bazar viram um esquema só no contrato (17.02).
+
+    @Schema(name = "ItemDoPedido")
     public record Item(UUID produtoId, String sku, String nomeProduto, int quantidade, Dinheiro precoUnitario,
             Dinheiro subtotal) {
     }

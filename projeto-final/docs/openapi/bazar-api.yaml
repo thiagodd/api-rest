@@ -1,0 +1,1756 @@
+openapi: 3.1.0
+info:
+  contact:
+    name: Equipe de plataforma do Bazar
+    url: https://api.bazar.example/suporte
+  description: Erros seguem o RFC 9457 (`application/problem+json`). O catálogo de
+    tipos de erro está em https://api.bazar.example/problemas.
+  license:
+    name: Proprietária
+    url: https://api.bazar.example/termos
+  summary: "Catálogo, clientes e pedidos do marketplace Bazar."
+  title: API do Bazar
+  version: 1.0.0
+servers:
+- description: Este servidor
+  url: /
+- description: Produção
+  url: https://api.bazar.example
+tags:
+- description: O catálogo de produtos
+  name: produtos
+- description: O estoque dos produtos
+  name: estoque
+- description: As categorias do catálogo
+  name: categorias
+- description: Os pedidos
+  name: pedidos
+- description: Os clientes
+  name: clientes
+paths:
+  /v1/ajustes-estoque/lotes:
+    post:
+      operationId: ajustarEstoqueEmLote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AjusteDeEstoqueEmLoteRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadoDoLote"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      summary: Define o estoque de vários produtos
+      tags:
+      - estoque
+  /v1/categorias:
+    get:
+      operationId: listarCategoria
+      parameters:
+      - in: query
+        name: q
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          maxLength: 60
+          minLength: 2
+      - in: query
+        name: apenasRaizes
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - in: query
+        name: page
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int32
+          minimum: 1
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int32
+          minimum: 1
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginaCategoriaResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - categorias
+    post:
+      operationId: criarCategoria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriaResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - categorias
+  /v1/categorias/{id}:
+    delete:
+      operationId: removerCategoria
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - categorias
+    get:
+      operationId: detalharCategoria
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriaResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - categorias
+    put:
+      operationId: substituirCategoria
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriaResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - categorias
+  /v1/clientes:
+    post:
+      operationId: cadastrarCliente
+      parameters:
+      - description: "O canal do cliente. Ausente ou desconhecido, vale `DESCONHECIDO`\
+          \ (09.02)."
+        in: header
+        name: Bazar-Canal
+        schema:
+          type: string
+          examples:
+          - WEB
+          - APP
+          - PARCEIRO
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CriarClienteRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+  /v1/clientes/{clienteId}/enderecos:
+    get:
+      operationId: listarEndereco
+      parameters:
+      - in: path
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaEnderecoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+    post:
+      operationId: adicionarEndereco
+      parameters:
+      - in: path
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnderecoRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnderecoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+  /v1/clientes/{clienteId}/enderecos/{enderecoId}:
+    delete:
+      operationId: removerEndereco
+      parameters:
+      - in: path
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: enderecoId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+    get:
+      operationId: detalharEndereco
+      parameters:
+      - in: path
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: enderecoId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnderecoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+    put:
+      operationId: substituirEndereco
+      parameters:
+      - in: path
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: enderecoId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnderecoRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnderecoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+  /v1/clientes/{id}:
+    get:
+      operationId: detalharCliente
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - clientes
+  /v1/pedidos:
+    get:
+      operationId: listarPedido
+      parameters:
+      - in: query
+        name: clienteId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: "Itens por página. Acima de 100, vale 100."
+        in: query
+        name: limit
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int32
+          default: 20
+          description: "Itens por página. Acima de 100, vale 100."
+          minimum: 1
+      - description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaPedidoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - pedidos
+    post:
+      operationId: criarPedido
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CriarPedidoRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - pedidos
+  /v1/pedidos/{id}:
+    get:
+      operationId: detalharPedido
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - pedidos
+  /v1/pedidos/{id}/cancelamento:
+    post:
+      operationId: cancelarPedido
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelarPedidoRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityModelPedidoResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      summary: Cancela um pedido
+      tags:
+      - pedidos
+  /v1/produtos:
+    get:
+      description: "Os filtros se combinam com E; os valores de um mesmo filtro, com\
+        \ OU (13.01)."
+      operationId: listarProdutos
+      parameters:
+      - in: query
+        name: q
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          maxLength: 100
+          minLength: 2
+      - in: query
+        name: sku
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          pattern: "[A-Z]{3}-\\d{4}"
+      - in: query
+        name: categoriaId
+        required: false
+        schema:
+          type:
+          - array
+          - "null"
+          items:
+            type: string
+            format: uuid
+          maxItems: 20
+          minItems: 0
+      - in: query
+        name: status
+        required: false
+        schema:
+          type:
+          - array
+          - "null"
+          items:
+            type: string
+            description: "Lista extensível: valores novos podem ser acrescentados,\
+              \ e o cliente deve tolerar um valor que não conhece (15.04)."
+            examples:
+            - RASCUNHO
+            - ATIVO
+            - DESCONTINUADO
+      - in: query
+        name: precoMin
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int64
+          minimum: 0
+      - in: query
+        name: precoMax
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int64
+          minimum: 0
+      - in: query
+        name: criadoApos
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          format: date-time
+      - description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        in: query
+        name: sort
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - description: "Itens por página. Acima de 100, vale 100."
+        in: query
+        name: limit
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int32
+          default: 20
+          description: "Itens por página. Acima de 100, vale 100."
+          minimum: 1
+      - description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+      - description: "Os campos de cada item, separados por vírgula (13.05)."
+        example: "nome,precoEmCentavos"
+        in: query
+        name: fields
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaProdutoResumoResponse"
+          description: Uma página de produtos
+          headers:
+            Link:
+              description: "Os links `first`, `prev` e `next` (RFC 8288). Siga-os\
+                \ sem montar a URL."
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: "Lista produtos, paginando por cursor"
+      tags:
+      - produtos
+    post:
+      description: O produto nasce em `RASCUNHO`. Campos somente leitura enviados
+        são ignorados. Um SKU repetido dá `409` (14.01).
+      operationId: criarProduto
+      parameters:
+      - description: '`return=minimal` responde sem corpo.'
+        example: return=minimal
+        in: header
+        name: Prefer
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CriarProdutoRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoResponse"
+          description: "O produto foi criado. Sem corpo com `Prefer: return=minimal`."
+          headers:
+            Location:
+              description: A URI do produto
+              schema:
+                type: string
+              style: simple
+            Preference-Applied:
+              description: "`return=minimal`, quando foi atendido"
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "409":
+          $ref: "#/components/responses/Conflito"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Cadastra um produto
+      tags:
+      - produtos
+  /v1/produtos/buscas:
+    post:
+      description: "Não altera nada. Para seguir os links do header `Link`, repita\
+        \ o corpo."
+      operationId: buscarProdutos
+      parameters:
+      - description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        in: query
+        name: sort
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - description: "Itens por página. Acima de 100, vale 100."
+        in: query
+        name: limit
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int32
+          default: 20
+          description: "Itens por página. Acima de 100, vale 100."
+          minimum: 1
+      - description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+          description: "Opaco. Use o valor que veio no header `Link`, sem alterar."
+      - description: "Os campos de cada item, separados por vírgula."
+        in: query
+        name: fields
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuscaDeProdutos"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaProdutoResumoResponse"
+          description: Uma página de produtos
+          headers:
+            Link:
+              description: "Os links `first`, `prev` e `next` (RFC 8288)."
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Busca produtos com os critérios no corpo
+      tags:
+      - produtos
+  /v1/produtos/{id}:
+    delete:
+      description: O produto fica `DESCONTINUADO` e continua acessível pelo id. Repetir
+        dá o mesmo `204`.
+      operationId: removerProduto
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: O produto foi descontinuado
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      summary: Descontinua um produto
+      tags:
+      - produtos
+    get:
+      operationId: detalharProduto
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: '`categoria` traz a categoria dentro do produto.'
+        example: categoria
+        in: query
+        name: embed
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoResponse"
+          description: O produto
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      summary: Detalha um produto
+      tags:
+      - produtos
+    patch:
+      description: JSON Merge Patch (RFC 7396) ou JSON Patch (RFC 6902). O resultado
+        passa pelas mesmas validações do `PUT` (14.02). Um `test` do JSON Patch que
+        falha dá `409`.
+      operationId: corrigirProduto
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items:
+                type: object
+                description: "Uma operação: `op`, `path` e, conforme a operação, `value`\
+                  \ ou `from`."
+          application/merge-patch+json:
+            schema:
+              type: object
+              description: Os campos a mudar; `null` remove o valor.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoResponse"
+          description: O produto atualizado
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflito"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Muda só alguns campos de um produto
+      tags:
+      - produtos
+    put:
+      description: "Um campo ausente vira `null` ou vazio. Para mudar só alguns campos,\
+        \ use o `PATCH`."
+      operationId: substituirProduto
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AtualizarProdutoRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoResponse"
+          description: O produto atualizado
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Substitui a parte editável de um produto
+      tags:
+      - produtos
+  /v1/produtos/{produtoId}/estoque:
+    get:
+      operationId: detalharEstoque
+      parameters:
+      - in: path
+        name: produtoId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstoqueResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - estoque
+    put:
+      operationId: definirEstoque
+      parameters:
+      - in: path
+        name: produtoId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefinirEstoqueRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstoqueResponse"
+          description: OK
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      tags:
+      - estoque
+components:
+  responses:
+    Conflito:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: A requisição conflita com o estado atual do recurso
+    NaoEncontrado:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: O recurso não existe
+    RequisicaoInvalida:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: A requisição tem a forma ou o tipo errados
+    Validacao:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: Um ou mais valores violam as regras; veja `erros`
+  schemas:
+    AjusteDeEstoqueEmLoteRequest:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/AjusteDoLote"
+          maxItems: 500
+          minItems: 0
+      required:
+      - itens
+    AjusteDoLote:
+      type: object
+      properties:
+        produtoId:
+          type: string
+          format: uuid
+        quantidadeDisponivel:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+      required:
+      - produtoId
+      - quantidadeDisponivel
+    AtualizarProdutoRequest:
+      type: object
+      properties:
+        atributos:
+          type: object
+          additionalProperties:
+            type: string
+        categoriaId:
+          type: string
+          format: uuid
+        descricao:
+          type:
+          - string
+          - "null"
+          maxLength: 2000
+          minLength: 0
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 0
+        precoEmCentavos:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+      required:
+      - categoriaId
+      - nome
+      - precoEmCentavos
+    BuscaDeProdutos:
+      type: object
+      properties:
+        atributos:
+          type:
+          - object
+          - "null"
+          additionalProperties:
+            type: string
+        categoriaIds:
+          type:
+          - array
+          - "null"
+          items:
+            type: string
+            format: uuid
+          maxItems: 100
+          minItems: 0
+        criadoApos:
+          type:
+          - string
+          - "null"
+          format: date-time
+        precoMax:
+          type:
+          - integer
+          - "null"
+          format: int64
+          minimum: 0
+        precoMin:
+          type:
+          - integer
+          - "null"
+          format: int64
+          minimum: 0
+        q:
+          type:
+          - string
+          - "null"
+          maxLength: 100
+          minLength: 2
+        sku:
+          type:
+          - string
+          - "null"
+          pattern: "[A-Z]{3}-\\d{4}"
+        status:
+          type:
+          - array
+          - "null"
+          items:
+            type: string
+            description: "Lista extensível: valores novos podem ser acrescentados,\
+              \ e o cliente deve tolerar um valor que não conhece (15.04)."
+            examples:
+            - RASCUNHO
+            - ATIVO
+            - DESCONTINUADO
+    Cancelamento:
+      type: object
+      properties:
+        canceladoEm:
+          type: string
+          format: date-time
+        motivo:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - CLIENTE_DESISTIU
+          - ENDERECO_ERRADO
+          - OUTRO
+        observacao:
+          type:
+          - string
+          - "null"
+      required:
+      - canceladoEm
+      - motivo
+      - observacao
+    CancelarPedidoRequest:
+      type: object
+      properties:
+        motivo:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - CLIENTE_DESISTIU
+          - ENDERECO_ERRADO
+          - OUTRO
+        observacao:
+          type:
+          - string
+          - "null"
+          maxLength: 500
+          minLength: 0
+      required:
+      - motivo
+    CategoriaRequest:
+      type: object
+      properties:
+        categoriaPaiId:
+          type:
+          - string
+          - "null"
+          format: uuid
+        nome:
+          type: string
+          maxLength: 60
+          minLength: 0
+        slug:
+          type: string
+          maxLength: 60
+          minLength: 0
+          pattern: "[a-z0-9]+(-[a-z0-9]+)*"
+      required:
+      - nome
+      - slug
+    CategoriaResponse:
+      type: object
+      properties:
+        categoriaPaiId:
+          type:
+          - string
+          - "null"
+          format: uuid
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        slug:
+          type: string
+      required:
+      - categoriaPaiId
+      - id
+      - nome
+      - slug
+    ClienteResponse:
+      type: object
+      properties:
+        canalDeCadastro:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - WEB
+          - APP
+          - PARCEIRO
+          - DESCONHECIDO
+        criadoEm:
+          type: string
+          format: date-time
+        email:
+          type: string
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        telefone:
+          type:
+          - string
+          - "null"
+      required:
+      - canalDeCadastro
+      - criadoEm
+      - email
+      - id
+      - nome
+      - telefone
+    CriarClienteRequest:
+      type: object
+      properties:
+        cpf:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 0
+        telefone:
+          type:
+          - string
+          - "null"
+          pattern: "\\+\\d{10,13}"
+      required:
+      - cpf
+      - email
+      - nome
+    CriarPedidoRequest:
+      type: object
+      properties:
+        clienteId:
+          type: string
+          format: uuid
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemDoNovoPedido"
+          maxItems: 50
+          minItems: 0
+      required:
+      - clienteId
+      - itens
+    CriarProdutoRequest:
+      type: object
+      properties:
+        atributos:
+          type: object
+          additionalProperties:
+            type: string
+        categoriaId:
+          type: string
+          format: uuid
+        descricao:
+          type:
+          - string
+          - "null"
+          maxLength: 2000
+          minLength: 0
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 0
+        precoEmCentavos:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+        sku:
+          type: string
+          minLength: 1
+          pattern: "[A-Z]{3}-\\d{4}"
+      required:
+      - categoriaId
+      - nome
+      - precoEmCentavos
+      - sku
+    DefinirEstoqueRequest:
+      type: object
+      properties:
+        quantidadeDisponivel:
+          type: integer
+          format: int32
+          maximum: 1000000
+          minimum: 0
+        versao:
+          type: integer
+          format: int64
+      required:
+      - quantidadeDisponivel
+      - versao
+    Dinheiro:
+      type: object
+      description: "Um valor monetário exato, com a moeda (15.02)."
+      properties:
+        moeda:
+          type: string
+          description: Código ISO 4217
+          examples:
+          - BRL
+          pattern: "^[A-Z]{3}$"
+        valor:
+          type: string
+          description: "Decimal em texto, com as casas da moeda"
+          examples:
+          - "129.90"
+          pattern: ^-?\d+(\.\d+)?$
+      required:
+      - moeda
+      - valor
+    EnderecoRequest:
+      type: object
+      properties:
+        cep:
+          type: string
+          minLength: 1
+          pattern: "\\d{8}"
+        cidade:
+          type: string
+          maxLength: 60
+          minLength: 0
+        complemento:
+          type:
+          - string
+          - "null"
+          maxLength: 60
+          minLength: 0
+        logradouro:
+          type: string
+          maxLength: 120
+          minLength: 0
+        numero:
+          type: string
+          maxLength: 10
+          minLength: 0
+        principal:
+          type:
+          - boolean
+          - "null"
+        uf:
+          type: string
+          minLength: 1
+          pattern: "[A-Z]{2}"
+      required:
+      - cep
+      - cidade
+      - logradouro
+      - numero
+      - uf
+    EnderecoResponse:
+      type: object
+      properties:
+        cep:
+          type: string
+        cidade:
+          type: string
+        complemento:
+          type:
+          - string
+          - "null"
+        criadoEm:
+          type: string
+          format: date-time
+        id:
+          type: string
+          format: uuid
+        logradouro:
+          type: string
+        numero:
+          type: string
+        principal:
+          type: boolean
+        uf:
+          type: string
+      required:
+      - cep
+      - cidade
+      - complemento
+      - criadoEm
+      - id
+      - logradouro
+      - numero
+      - principal
+      - uf
+    EntityModelPedidoResponse:
+      type: object
+      properties:
+        _links:
+          $ref: "#/components/schemas/Links"
+        cancelamento:
+          oneOf:
+          - $ref: "#/components/schemas/Cancelamento"
+          - type: "null"
+        clienteId:
+          type: string
+          format: uuid
+        criadoEm:
+          type: string
+          format: date-time
+        id:
+          type: string
+          format: uuid
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemDoPedido"
+        numero:
+          type: string
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - CRIADO
+          - PAGAMENTO_PENDENTE
+          - PAGO
+          - ENVIADO
+          - ENTREGUE
+          - CANCELADO
+          - REEMBOLSADO
+        valorFrete:
+          $ref: "#/components/schemas/Dinheiro"
+        valorItens:
+          $ref: "#/components/schemas/Dinheiro"
+        valorTotal:
+          $ref: "#/components/schemas/Dinheiro"
+      required:
+      - cancelamento
+      - clienteId
+      - criadoEm
+      - id
+      - itens
+      - numero
+      - status
+      - valorFrete
+      - valorItens
+      - valorTotal
+    EstoqueResponse:
+      type: object
+      properties:
+        produtoId:
+          type: string
+          format: uuid
+        quantidadeDisponivel:
+          type: integer
+          format: int32
+        quantidadeReservada:
+          type: integer
+          format: int32
+        versao:
+          type: integer
+          format: int64
+      required:
+      - produtoId
+      - quantidadeDisponivel
+      - quantidadeReservada
+      - versao
+    ItemDoNovoPedido:
+      type: object
+      properties:
+        produtoId:
+          type: string
+          format: uuid
+        quantidade:
+          type: integer
+          format: int32
+          exclusiveMinimum: 0
+          maximum: 100
+      required:
+      - produtoId
+      - quantidade
+    ItemDoPedido:
+      type: object
+      properties:
+        nomeProduto:
+          type: string
+        precoUnitario:
+          $ref: "#/components/schemas/Dinheiro"
+        produtoId:
+          type: string
+          format: uuid
+        quantidade:
+          type: integer
+          format: int32
+        sku:
+          type: string
+        subtotal:
+          $ref: "#/components/schemas/Dinheiro"
+      required:
+      - nomeProduto
+      - precoUnitario
+      - produtoId
+      - quantidade
+      - sku
+      - subtotal
+    Link:
+      type: object
+      properties:
+        deprecation:
+          type:
+          - string
+          - "null"
+        href:
+          type: string
+        hreflang:
+          type:
+          - string
+          - "null"
+        name:
+          type:
+          - string
+          - "null"
+        profile:
+          type:
+          - string
+          - "null"
+        templated:
+          type: boolean
+        title:
+          type:
+          - string
+          - "null"
+        type:
+          type:
+          - string
+          - "null"
+    Links:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/Link"
+    ListaEnderecoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnderecoResponse"
+      required:
+      - itens
+    ListaPedidoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/PedidoResponse"
+      required:
+      - itens
+    ListaProdutoResumoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProdutoResumoResponse"
+      required:
+      - itens
+    Metadados:
+      type: object
+      properties:
+        numero:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        totalDeItens:
+          type: integer
+          format: int64
+        totalDePaginas:
+          type: integer
+          format: int32
+      required:
+      - numero
+      - tamanho
+      - totalDeItens
+      - totalDePaginas
+    PaginaCategoriaResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoriaResponse"
+        pagina:
+          $ref: "#/components/schemas/Metadados"
+      required:
+      - itens
+      - pagina
+    PedidoResponse:
+      type: object
+      properties:
+        cancelamento:
+          oneOf:
+          - $ref: "#/components/schemas/Cancelamento"
+          - type: "null"
+        clienteId:
+          type: string
+          format: uuid
+        criadoEm:
+          type: string
+          format: date-time
+        id:
+          type: string
+          format: uuid
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemDoPedido"
+        numero:
+          type: string
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - CRIADO
+          - PAGAMENTO_PENDENTE
+          - PAGO
+          - ENVIADO
+          - ENTREGUE
+          - CANCELADO
+          - REEMBOLSADO
+        valorFrete:
+          $ref: "#/components/schemas/Dinheiro"
+        valorItens:
+          $ref: "#/components/schemas/Dinheiro"
+        valorTotal:
+          $ref: "#/components/schemas/Dinheiro"
+      required:
+      - cancelamento
+      - clienteId
+      - criadoEm
+      - id
+      - itens
+      - numero
+      - status
+      - valorFrete
+      - valorItens
+      - valorTotal
+    Problema:
+      type: object
+      description: "Problem Details (RFC 9457) com as extensões do Bazar (08.02, 16.01)."
+      properties:
+        codigo:
+          type: string
+          description: "O tipo em MAIÚSCULAS, estável para o código do cliente."
+          examples:
+          - PRODUTO_NAO_ENCONTRADO
+        detail:
+          type: string
+        erros:
+          type: array
+          description: "Só nos erros de validação (422): um item por campo."
+          items:
+            type: object
+            properties:
+              campo:
+                type: string
+              mensagem:
+                type: string
+            required:
+            - campo
+            - mensagem
+        instance:
+          type: string
+          format: uri-reference
+        status:
+          type: integer
+        title:
+          type: string
+        traceId:
+          type: string
+        type:
+          type: string
+          format: uri
+      required:
+      - codigo
+      - status
+      - title
+      - traceId
+      - type
+    ProdutoResponse:
+      type: object
+      properties:
+        atributos:
+          type: object
+          additionalProperties:
+            type: string
+        atualizadoEm:
+          type: string
+          format: date-time
+        categoria:
+          oneOf:
+          - $ref: "#/components/schemas/CategoriaResponse"
+          - type: "null"
+        categoriaId:
+          type: string
+          format: uuid
+        criadoEm:
+          type: string
+          format: date-time
+        descricao:
+          type:
+          - string
+          - "null"
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        precoEmCentavos:
+          type: integer
+          format: int64
+        sku:
+          type: string
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - RASCUNHO
+          - ATIVO
+          - DESCONTINUADO
+      required:
+      - atributos
+      - atualizadoEm
+      - categoriaId
+      - criadoEm
+      - descricao
+      - id
+      - nome
+      - precoEmCentavos
+      - sku
+      - status
+    ProdutoResumoResponse:
+      type: object
+      properties:
+        categoriaId:
+          type: string
+          format: uuid
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        precoEmCentavos:
+          type: integer
+          format: int64
+        sku:
+          type: string
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - RASCUNHO
+          - ATIVO
+          - DESCONTINUADO
+      required:
+      - categoriaId
+      - id
+      - nome
+      - precoEmCentavos
+      - sku
+      - status
+    ResultadoDoItem:
+      type: object
+      properties:
+        estoque:
+          oneOf:
+          - $ref: "#/components/schemas/EstoqueResponse"
+          - type: "null"
+        indice:
+          type: integer
+          format: int32
+        problema:
+          oneOf:
+          - $ref: "#/components/schemas/Problema"
+          - type: "null"
+        produtoId:
+          type: string
+          format: uuid
+        status:
+          type: integer
+          format: int32
+      required:
+      - indice
+      - produtoId
+      - status
+    ResultadoDoLote:
+      type: object
+      properties:
+        falhas:
+          type: integer
+          format: int32
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResultadoDoItem"
+        sucessos:
+          type: integer
+          format: int32
+      required:
+      - falhas
+      - itens
+      - sucessos

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.ProblemDetail;
@@ -19,6 +20,8 @@ public record ResultadoDoLote(int sucessos, int falhas, List<Item> itens) {
         return new ResultadoDoLote(sucessos, itens.size() - sucessos, itens);
     }
 
+    // Sem o nome, os quatro records Item do Bazar viram um esquema só no contrato (17.02).
+    @Schema(name = "ResultadoDoItem")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Item(
             int indice,

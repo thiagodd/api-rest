@@ -3,6 +3,8 @@ package com.bazar.pedidos.api;
 import java.util.UUID;
 
 import com.bazar.pedidos.dominio.PedidoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.hateoas.EntityModel;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/v1/pedidos/{id}")
+@Tag(name = "pedidos", description = "Os pedidos")
 public class PedidoAcoesController {
 
     private final PedidoService servico;
@@ -29,6 +32,7 @@ public class PedidoAcoesController {
     }
 
     @PostMapping("/cancelamento")
+    @Operation(operationId = "cancelarPedido", summary = "Cancela um pedido")
     public EntityModel<PedidoResponse> cancelar(@PathVariable UUID id, @Valid @RequestBody CancelarPedidoRequest request) {
         return assembler.toModel(servico.cancelar(id, request.motivo(), request.observacao()));
     }

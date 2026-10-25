@@ -9,6 +9,8 @@ import com.bazar.compartilhado.erros.ConflitoDeVersaoException;
 import com.bazar.compartilhado.erros.Problemas;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.estoque.dominio.EstoqueService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.context.MessageSource;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/v1/ajustes-estoque/lotes")
+@Tag(name = "estoque", description = "O estoque dos produtos")
 public class AjusteDeEstoqueController {
 
     private final EstoqueService servico;
@@ -40,6 +43,7 @@ public class AjusteDeEstoqueController {
     }
 
     @PostMapping
+    @Operation(operationId = "ajustarEstoqueEmLote", summary = "Define o estoque de vários produtos")
     public ResponseEntity<ResultadoDoLote> ajustar(@Valid @RequestBody AjusteDeEstoqueEmLoteRequest lote) {
         exigirProdutosDistintos(lote);
         var resultados = new ArrayList<ResultadoDoLote.Item>();

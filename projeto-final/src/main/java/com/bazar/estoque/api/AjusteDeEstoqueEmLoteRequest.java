@@ -3,6 +3,7 @@ package com.bazar.estoque.api;
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
@@ -19,6 +20,10 @@ public record AjusteDeEstoqueEmLoteRequest(
 
     public static final int MAXIMO = 500;
 
+
+    // Sem o nome, os quatro records Item do Bazar viram um esquema só no contrato (17.02).
+
+    @Schema(name = "AjusteDoLote")
     public record Item(
             @NotNull UUID produtoId,
             @NotNull @PositiveOrZero @Max(1_000_000) Integer quantidadeDisponivel) {

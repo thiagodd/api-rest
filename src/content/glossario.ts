@@ -132,4 +132,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'locale-resolver', termo: 'LocaleResolver', definicao: 'Componente do Spring MVC que decide o idioma de cada requisição (por exemplo, pelo Accept-Language), usado pelas mensagens e pelos erros.', pagina: '15.05' },
   { id: 'catalogo-de-problemas', termo: 'Catálogo de problemas', definicao: 'Lista de todos os tipos de erro de uma API, cada um com URI do type, código, status HTTP e o que o cliente deve fazer ao recebê-lo.', pagina: '16.01' },
   { id: 'adr', termo: 'ADR (Architecture Decision Record)', definicao: 'Documento curto e numerado que registra uma decisão de arquitetura ou de design: o contexto, a decisão e as consequências, inclusive as ruins.', pagina: '16.02' },
+  { id: 'springdoc', termo: 'springdoc-openapi', definicao: 'Biblioteca que gera o contrato OpenAPI de uma aplicação Spring a partir dos controllers e das classes, com a aplicação no ar, e publica a Swagger UI.', pagina: '17.02' },
 ]

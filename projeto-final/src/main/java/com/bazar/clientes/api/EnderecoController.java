@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.clientes.dominio.EnderecoService;
 import com.bazar.compartilhado.Lista;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  */
 @RestController
 @RequestMapping("/v1/clientes/{clienteId}/enderecos")
+@Tag(name = "clientes", description = "Os clientes")
 public class EnderecoController {
 
     private final EnderecoService servico;

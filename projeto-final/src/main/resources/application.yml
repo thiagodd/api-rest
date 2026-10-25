@@ -23,3 +23,25 @@ spring:
 
 server:
   port: 8080
+
+# O contrato OpenAPI gerado a partir do código (17.02): /v3/api-docs e /swagger-ui.html.
+springdoc:
+  # Só a API pública: o /error do Spring e as páginas HTML de /problemas não entram no contrato.
+  paths-to-match: /v1/**
+  # Sem isso, as respostas aparecem como */*: o springdoc não sabe o que o conversor de mensagens vai escolher.
+  default-produces-media-type: application/json
+  # Os @ModelAttribute (FiltroProduto, JanelaPedida) viram um parâmetro de query por campo, como chegam de verdade.
+  default-flat-param-object: true
+  # Chaves em ordem alfabética: o contrato exportado (docs/openapi) muda só quando a API muda.
+  writer-with-order-by-keys: true
+  model-converters:
+    # Campos com @Nullable (JSpecify) aceitam null no contrato: type: [string, "null"].
+    java-nullable-property-customizer:
+      enabled: true
+  api-docs:
+    # Em produção, o contrato é publicado no portal a partir do arquivo versionado (17.05), e não pela aplicação.
+    enabled: ${BAZAR_CONTRATO_NA_APLICACAO:true}
+  swagger-ui:
+    enabled: ${BAZAR_CONTRATO_NA_APLICACAO:true}
+    # A ordem do contrato, e não a alfabética.
+    operations-sorter: method

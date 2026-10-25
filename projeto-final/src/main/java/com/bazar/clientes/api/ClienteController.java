@@ -7,6 +7,7 @@ import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.ContextoRequisicao;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/v1/clientes")
+@Tag(name = "clientes", description = "Os clientes")
 public class ClienteController {
 
     private final ClienteRepository repository;

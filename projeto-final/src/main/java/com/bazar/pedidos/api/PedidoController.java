@@ -8,6 +8,7 @@ import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
 import com.bazar.pedidos.dominio.PedidoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.hateoas.EntityModel;
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 // O controller não tem @Transactional: a transação começa e termina no serviço.
 @RestController
 @RequestMapping("/v1/pedidos")
+@Tag(name = "pedidos", description = "Os pedidos")
 public class PedidoController {
 
     private final PedidoService servico;

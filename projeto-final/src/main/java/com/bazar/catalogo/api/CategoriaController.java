@@ -11,6 +11,7 @@ import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.LinksDePaginacao;
 import com.bazar.compartilhado.web.PaginaPedida;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
@@ -31,6 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/v1/categorias")
+@Tag(name = "categorias", description = "As categorias do catálogo")
 public class CategoriaController {
 
     // A listagem não oferece ?sort=: a ordem é sempre pelo nome, com o desempate pelo id (13.02).

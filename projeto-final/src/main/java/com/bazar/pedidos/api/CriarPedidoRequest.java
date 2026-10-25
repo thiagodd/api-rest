@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.bazar.pedidos.dominio.ItemSolicitado;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,6 +19,10 @@ public record CriarPedidoRequest(
         @NotNull UUID clienteId,
         @NotEmpty @Size(max = 50) List<@Valid @NotNull Item> itens) {
 
+
+    // Sem o nome, os quatro records Item do Bazar viram um esquema só no contrato (17.02).
+
+    @Schema(name = "ItemDoNovoPedido")
     public record Item(@NotNull UUID produtoId, @NotNull @Positive @Max(100) Integer quantidade) {
     }
 
