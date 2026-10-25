@@ -26,8 +26,9 @@ server:
 
 # O contrato OpenAPI gerado a partir do código (17.02): /v3/api-docs e /swagger-ui.html.
 springdoc:
-  # Só a API pública: o /error do Spring e as páginas HTML de /problemas não entram no contrato.
-  paths-to-match: /v1/**
+  # Só a API pública: o /error do Spring e as páginas HTML de /problemas não entram no contrato. O filtro vale para o
+  # caminho do mapeamento, antes de o springdoc trocar /v{versao} por /v1 ou /v2 (18.03).
+  paths-to-match: /v*/**
   # Sem isso, as respostas aparecem como */*: o springdoc não sabe o que o conversor de mensagens vai escolher.
   default-produces-media-type: application/json
   # Os @ModelAttribute (FiltroProduto, JanelaPedida) viram um parâmetro de query por campo, como chegam de verdade.

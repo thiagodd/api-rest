@@ -931,6 +931,30 @@ paths:
           $ref: "#/components/responses/RequisicaoInvalida"
       tags:
       - estoque
+  /v2/produtos/{id}:
+    get:
+      operationId: detalharProdutoV2
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProdutoV2"
+          description: O produto
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      summary: Detalha um produto (v2)
+      tags:
+      - produtos
 components:
   responses:
     Conflito:
@@ -1741,6 +1765,54 @@ components:
       - id
       - nome
       - precoEmCentavos
+      - sku
+      - status
+    ProdutoV2:
+      type: object
+      properties:
+        atributos:
+          type: object
+          additionalProperties:
+            type: string
+        atualizadoEm:
+          type: string
+          format: date-time
+        categoriaId:
+          type: string
+          format: uuid
+        criadoEm:
+          type: string
+          format: date-time
+        descricao:
+          type:
+          - string
+          - "null"
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        preco:
+          $ref: "#/components/schemas/Dinheiro"
+        sku:
+          type: string
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - RASCUNHO
+          - ATIVO
+          - DESCONTINUADO
+      required:
+      - atributos
+      - atualizadoEm
+      - categoriaId
+      - criadoEm
+      - descricao
+      - id
+      - nome
+      - preco
       - sku
       - status
     ResultadoDoItem:

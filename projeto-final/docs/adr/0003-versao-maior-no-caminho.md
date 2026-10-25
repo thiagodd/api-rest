@@ -34,3 +34,12 @@ por header.
 - Divergimos do Zalando: integradores acostumados ao media type versionado precisam ler este ADR.
 - Versão por recurso evita copiar a API inteira, mas o cliente precisa saber qual recurso está em qual versão. O guia
   de primeiros passos (17.05) lista as versões vigentes.
+
+## Implementação (18.03)
+
+- Versionamento nativo do Spring Framework 7: `usePathSegment(0, predicado)` em `ConfiguracaoWeb`, com as versões 1
+  e 2 declaradas. Um recurso com duas versões usa `/v{versao}/...` e `version = "1"` ou `"2"` no controller; um
+  recurso só na v1 continua com o caminho literal `/v1/...`.
+- Uma versão que não existe (`/v3`), que a operação ainda não tem (`GET /v2/produtos`, a listagem só na v1) ou que
+  não é versão (`/vabc`) é um `400` com o tipo `versao-nao-suportada` do catálogo de problemas. Um recurso que nunca
+  teve `/v2` (`/v2/pedidos`) é um `404`: o caminho não existe.

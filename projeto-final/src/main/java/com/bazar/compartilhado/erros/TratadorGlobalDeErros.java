@@ -32,6 +32,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.accept.InvalidApiVersionException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -57,7 +58,8 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
             HttpMessageNotReadableException.class, TipoProblema.REQUISICAO_INVALIDA,
             TypeMismatchException.class, TipoProblema.REQUISICAO_INVALIDA,
             HttpMediaTypeNotAcceptableException.class, TipoProblema.FORMATO_NAO_ACEITO,
-            HttpMediaTypeNotSupportedException.class, TipoProblema.FORMATO_NAO_SUPORTADO);
+            HttpMediaTypeNotSupportedException.class, TipoProblema.FORMATO_NAO_SUPORTADO,
+            InvalidApiVersionException.class, TipoProblema.VERSAO_NAO_SUPORTADA);
 
     // Toda exceção de domínio aponta um tipo do catálogo (TipoProblema), e o tipo define o status (16.01).
     @ExceptionHandler(ExcecaoDeDominio.class)
@@ -213,6 +215,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         if (body == null && ex instanceof ErrorResponse erro) {
             body = erro.updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
         }
+        // Uma ResponseStatusException com reason fica com o reason (em inglês) como detail, mesmo com a chave da classe
+        // no messages.properties: a mensagem da versão é resolvida aqui (18.03).
+        if (body instanceof ProblemDetail problema && ex instanceof InvalidApiVersionException versao) {
+            problema.setDetail(mensagem("problemDetail.versao-recusada", versao.getVersion()));
+        }
         if (body instanceof ProblemDetail problema) {
             completar(problema, ex, status, request);
         }
@@ -223,6 +230,13 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         cabecalhos.setContentLanguage(LocaleContextHolder.getLocale());
         cabecalhos.add(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE);
         return super.handleExceptionInternal(ex, body, cabecalhos, status, request);
+    }
+
+    private String mensagem(String codigo, Object... argumentos) {
+        var mensagens = getMessageSource();
+        return mensagens != null
+                ? mensagens.getMessage(codigo, argumentos, codigo, LocaleContextHolder.getLocale())
+                : codigo;
     }
 
     private ResponseEntity<Object> valorNaoConvertido(Exception ex, List<String> campos, WebRequest request) {

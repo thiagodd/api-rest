@@ -51,7 +51,9 @@ import static com.bazar.compartilhado.web.RespostasDeErro.NAO_ENCONTRADO;
 import static com.bazar.compartilhado.web.RespostasDeErro.VALIDACAO;
 
 @RestController
-@RequestMapping("/v1/produtos")
+// A v1 do produto. A v2 (ProdutoV2Controller) tem o mesmo caminho: o Spring escolhe pela versão do primeiro segmento,
+// e o springdoc troca o {versao} pela versão de cada controller no contrato (18.03).
+@RequestMapping(path = "/v{versao}/produtos", version = "1")
 @Tag(name = "produtos", description = "O catálogo de produtos")
 public class ProdutoController {
 
