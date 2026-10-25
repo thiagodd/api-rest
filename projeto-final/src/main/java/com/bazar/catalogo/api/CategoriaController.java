@@ -1,14 +1,12 @@
 package com.bazar.catalogo.api;
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
-import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.catalogo.dominio.CategoriaService;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
-import com.bazar.compartilhado.erros.RegraDeNegocioException;
 import com.bazar.compartilhado.web.Auditavel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -31,11 +29,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class CategoriaController {
 
     private final CategoriaRepository repository;
-    private final ProdutoRepository produtos;
+    private final CategoriaService servico;
 
-    public CategoriaController(CategoriaRepository repository, ProdutoRepository produtos) {
+    public CategoriaController(CategoriaRepository repository, CategoriaService servico) {
         this.repository = repository;
-        this.produtos = produtos;
+        this.servico = servico;
     }
 
     @GetMapping
@@ -70,22 +68,13 @@ public class CategoriaController {
 
     @PutMapping("/{id}")
     public CategoriaResponse substituir(@PathVariable UUID id, @Valid @RequestBody CategoriaRequest request) {
-        var categoria = repository.findById(id).orElseThrow(() -> naoEncontrada(id));
-        categoria.substituir(request.nome(), request.slug(), request.categoriaPaiId());
-        return CategoriaResponse.de(repository.save(categoria));
+        return CategoriaResponse.de(servico.substituir(id, request.nome(), request.slug(), request.categoriaPaiId()));
     }
 
     @Auditavel("categoria.remover")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID id) {
-        var categoria = repository.findById(id).orElseThrow(() -> naoEncontrada(id));
-        // Regra de negócio no controller por enquanto; ela vai para um serviço em 10.03.
-        var quantidade = produtos.countByCategoriaId(id);
-        if (quantidade > 0) {
-            throw new RegraDeNegocioException("categoria-com-produtos",
-                    Map.of("quantidadeDeProdutos", quantidade), categoria.nome(), quantidade);
-        }
-        repository.deleteById(id);
+        servico.remover(id);
         return ResponseEntity.noContent().build();
     }
 

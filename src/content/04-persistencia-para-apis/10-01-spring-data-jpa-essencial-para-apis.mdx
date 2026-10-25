@@ -146,6 +146,14 @@ insert into sem_versao (nome,id) values (?,?)
 
 O produto do Bazar tem `@Version private @Nullable Long versao`: nulo até a primeira gravação, ele resolve a dúvida, e a criação faz um único `INSERT`. Outra saída é implementar `Persistable<UUID>`, com um `isNew()` próprio.
 
+### Onde ficam a entidade e o repositório
+
+[05.02](/construindo-apis-com-spring-boot/criando-o-projeto-bazar) definiu que o domínio não depende das outras camadas. A JPA testa essa regra. A entidade `Produto`, que é do domínio, passa a ter anotações `jakarta.persistence`. O `ProdutoRepository`, uma interface do domínio, estende o `JpaRepository` do Spring Data.
+
+A alternativa "pura" existe: o domínio declara a própria interface (`interface Produtos { Optional<Produto> porId(UUID id); ... }`), sem nada de Spring. A infraestrutura a implementa com um repositório Spring Data e uma entidade JPA separada (`ProdutoJpa`), convertendo de um lado para o outro. O domínio fica livre de qualquer *framework*, ao custo de duas classes por entidade e um mapeamento a mais em cada leitura e gravação.
+
+O Bazar faz a **concessão** comum em projetos Spring: anotações JPA na entidade do domínio e interfaces do Spring Data no pacote `dominio`. As anotações não mudam o comportamento das regras de negócio, e os testes do domínio continuam rodando sem banco ([11.02](/testes-de-api/testes-unitarios-de-dominio-e-servicos)). A regra que continua valendo sem exceção: **o domínio não conhece a camada `api`**, nem DTOs nem HTTP. Se um dia o Bazar trocar a JPA por outra tecnologia, a separação completa passa a compensar.
+
 ### Entidade não é DTO
 
 [06.01](/construindo-apis-com-spring-boot/dtos-com-records-e-por-que-nao-expor-entidades) mostrou por que o controller não devolve a entidade. Com JPA, os motivos ficam mais concretos:

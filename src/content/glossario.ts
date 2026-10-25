@@ -88,4 +88,7 @@ export const glossario: TermoGlossario[] = [
   { id: 'orm', termo: 'ORM', ingles: 'object-relational mapping', definicao: 'Mapeamento objeto-relacional: técnica (e biblioteca, como o Hibernate) que converte objetos Java em linhas de tabelas e vice-versa, gerando o SQL.', pagina: '10.01' },
   { id: 'contexto-de-persistencia', termo: 'Contexto de persistência', ingles: 'persistence context', definicao: 'Conjunto de entidades que um EntityManager está acompanhando. Dentro dele, cada linha do banco tem uma única instância, e as alterações são detectadas e gravadas no fim da transação.', pagina: '10.01' },
   { id: 'dirty-checking', termo: 'Dirty checking', definicao: 'Detecção automática, pelo Hibernate, das entidades gerenciadas que foram alteradas; ele gera os UPDATEs sem que o código chame save.', pagina: '10.01' },
+  { id: 'transacao', termo: 'Transação', definicao: 'Conjunto de operações no banco que é confirmado (commit) ou desfeito (rollback) como uma unidade: ou tudo acontece, ou nada.', pagina: '10.03' },
+  { id: 'pool-de-conexoes', termo: 'Pool de conexões', definicao: 'Conjunto limitado de conexões abertas com o banco, reaproveitadas entre requisições. No Spring Boot, o padrão é o HikariCP, com 10 conexões.', pagina: '10.03' },
+  { id: 'propagacao', termo: 'Propagação', definicao: 'Regra que define o que um método @Transactional faz quando já existe uma transação em andamento: participar dela (REQUIRED), abrir outra (REQUIRES_NEW) etc.', pagina: '10.03' },
 ]

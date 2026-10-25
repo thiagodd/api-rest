@@ -1,27 +1,27 @@
 package com.bazar.catalogo.api;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
+import com.bazar.LimpezaDoBanco;
 import com.bazar.TestcontainersConfiguration;
-import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.catalogo.dominio.Produto;
-import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
@@ -35,33 +35,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(OutputCaptureExtension.class)
 class CategoriaControllerTest {
 
-    static final Set<UUID> CATEGORIAS_INICIAIS = Set.of(
-            UUID.fromString("0192f3a0-5555-7000-8000-000000000001"),
-            UUID.fromString("0192f3a0-5555-7000-8000-000000000002"),
-            UUID.fromString("0192f3a0-5555-7000-8000-000000000003"));
-
     @Autowired
     MockMvcTester mvc;
 
     @Autowired
-    CategoriaRepository categorias;
+    ProdutoService produtos;
 
     @Autowired
-    ProdutoRepository produtos;
+    JdbcClient jdbc;
 
     // O banco é compartilhado pelos testes: cada um desfaz o que criou, e as categorias iniciais ficam.
     @AfterEach
     void limparOBanco() {
-        produtos.deleteAll();
-        categorias.findAll().stream()
-                .filter(categoria -> !CATEGORIAS_INICIAIS.contains(categoria.id()))
-                .forEach(categorias::delete);
+        LimpezaDoBanco.limpar(jdbc);
     }
 
     @Test
     void naoRemoveUmaCategoriaComProdutos() {
         var programacao = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
-        produtos.save(new Produto("LIV-0042", "Clean Code", null, Dinheiro.deCentavos(12990, "BRL"), programacao, Map.of()));
+        produtos.criar(new Produto("LIV-0042", "Clean Code", null, Dinheiro.deCentavos(12990, "BRL"), programacao, Map.of()));
 
         assertThat(mvc.delete().uri("/v1/categorias/{id}", programacao).header("Accept-Language", "pt-BR"))
                 .hasStatus(HttpStatus.CONFLICT)
@@ -96,6 +88,19 @@ class CategoriaControllerTest {
         assertThat(mvc.get().uri("/v1/categorias")).hasStatusOk();
 
         assertThat(saida).doesNotContain("bazar.auditoria");
+    }
+
+    @Test
+    void naoRemoveUmaCategoriaComSubcategorias() {
+        // Livros é a categoria pai de Programação.
+        assertThat(mvc.delete().uri("/v1/categorias/0192f3a0-5555-7000-8000-000000000001").header("Accept-Language", "pt-BR"))
+                .hasStatus(HttpStatus.CONFLICT)
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/categoria-com-subcategorias",
+                          "detail": "A categoria \\"Livros\\" tem 1 subcategoria(s). Mova ou remova as subcategorias antes de removê-la.",
+                          "codigo": "CATEGORIA_COM_SUBCATEGORIAS", "quantidadeDeSubcategorias": 1 }
+                        """);
     }
 
     @Test

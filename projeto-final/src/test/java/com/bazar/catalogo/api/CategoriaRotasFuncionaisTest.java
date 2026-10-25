@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.Categoria;
 import com.bazar.catalogo.dominio.CategoriaRepository;
-import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.catalogo.dominio.CategoriaService;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ class CategoriaRotasFuncionaisTest {
     CategoriaRepository categorias;
 
     @MockitoBean
-    ProdutoRepository produtos;
+    CategoriaService servico;
 
     @BeforeEach
     void categoriasIniciais() {

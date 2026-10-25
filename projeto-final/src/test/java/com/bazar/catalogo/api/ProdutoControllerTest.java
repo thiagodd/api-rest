@@ -2,8 +2,8 @@ package com.bazar.catalogo.api;
 
 import java.util.Map;
 
-import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
+import com.bazar.LimpezaDoBanco;
 import com.bazar.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -32,11 +33,11 @@ class ProdutoControllerTest {
     MockMvcTester mvc;
 
     @Autowired
-    ProdutoRepository repository;
+    JdbcClient jdbc;
 
     @AfterEach
     void limparOBanco() {
-        repository.deleteAll();
+        LimpezaDoBanco.limpar(jdbc);
     }
 
     @Test
