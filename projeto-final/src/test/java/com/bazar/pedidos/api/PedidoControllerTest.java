@@ -283,10 +283,14 @@ class PedidoControllerTest {
             assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON).content("{}"))
                     .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
                     .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("motivo");
-            // Um valor fora do enum nem chega à validação: o Jackson não consegue ler o corpo.
+            // Um valor fora do enum é um erro de validação no campo, com os valores aceitos (15.04).
             assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
                     .content("{ \"motivo\": \"TALVEZ\" }"))
-                    .hasStatus(HttpStatus.BAD_REQUEST);
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson()
+                    .hasPathSatisfying("$.erros[0].campo", campo -> assertThat(campo).isEqualTo("motivo"))
+                    .hasPathSatisfying("$.erros[0].mensagem", mensagem -> assertThat(mensagem)
+                            .isEqualTo("deve ser um destes valores: CLIENTE_DESISTIU, ENDERECO_ERRADO, OUTRO."));
         }
 
         @Test

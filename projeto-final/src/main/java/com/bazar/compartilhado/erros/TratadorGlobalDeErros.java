@@ -2,12 +2,14 @@ package com.bazar.compartilhado.erros;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -36,6 +38,8 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 /**
  * Converte toda exceção que sai de um controller num Problem Details (RFC 9457) no formato do Bazar (08.01).
@@ -138,7 +142,37 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         if (ex.getMostSpecificCause() instanceof ParametroDesconhecidoException desconhecido) {
             return parametroDesconhecido(desconhecido, request);
         }
+        // Um valor fora do enum ("motivo": "TALVEZ") é JSON bem formado com um valor inválido: 422 no campo, com a
+        // lista de valores aceitos, como qualquer outra validação (15.04).
+        if (ex.getMostSpecificCause() instanceof InvalidFormatException invalido && invalido.getTargetType() != null
+                && invalido.getTargetType().isEnum()) {
+            return valorForaDoEnum(invalido, request);
+        }
         return super.handleHttpMessageNotReadable(ex, headers, status, request);
+    }
+
+    private ResponseEntity<Object> valorForaDoEnum(InvalidFormatException ex, WebRequest request) {
+        var aceitos = Arrays.stream(ex.getTargetType().getEnumConstants())
+                .map(valor -> ((Enum<?>) valor).name())
+                .collect(Collectors.joining(", "));
+        var fonte = getMessageSource();
+        var mensagem = fonte != null
+                ? fonte.getMessage("bazar.validacao.enum", new Object[] {aceitos}, LocaleContextHolder.getLocale())
+                : aceitos;
+        return validacao(ex, List.of(new ErroDeCampo(caminho(ex), mensagem)), new HttpHeaders(), request);
+    }
+
+    // O caminho do campo no corpo, no formato dos outros erros: itens[0].produtoId.
+    private static String caminho(JacksonException ex) {
+        var caminho = new StringBuilder();
+        for (var parte : ex.getPath()) {
+            if (parte.getPropertyName() != null) {
+                caminho.append(caminho.isEmpty() ? "" : ".").append(parte.getPropertyName());
+            } else if (parte.getIndex() >= 0) {
+                caminho.append('[').append(parte.getIndex()).append(']');
+            }
+        }
+        return caminho.toString();
     }
 
     @Override
