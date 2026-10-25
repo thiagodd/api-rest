@@ -165,6 +165,29 @@ class ProdutoIntegracaoTest {
         }
     }
 
+    // Soft delete (14.03): o produto continua no banco e na API, DESCONTINUADO; repetir o DELETE dá o mesmo 204.
+    @Test
+    void deleteDescontinuaOProdutoEPodeSerRepetido() {
+        var location = cliente.post().uri("/v1/produtos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(CLEAN_CODE)
+                .exchange()
+                .returnResult()
+                .getResponseHeaders()
+                .getLocation();
+
+        cliente.delete().uri(location).exchange().expectStatus().isNoContent();
+        cliente.delete().uri(location).exchange().expectStatus().isNoContent();
+
+        cliente.get().uri(location)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.status").isEqualTo("DESCONTINUADO");
+        cliente.delete().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
     @Test
     void responde404ParaUmIdQueNaoEstaNoBanco() {
         cliente.get().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")

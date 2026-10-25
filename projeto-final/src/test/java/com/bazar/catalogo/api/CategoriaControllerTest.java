@@ -62,7 +62,7 @@ class CategoriaControllerTest {
                 .isLenientlyEqualTo("""
                         { "type": "https://api.bazar.example/problemas/categoria-com-produtos",
                           "title": "A categoria possui produtos", "status": 409,
-                          "detail": "A categoria \\"Programação\\" tem 1 produto(s). Mova ou descontinue os produtos antes de removê-la.",
+                          "detail": "A categoria \\"Programação\\" tem 1 produto(s). Mova os produtos para outra categoria antes de removê-la.",
                           "codigo": "CATEGORIA_COM_PRODUTOS", "quantidadeDeProdutos": 1 }
                         """);
     }

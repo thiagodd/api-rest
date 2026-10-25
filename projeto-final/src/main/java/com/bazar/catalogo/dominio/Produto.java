@@ -96,6 +96,15 @@ public class Produto {
         this.atualizadoEm = agora();
     }
 
+    // Soft delete (14.03): o produto sai da loja, mas continua existindo para os pedidos que o citam. Descontinuar
+    // de novo não muda nada, nem a data.
+    public void descontinuar() {
+        if (status != StatusProduto.DESCONTINUADO) {
+            status = StatusProduto.DESCONTINUADO;
+            atualizadoEm = agora();
+        }
+    }
+
     // O PostgreSQL guarda microssegundos; truncar aqui faz a resposta do POST bater com a de um GET posterior.
     private static Instant agora() {
         return Instant.now().truncatedTo(ChronoUnit.MICROS);

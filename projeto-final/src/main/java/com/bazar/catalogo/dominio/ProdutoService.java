@@ -64,6 +64,11 @@ public class ProdutoService {
         return produtos.findById(id).orElseThrow(() -> naoEncontrado(id));
     }
 
+    @Transactional
+    public void descontinuar(UUID id) {
+        detalhar(id).descontinuar();
+    }
+
     // O produto e o seu estoque (zerado) nascem juntos, ou nenhum dos dois.
     @Transactional
     public Produto criar(Produto produto) {

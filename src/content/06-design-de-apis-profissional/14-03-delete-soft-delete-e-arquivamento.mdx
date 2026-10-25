@@ -2,77 +2,402 @@
 id: "14.03"
 titulo: "DELETE, soft delete e arquivamento"
 descricao: "Apagar de verdade dados com histórico (produto já vendido) quebra relatórios e auditoria. Decidir a semântica do DELETE é parte do contrato."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "RFC 9110 §9.3.5"
-  - titulo: "google.aip.dev: 135"
+  - titulo: "RFC 9110: DELETE (§9.3.5), idempotência (§9.2.2) e 410 Gone (§15.5.11)"
+    url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.5"
+  - titulo: "Google AIP-135: Standard methods: Delete"
     url: "https://google.aip.dev/135"
-  - titulo: "google.aip.dev: 164"
+  - titulo: "Google AIP-164: Soft delete"
     url: "https://google.aip.dev/164"
+  - titulo: "Zalando RESTful API Guidelines: DELETE"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#delete"
+  - titulo: "Hibernate ORM 7: @SoftDelete e @SQLRestriction"
+    url: "https://docs.hibernate.org/orm/7.0/userguide/html_single/#soft-delete"
+  - titulo: "Lei Geral de Proteção de Dados (Lei 13.709/2018), arts. 16 e 18"
+    url: "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Apagar de verdade dados com histórico (produto já vendido) quebra relatórios e auditoria. Decidir a semântica do DELETE é parte do contrato.
+O lojista decide parar de vender o "Clean Code". O app manda `DELETE /v1/produtos/{id}`. O que deveria acontecer?
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+Se o Bazar apagar a linha da tabela `produto`:
+
+- **Os pedidos antigos perdem a referência.** O pedido de março tem um item com `produtoId` apontando para lugar nenhum. Ou a chave estrangeira recusa o `DELETE` (e a API responde `500`), ou não há chave estrangeira, e o relatório de vendas do ano passa a ter itens sem produto.
+- **O histórico some.** "Quanto vendemos de livros de programação em 2026?" deixa de ter resposta.
+- **Não há volta.** O lojista que apertou o botão errado perdeu o cadastro, com descrição, atributos e fotos.
+
+E se não apagar, outras perguntas aparecem: o produto continua aparecendo nas listagens? Um `GET` nele dá `200` ou `404`? E um segundo `DELETE`?
+
+Esta página trata da semântica do `DELETE`: o que ele responde, o que acontece quando há dependentes, e quando "apagar" deve significar **marcar como apagado**.
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- 204 × 200 com corpo; DELETE repetido (404 ou 204?)
-- 409 quando há dependentes; 410 Gone
-- *Soft delete* (status `DESCONTINUADO`) × exclusão física × arquivamento; o filtro padrão nas listagens (`@SQLRestriction` do Hibernate)
-- *Undelete*
-- LGPD: direito de exclusão × retenção (menção)
-</Draft>
+### O que o HTTP diz
 
-## Diagrama
+A RFC 9110 define o `DELETE` como o pedido para que o servidor *"remove the association between the target resource and its current functionality"*. Note a formulação: remover a **associação** com a funcionalidade, e não necessariamente apagar dados. A própria RFC diz que, se os dados são destruídos ou só ficam inacessíveis, é uma decisão do servidor.
 
-<Draft title="Diagramas previstos">
-Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
-</Draft>
+As respostas de sucesso:
+
+| Status | Quando |
+|---|---|
+| `204 No Content` | A remoção foi feita, e não há nada a dizer |
+| `200 OK` | A remoção foi feita, e o corpo descreve o resultado |
+| `202 Accepted` | A remoção vai acontecer, mas ainda não aconteceu ([21.02](/padroes-avancados-de-http/operacoes-assincronas-e-de-longa-duracao-202-polling)) |
+
+O `DELETE` é **idempotente** ([02.02](/comecando-e-fundamentos-de-http/metodos-http-semantica-seguranca-e-idempotencia)): repetido, deixa o servidor no mesmo estado que uma vez só. A idempotência fala do **estado**, e não da resposta. Por isso a pergunta clássica (o segundo `DELETE` responde `204` ou `404`?) tem duas respostas corretas.
+
+### O segundo DELETE: 204 ou 404?
+
+| Segundo `DELETE` | A favor | Contra |
+|---|---|---|
+| `404 Not Found` | Honesto: não havia nada a remover. É o que o Google pede (AIP-135: *"If the resource did not exist, the method should send a NOT_FOUND error"*) | O cliente que reenviou por *timeout* recebe um erro por algo que deu certo |
+| `204 No Content` | O cliente que reenvia recebe o mesmo resultado. Mais simples de tratar | Esconde um id errado: `DELETE` de um id que nunca existiu também dá `204`? |
+
+O Google oferece um meio-termo: o campo `allow_missing`, com o qual o cliente diz explicitamente "se não existir, tudo bem", e o `DELETE` vira uma operação sem efeito em vez de um `404`.
+
+Para um `DELETE` que apaga a linha, a escolha mais comum é **`404` para o que não existe**, com o cliente tratando `404` como sucesso quando reenviou. Para um `DELETE` que só marca o recurso, como o do Bazar, o problema desaparece, como veremos: o recurso continua existindo, e o segundo `DELETE` tem onde ser aplicado.
+
+### 410 Gone
+
+O `410 Gone` diz que o recurso **existiu** e foi removido de propósito: *"access to the target resource is no longer available at the origin server and that this condition is likely to be permanent"*. É mais informativo que o `404`, mas exige que o servidor **lembre** do que apagou, o que já é uma forma de *soft delete*.
+
+A Zalando prevê o `410` depois de um `DELETE` (*"Failed DELETE requests will usually generate 404 (if the resource cannot be found) or 410 (if the resource was already traceably deleted before)"*) e diz que ele normalmente não precisa ser documentado, a não ser que o cliente precise distinguir os dois casos. Na prática, poucas APIs usam o `410` para recursos individuais. Ele aparece mais para **versões de API desligadas** ([18.04](/contratos-documentacao-e-ciclo-de-vida/depreciacao-e-desligamento-de-apis)).
+
+### 409 quando há dependentes
+
+A categoria "Programação" tem 42 produtos. `DELETE /v1/categorias/{id}` deveria:
+
+- apagar os 42 produtos junto (**cascata**)?
+- deixar os produtos sem categoria?
+- recusar?
+
+O Bazar recusa com **`409 Conflict`**, desde a [05.04](/construindo-apis-com-spring-boot/um-crud-com-status-corretos): o estado atual (a categoria tem produtos) impede a operação, e o cliente pode resolver mudando o estado (movendo os produtos). O Google faz o mesmo, com uma saída explícita: a remoção *"must fail with a FAILED_PRECONDITION error if the force field is false (or unset) and child resources are present"*. Com `force=true`, o cliente pede a cascata conscientemente. Uma cascata nunca deveria ser o **padrão** de um `DELETE`, porque um clique apaga muito mais do que o cliente vê.
+
+<HttpExchange
+  title="Categoria com produtos"
+  request={{ method: 'DELETE', url: '/v1/categorias/0192f3a0-5555-7000-8000-000000000002', headers: { 'Accept-Language': 'pt-BR' } }}
+  response={{ status: 409, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/categoria-com-produtos', title: 'A categoria possui produtos', status: 409, detail: 'A categoria "Eletrônicos" tem 1 produto(s). Mova os produtos para outra categoria antes de removê-la.', instance: '/v1/categorias/0192f3a0-5555-7000-8000-000000000002', quantidadeDeProdutos: 1, codigo: 'CATEGORIA_COM_PRODUTOS', traceId: '45c2a85908dfb2c687b55fd6cf991802' } }}
+>
+O corpo diz **quantos** dependentes há e **o que fazer**. O único produto da categoria está descontinuado, e mesmo assim conta (veja adiante).
+</HttpExchange>
+
+### Exclusão física, soft delete e arquivamento
+
+| Estratégia | O que acontece | Quando usar |
+|---|---|---|
+| **Exclusão física** | A linha sai do banco | Dados sem histórico nem referências: um rascunho, um item de carrinho, um endereço |
+| ***Soft delete*** | A linha fica, marcada como removida (um *status*, uma data `removidoEm`) | Dados com histórico ou referências: produtos vendidos, clientes com pedidos |
+| **Arquivamento** | A linha vai para outro lugar (uma tabela ou um *storage* de arquivo) | Volume grande que não é mais consultado, mas precisa ser guardado |
+
+O <Term id="soft-delete">*soft delete*</Term> é a escolha para o produto do Bazar, e ele já tinha o estado certo para isso desde o início: `DESCONTINUADO`. Um produto descontinuado:
+
+- **continua existindo**: `GET /v1/produtos/{id}` responde `200`, com `status: DESCONTINUADO`. Um pedido antigo continua apontando para ele;
+- **sai da loja**: a vitrine lista só `?status=ATIVO`;
+- **pode voltar**: *undelete* é uma transição de estado, e não uma recriação.
+
+### Depois do DELETE, o GET deve achar o recurso?
+
+Aqui os dois guias que esta parte acompanha **discordam**:
+
+- **Zalando:** *"After deleting a resource with DELETE, a GET request on the resource is expected to either return 404 (not found) or 410 (gone)"*, e *"Under no circumstances the resource must be accessible after this operation on its endpoint"*.
+- **Google** (AIP-164, *soft delete*): o `Delete` devolve o recurso atualizado, e o `Get` de um recurso removido *"should return the resource (rather than a NOT_FOUND error)"*. As listagens não o mostram por padrão, a não ser com `show_deleted`.
+
+As duas posições respondem a perguntas diferentes. A da Zalando protege o significado de "apagar": o cliente que mandou `DELETE` não espera ver o recurso de novo. A do Google reconhece que, num *soft delete*, o recurso **existe**, e escondê-lo só complica a vida de quem precisa dele (o pedido antigo, a auditoria, o *undelete*).
+
+O Bazar segue o **Google**: um produto descontinuado continua acessível pelo seu endereço, porque os pedidos do Bazar o exibem pelo `produtoId`. Um `404` ali quebraria a tela "meus pedidos" para todo produto fora de linha.
+
+Se a posição da Zalando fosse obrigatória, a saída seria **não chamar isso de `DELETE`**: descontinuar seria uma ação ([12.04](/design-de-apis-profissional/acoes-que-nao-sao-crud-e-maquinas-de-estado)), como `POST /v1/produtos/{id}/descontinuacao`, e o `DELETE` ficaria reservado para a remoção que de fato esconde o recurso. É uma alternativa honesta, e talvez a mais clara para quem lê o contrato.
+
+### O filtro padrão nas listagens
+
+Um produto descontinuado deve aparecer em `GET /v1/produtos`?
+
+| Opção | Efeito |
+|---|---|
+| Não, nunca | Some de todas as consultas, inclusive das que precisam dele |
+| Não, por padrão; sim com um parâmetro | O Google: `show_deleted=true` |
+| Sim; quem não quer filtra | O Bazar: `?status=ATIVO,RASCUNHO` |
+
+O Bazar fica com a terceira, porque a listagem de produtos é usada pelo painel do lojista, que precisa ver tudo, e o filtro `status` já existe ([13.01](/design-de-apis-profissional/filtros-e-busca)). Uma API pública de loja escolheria a segunda.
+
+A primeira opção tem uma implementação tentadora no Hibernate. O `@SQLRestriction` acrescenta uma condição a **toda** consulta da entidade:
+
+```java
+@Entity
+@SQLRestriction("status <> 'DESCONTINUADO'")    // o antigo @Where, removido no Hibernate 7
+public class Produto { ... }
+```
+
+E o `@SoftDelete` (Hibernate 6.4+) vai além: transforma o `repository.delete(produto)` num `UPDATE` que marca uma coluna, e filtra todas as consultas por ela:
+
+```java
+@Entity
+@SoftDelete(columnName = "removido")             // delete vira "update produto set removido = true"
+public class Produto { ... }
+```
+
+O problema dos dois é o "toda". O javadoc do `@SQLRestriction` avisa: *"@SQLRestrictions are always applied and cannot be disabled"*. O `findById` do produto descontinuado passa a devolver vazio, e o `GET` vira `404`. A busca do pedido pelos seus produtos não acha o produto. O relatório de vendas some com os itens. Um *undelete* fica impossível pelo repositório, porque a entidade não é mais encontrada. Os dois servem bem a dados que realmente **devem** sumir de tudo (um comentário moderado, um rascunho descartado) e mal a dados com histórico. O mesmo javadoc indica a alternativa flexível: o `@Filter` do Hibernate, que é declarado na entidade e **ligado por sessão** (`session.enableFilter(...)`), com parâmetros.
+
+> O `@Where` era a forma de escrever isso até o Hibernate 6.2. Foi substituído pelo `@SQLRestriction` no 6.3 e removido no Hibernate 7. Tutoriais antigos usam `@Where` junto com `@SQLDelete("update produto set removido = true where id = ?")`, que reescreve o `DELETE` à mão; o `@SoftDelete` faz os dois trabalhos.
+
+### Soft delete não resolve os dependentes
+
+O teste da categoria acima mostrou um detalhe: a categoria com um produto **descontinuado** continua não podendo ser removida. É o certo: o produto existe e aponta para a categoria. Se ela sumisse, o produto descontinuado ficaria com uma `categoriaId` inválida, e o `GET` dele mostraria uma categoria que não existe.
+
+Até esta página, a mensagem do Bazar dizia *"Mova ou descontinue os produtos antes de removê-la"*. Descontinuar nunca resolveu, e a mensagem foi corrigida para *"Mova os produtos para outra categoria antes de removê-la"*. Uma mensagem de erro que sugere uma saída que não funciona é pior do que nenhuma sugestão.
+
+### Undelete
+
+Com *soft delete*, desfazer é mudar o estado de volta. O Google define um método próprio, `POST /v1/{name}:undelete`, que devolve o recurso, com uma regra para o caso sem sentido: *undelete* de um recurso que não está removido responde `ALREADY_EXISTS` (`409`).
+
+No estilo do Bazar ([12.04](/design-de-apis-profissional/acoes-que-nao-sao-crud-e-maquinas-de-estado)), seria uma ação com nome de substantivo: `POST /v1/produtos/{id}/reativacao`, que passa `DESCONTINUADO` para `ATIVO` e responde `409` se o produto não estiver descontinuado. O Bazar ainda não a implementa: a transição para `ATIVO` (publicar um produto) chega junto com as outras ações do produto, na consolidação da [31.03](/projeto-final-o-bazar/catalogo).
+
+### Quanto tempo o soft delete guarda?
+
+O Google pede que a API documente quando os recursos removidos são **apagados de vez** (*purge*): depois de 30 dias, por exemplo, ou nunca. Para produtos, "nunca" é razoável: eles são poucos e têm histórico. Para dados pessoais, a resposta vem da lei.
+
+A **LGPD** dá ao titular o direito de pedir a **eliminação** dos dados pessoais tratados com o seu consentimento (art. 18, VI). A mesma lei permite **guardar** dados para cumprir obrigação legal ou regulatória (art. 16, I): uma nota fiscal precisa ser mantida pelo prazo fiscal, com o nome e o CPF do comprador. O *soft delete* de um cliente, que só marca a linha e mantém tudo, **não** atende a um pedido de eliminação. O caminho comum é **anonimizar**: apagar ou substituir os dados pessoais que não são exigidos por lei, e manter o resto (o pedido, os valores, a data) desvinculado da pessoa. É um tema jurídico, que cada empresa decide com o seu jurídico; para a API, importa saber que "remover um cliente" quase nunca é um `DELETE` simples.
 
 ## Na prática
 
-<Draft title="Código previsto">
-`DELETE /v1/produtos/{id}` como *soft delete*; `DELETE /v1/categorias/{id}` com 409.
-</Draft>
+### O produto descontinua
+
+```java title="src/main/java/com/bazar/catalogo/dominio/Produto.java (trecho)"
+// Soft delete (14.03): o produto sai da loja, mas continua existindo para os pedidos que o citam. Descontinuar
+// de novo não muda nada, nem a data.
+public void descontinuar() {
+    if (status != StatusProduto.DESCONTINUADO) {
+        status = StatusProduto.DESCONTINUADO;
+        atualizadoEm = agora();
+    }
+}
+```
+
+O `if` é o que torna o segundo `DELETE` realmente idempotente: sem ele, cada repetição mudaria o `atualizadoEm`, e o recurso seria diferente a cada chamada.
+
+```java title="src/main/java/com/bazar/catalogo/dominio/ProdutoService.java (trecho)"
+@Transactional
+public void descontinuar(UUID id) {
+    detalhar(id).descontinuar();
+}
+```
+
+```java title="src/main/java/com/bazar/catalogo/api/ProdutoController.java (trecho)"
+// DELETE é um soft delete: o produto fica DESCONTINUADO, e um GET continua encontrando-o. Repetir dá o mesmo
+// 204 (14.03).
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> remover(@PathVariable UUID id) {
+    servico.descontinuar(id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+Um id que nunca existiu continua dando `404`: o `detalhar` não o encontra. O `204` repetido vale só para o produto que existe.
+
+O Google pede que o `Delete` de um *soft delete* devolva o recurso (`200` com o produto). O Bazar responde `204`, como no `DELETE` de categorias, para que o cliente trate todos os `DELETE` da API da mesma forma; quem precisa do estado depois faz um `GET`.
+
+### Pela API
+
+<HttpExchange
+  title="Descontinuar o produto"
+  request={{ method: 'DELETE', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042' }}
+  response={{ status: 204 }}
+/>
+
+<HttpExchange
+  title="O produto continua lá"
+  request={{ method: 'GET', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042' }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json' }, body: { id: '0192f39f-2222-7000-8000-000000000042', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 12990, categoriaId: '0192f3a0-5555-7000-8000-000000000002', status: 'DESCONTINUADO', atributos: {}, criadoEm: '2026-10-25T18:21:04.211980Z', atualizadoEm: '2026-10-25T18:21:04.293024Z' } }}
+/>
+
+### O teste
+
+```java title="src/test/java/com/bazar/catalogo/ProdutoIntegracaoTest.java (trecho)"
+// Soft delete (14.03): o produto continua no banco e na API, DESCONTINUADO; repetir o DELETE dá o mesmo 204.
+@Test
+void deleteDescontinuaOProdutoEPodeSerRepetido() {
+    var location = cliente.post().uri("/v1/produtos")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(CLEAN_CODE)
+            .exchange()
+            .returnResult()
+            .getResponseHeaders()
+            .getLocation();
+
+    cliente.delete().uri(location).exchange().expectStatus().isNoContent();
+    cliente.delete().uri(location).exchange().expectStatus().isNoContent();
+
+    cliente.get().uri(location)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody().jsonPath("$.status").isEqualTo("DESCONTINUADO");
+    cliente.delete().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")
+            .exchange()
+            .expectStatus().isNotFound();
+}
+```
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Apagar a linha de um recurso com histórico" why="O pedido de março aponta para o produto. Apagar a linha quebra a chave estrangeira (500) ou, sem ela, deixa itens de pedido sem produto e relatórios errados.">
+<Bad title="Exclusão física">
+
+```java
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> remover(@PathVariable UUID id) {
+    produtos.deleteById(id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+</Bad>
+<Good title="Uma transição de estado">
+
+```java
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> remover(@PathVariable UUID id) {
+    servico.descontinuar(id);       // status = DESCONTINUADO
+    return ResponseEntity.noContent().build();
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="Esconder o soft delete de todas as consultas" why="O filtro global também esconde o produto de quem precisa dele: o GET, o pedido antigo, o relatório e o próprio undelete.">
+<Bad title="Filtro em toda consulta">
+
+```java
+@Entity
+@SQLRestriction("status <> 'DESCONTINUADO'")
+public class Produto { ... }
+// GET /v1/produtos/{id} de um produto descontinuado → 404
+```
+
+</Bad>
+<Good title="O filtro onde ele faz sentido">
+
+```http
+GET /v1/produtos?status=ATIVO
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **Cascata como padrão.** Um `DELETE` na categoria que apaga 42 produtos sem perguntar. Recuse com `409`, ou exija um `force=true` explícito.
+- **`500` quando a chave estrangeira recusa a remoção.** O dependente deve ser verificado e virar um `409` com uma mensagem útil.
+- **Um `DELETE` que muda a data a cada repetição**, tornando-o não idempotente na prática.
+- **Tratar *soft delete* como cumprimento da LGPD.** Marcar a linha não elimina os dados pessoais.
+- **Mensagens de erro que sugerem saídas que não funcionam**, como o "descontinue os produtos" que o Bazar tinha.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Decida e documente a semântica do `DELETE`** de cada recurso: exclusão física, *soft delete* ou arquivamento.
+- **`204` para o sucesso**, e `404` para um id que nunca existiu.
+- **`409` com a contagem de dependentes** e a ação que resolve; cascata só com um parâmetro explícito.
+- **Use *soft delete* para dados com histórico** ou referências, de preferência com um *status* que o domínio já tem.
+- **Filtre o *soft delete* nas listagens**, e não em toda consulta: o recurso removido precisa continuar acessível a quem depende dele.
+- **Documente quanto tempo** os recursos removidos são guardados e como desfazer a remoção.
+- **Trate dados pessoais com a LGPD em mente:** eliminação ou anonimização, e não só uma marca.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="DELETE de produtos como soft delete" module="catalogo" tag="pagina-14.03" files={[
+  { path: 'src/main/java/com/bazar/catalogo/dominio/Produto.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/catalogo/dominio/ProdutoService.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/catalogo/api/ProdutoController.java', change: 'alterado' },
+  { path: 'src/main/resources/messages.properties', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/ProdutoIntegracaoTest.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/api/CategoriaControllerTest.java', change: 'alterado' },
+]}>
+`DELETE /v1/produtos/{id}` passa o produto para `DESCONTINUADO` e responde `204`. O produto continua acessível pelo `GET`, um segundo `DELETE` dá o mesmo `204` sem mudar o `atualizadoEm`, e um id inexistente dá `404`. A mensagem do `409 categoria-com-produtos` deixou de sugerir "descontinue os produtos", que nunca resolveu. Um teste de integração novo; a suíte tem 220 testes.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- `DELETE` remove a associação do recurso com a sua URL. Se os dados são apagados, só marcados ou arquivados, é uma decisão do servidor, e parte do contrato.
+- Sucesso: `204` (sem corpo), `200` (com corpo) ou `202` (assíncrono). A idempotência fala do estado, e o segundo `DELETE` pode dar `204` ou `404`.
+- `410 Gone` diz que o recurso existiu e foi removido de propósito. Exige lembrar do que foi apagado.
+- Dependentes: `409` com a contagem e a saída; cascata só com consentimento explícito (`force`).
+- *Soft delete* preserva histórico e referências. Zalando e Google discordam sobre o `GET` depois do `DELETE`. O Bazar segue o Google, porque os pedidos precisam dos produtos descontinuados.
+- `@SQLRestriction` e `@SoftDelete` escondem o recurso de **toda** consulta. Para dados com histórico, filtre só nas listagens.
+- *Soft delete* não atende à LGPD: eliminar dados pessoais exige apagar ou anonimizar.
+
+<Exercise title="Remover um endereço e remover um cliente" difficulty="medio">
+O cliente do Bazar tem endereços (`/v1/clientes/{id}/enderecos/{enderecoId}`) e pedidos. Cada pedido guarda o endereço de entrega.
+
+1. `DELETE` de um endereço: exclusão física ou *soft delete*? O que acontece com os pedidos que foram entregues nele?
+2. Um cliente pede, pelo app, para "apagar a minha conta". Descreva o que a API deve fazer com o cliente, os endereços e os pedidos.
+3. Que status o `DELETE /v1/clientes/{id}` deve responder, sabendo que o processo do item 2 envolve outros sistemas (o de e-mail marketing, o de notas fiscais) e pode levar horas?
+
+<Hint>No item 1, pense se o pedido deve **apontar** para o endereço ou **copiar** o endereço. No item 3, a operação termina dentro da requisição?</Hint>
+
+<Solution>
+
+1. **Exclusão física**, desde que o pedido **copie** o endereço de entrega no momento da compra, em vez de apontar para o endereço do cadastro. É assim que o pedido deve funcionar de qualquer forma: se o cliente mudar o número da casa amanhã, o pedido de ontem foi entregue no endereço antigo, e é isso que ele precisa mostrar. Com a cópia, o endereço do cadastro não tem dependentes e pode ser apagado. Se o pedido apontasse para o endereço, seria preciso *soft delete*, e o problema real seria o modelo.
+
+2. Não é um *soft delete*, porque a LGPD pede a eliminação dos dados pessoais tratados por consentimento:
+   - **Endereços:** apagados.
+   - **Cliente:** dados pessoais apagados ou anonimizados (nome, e-mail, telefone); a linha pode ficar, com um status `REMOVIDO`, para que os pedidos continuem apontando para algo.
+   - **Pedidos:** mantidos, porque há obrigação fiscal (LGPD, art. 16, I). Os dados que a nota fiscal exige ficam, pelo prazo legal, e o resto do vínculo com a pessoa é removido.
+
+   O login deixa de funcionar imediatamente, e o app não mostra mais nada dessa conta.
+
+3. **`202 Accepted`**, com um `Location` para acompanhar o pedido de remoção (`/v1/remocoes-de-conta/{id}`, por exemplo), como na [21.02](/padroes-avancados-de-http/operacoes-assincronas-e-de-longa-duracao-202-polling). Um `204` diria que a remoção já aconteceu, e ela só termina quando os outros sistemas confirmarem. O recurso de acompanhamento é onde o app mostra ao cliente quando a remoção terminou.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'O cliente manda DELETE /v1/produtos/{id}, a rede cai, e ele reenvia. O primeiro DELETE tinha funcionado. O que a RFC 9110 exige da resposta ao segundo?',
+    options: [
+      'Que seja 204, porque DELETE é idempotente',
+      'Que seja 404, porque o recurso não existe mais',
+      'Nada específico: a idempotência garante o mesmo estado no servidor, e a resposta pode ser 204 ou 404 conforme o contrato',
+      'Que seja 410 Gone',
+    ],
+    answer: 2,
+    explanation: 'Idempotência é sobre o efeito no servidor, e não sobre o status da resposta. O Google prefere 404 (com allow_missing para quem quer sucesso); o Bazar, com soft delete, responde 204, porque o produto continua existindo.',
+  },
+  {
+    question: 'Por que o Bazar não usa @SQLRestriction("status <> \'DESCONTINUADO\'") na entidade Produto?',
+    options: [
+      'Porque a anotação não existe no Hibernate 7',
+      'Porque a condição vale para toda consulta: o GET de um produto descontinuado daria 404, e os pedidos e relatórios perderiam o produto',
+      'Porque ela só funciona com MySQL',
+      'Porque ela apaga a linha do banco',
+    ],
+    answer: 1,
+    explanation: 'O @SQLRestriction (que substituiu o @Where, removido no Hibernate 7) filtra todas as consultas da entidade. Para dados com histórico, o filtro deve ficar só nas listagens.',
+  },
+  {
+    question: 'A categoria tem um único produto, descontinuado. DELETE /v1/categorias/{id} deve:',
+    options: [
+      'Remover a categoria, porque o produto foi "apagado"',
+      'Remover a categoria e o produto',
+      'Responder 409: o produto descontinuado continua existindo e aponta para a categoria',
+      'Responder 410',
+    ],
+    answer: 2,
+    explanation: 'Soft delete mantém o recurso, e com ele as referências. Remover a categoria deixaria o produto descontinuado com uma categoriaId inválida.',
+  },
+  {
+    question: 'Um cliente pede a eliminação dos seus dados (LGPD). Marcar a linha do cliente como REMOVIDO atende ao pedido?',
+    options: [
+      'Sim: o cliente deixa de aparecer na API',
+      'Não: os dados pessoais continuam guardados. É preciso apagar ou anonimizar o que não tem obrigação legal de ser mantido',
+      'Sim, se a marcação for feita com @SoftDelete',
+      'Não: é preciso apagar também os pedidos e as notas fiscais',
+    ],
+    answer: 1,
+    explanation: 'Soft delete esconde, mas não elimina. A LGPD permite manter o que a lei exige (art. 16, I), como os dados da nota fiscal, e pede a eliminação do resto.',
+  },
+]} />
 
 ## Referências
 

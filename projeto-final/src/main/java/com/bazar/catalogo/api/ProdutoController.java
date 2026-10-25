@@ -23,6 +23,7 @@ import tools.jackson.databind.JsonNode;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -128,6 +129,14 @@ public class ProdutoController {
         var produto = servico.atualizar(id, request.nome(), request.descricao(),
                 Dinheiro.deCentavos(request.precoEmCentavos(), "BRL"), request.categoriaId(), request.atributos());
         return mapper.paraResponse(produto);
+    }
+
+    // DELETE é um soft delete: o produto fica DESCONTINUADO, e um GET continua encontrando-o. Repetir dá o mesmo
+    // 204 (14.03).
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> remover(@PathVariable UUID id) {
+        servico.descontinuar(id);
+        return ResponseEntity.noContent().build();
     }
 
     // JSON Merge Patch (RFC 7396): só os campos enviados mudam, e null remove (14.02). O resultado passa pelas
