@@ -172,15 +172,15 @@ As ações oferecidas pelo pedido em cada estado:
 flowchart LR
     subgraph C[Pedido CRIADO]
         direction TB
-        C1["_links:<br/>self · pagamentos<br/>bazar:pagar · bazar:cancelar"]
+        C1["_links:<br/>self · bazar:pagamentos<br/>bazar:pagar · bazar:cancelar"]
     end
     subgraph P[Pedido PAGO]
         direction TB
-        P1["_links:<br/>self · pagamentos<br/>bazar:reembolsar"]
+        P1["_links:<br/>self · bazar:pagamentos<br/>bazar:reembolsar"]
     end
     subgraph E[Pedido ENVIADO]
         direction TB
-        E1["_links:<br/>self · pagamentos · eventos"]
+        E1["_links:<br/>self · bazar:pagamentos · bazar:eventos"]
     end
     C -- "pagar → webhook aprovado" --> P
     P -- "enviar (logística)" --> E
@@ -220,15 +220,15 @@ As respostas abaixo mostram o pedido do Bazar em estados diferentes, em HAL. Ain
       _links: {
         self: { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123' },
         curies: [{ name: 'bazar', href: 'https://api.bazar.example/rels/{rel}', templated: true }],
-        cliente: { href: '/v1/clientes/0192f3a0-1111-7000-8000-000000000001' },
-        pagamentos: { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/pagamentos' },
+        'bazar:cliente': { href: '/v1/clientes/0192f3a0-1111-7000-8000-000000000001' },
+        'bazar:pagamentos': { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/pagamentos' },
         'bazar:pagar': { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/pagamentos' },
         'bazar:cancelar': { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/cancelamento' },
       },
     },
   }}
 >
-  Repare que `pagamentos` (a lista, com `GET`) e `bazar:pagar` (iniciar um pagamento, com `POST`) apontam para a mesma URI: a relação diz o que fazer, o HAL não diz o método. É a lacuna que o HAL-FORMS preenche.
+  Repare que `bazar:pagamentos` (a lista, com `GET`) e `bazar:pagar` (iniciar um pagamento, com `POST`) apontam para a mesma URI: a relação diz o que fazer, o HAL não diz o método. É a lacuna que o HAL-FORMS preenche.
 </HttpExchange>
 
 ### Pedido pago
@@ -247,8 +247,8 @@ As respostas abaixo mostram o pedido do Bazar em estados diferentes, em HAL. Ain
       _links: {
         self: { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123' },
         curies: [{ name: 'bazar', href: 'https://api.bazar.example/rels/{rel}', templated: true }],
-        cliente: { href: '/v1/clientes/0192f3a0-1111-7000-8000-000000000001' },
-        pagamentos: { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/pagamentos' },
+        'bazar:cliente': { href: '/v1/clientes/0192f3a0-1111-7000-8000-000000000001' },
+        'bazar:pagamentos': { href: '/v1/pedidos/0192f3a1-9999-7000-8000-000000000123/pagamentos' },
         'bazar:reembolsar': { href: '/v1/pagamentos/0192f3a2-dddd-7000-8000-000000000031/reembolsos' },
       },
     },
@@ -259,7 +259,7 @@ As respostas abaixo mostram o pedido do Bazar em estados diferentes, em HAL. Ain
 
 ### Com HAL-FORMS
 
-Pedindo `application/prs.hal-forms+json`, o mesmo pedido criado traz as ações descritas como formulários:
+Se o Bazar oferecesse HAL-FORMS, o mesmo pedido criado, pedido com `Accept: application/prs.hal-forms+json`, traria as ações descritas como formulários. (O Bazar fica no HAL; a [12.04](/design-de-apis-profissional/acoes-que-nao-sao-crud-e-maquinas-de-estado) mostra o que seria preciso para ligar o HAL-FORMS no Spring HATEOAS.)
 
 ```json
 {

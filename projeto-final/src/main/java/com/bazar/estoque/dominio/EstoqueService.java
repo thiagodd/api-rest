@@ -43,4 +43,12 @@ public class EstoqueService {
             throw new EstoqueInsuficienteException(produtoId, estoque.getQuantidadeDisponivel(), quantidade);
         }
     }
+
+    // Uma reserva que não pode ser liberada é um bug (o pedido e o estoque divergiram), não um erro do cliente.
+    @Transactional
+    public void liberar(UUID produtoId, int quantidade) {
+        if (estoques.liberar(produtoId, quantidade) == 0) {
+            throw new IllegalStateException("Reserva de " + quantidade + " não encontrada no estoque de " + produtoId);
+        }
+    }
 }

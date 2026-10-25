@@ -20,4 +20,15 @@ public interface EstoqueRepository extends JpaRepository<Estoque, UUID> {
              where e.produtoId = :produtoId
                and e.quantidadeDisponivel >= :quantidade""")
     int reservar(UUID produtoId, int quantidade);
+
+    // O inverso da reserva, quando o pedido é cancelado. O where protege de liberar mais do que foi reservado.
+    @Modifying
+    @Query("""
+            update Estoque e
+               set e.quantidadeDisponivel = e.quantidadeDisponivel + :quantidade,
+                   e.quantidadeReservada = e.quantidadeReservada - :quantidade,
+                   e.versao = e.versao + 1
+             where e.produtoId = :produtoId
+               and e.quantidadeReservada >= :quantidade""")
+    int liberar(UUID produtoId, int quantidade);
 }

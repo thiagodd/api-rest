@@ -62,7 +62,7 @@ public final class PedidoDeTeste {
             case ENVIADO -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::enviar);
             case ENTREGUE -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::enviar,
                     Pedido::confirmarEntrega);
-            case CANCELADO -> List.of(Pedido::cancelar);
+            case CANCELADO -> List.of(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null));
             case REEMBOLSADO -> List.of(Pedido::iniciarPagamento, Pedido::confirmarPagamento, Pedido::reembolsar);
         };
     }

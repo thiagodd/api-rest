@@ -18,6 +18,7 @@ import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.Canal;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.pedidos.dominio.ItemSolicitado;
+import com.bazar.pedidos.dominio.MotivoCancelamento;
 import com.bazar.pedidos.dominio.PedidoService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +68,7 @@ class ReservaConcorrenteTest {
 
         var resultados = emParalelo(20, () -> pedidos.criar(clienteId, List.of(new ItemSolicitado(produto, 1))));
 
-        assertThat(resultados).containsExactlyInAnyOrderEntriesOf(Map.of("criado", 5, "EstoqueInsuficienteException", 15));
+        assertThat(resultados).containsExactlyInAnyOrderEntriesOf(Map.of("sucesso", 5, "EstoqueInsuficienteException", 15));
         assertThat(estoques.findById(produto)).get()
                 .returns(0, Estoque::getQuantidadeDisponivel)
                 .returns(5, Estoque::getQuantidadeReservada);
@@ -84,9 +85,26 @@ class ReservaConcorrenteTest {
                 : pedidos.criar(clienteId, List.of(new ItemSolicitado(b, 1), new ItemSolicitado(a, 1))));
 
         // Sem a ordenação das reservas, parte destes pedidos falharia com "deadlock detected".
-        assertThat(resultados).containsExactlyEntriesOf(Map.of("criado", 40));
+        assertThat(resultados).containsExactlyEntriesOf(Map.of("sucesso", 40));
         assertThat(estoques.findById(a)).get().returns(60, Estoque::getQuantidadeDisponivel);
         assertThat(estoques.findById(b)).get().returns(60, Estoque::getQuantidadeDisponivel);
+    }
+
+    // Dez cliques em "Cancelar" ao mesmo tempo (12.04): um cancela, os outros recebem 409, e a reserva volta uma vez só.
+    @Test
+    void cancelamentosSimultaneosLiberamOEstoqueUmaVezSo() throws Exception {
+        var produto = criarProdutoComEstoque("LIV-0042", 5);
+        var pedido = pedidos.criar(clienteId, List.of(new ItemSolicitado(produto, 3))).getId();
+
+        var resultados = emParalelo(10, () -> pedidos.cancelar(pedido, MotivoCancelamento.CLIENTE_DESISTIU, null));
+
+        assertThat(resultados).containsEntry("sucesso", 1);
+        // Quem leu o pedido antes do primeiro commit falha no @Version; quem leu depois já o vê CANCELADO.
+        assertThat(resultados.keySet()).isSubsetOf("sucesso", "ObjectOptimisticLockingFailureException",
+                "TransicaoInvalidaException");
+        assertThat(estoques.findById(produto)).get()
+                .returns(5, Estoque::getQuantidadeDisponivel)
+                .returns(0, Estoque::getQuantidadeReservada);
     }
 
     private Map<String, Integer> emParalelo(int vezes, Runnable tarefa) throws Exception {
@@ -107,7 +125,7 @@ class ReservaConcorrenteTest {
                     largada.await();
                     try {
                         tarefa.apply(indice);
-                        resultados.merge("criado", 1, Integer::sum);
+                        resultados.merge("sucesso", 1, Integer::sum);
                     } catch (RuntimeException e) {
                         resultados.merge(e.getClass().getSimpleName(), 1, Integer::sum);
                     }

@@ -109,4 +109,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'agregado', termo: 'Agregado', ingles: 'aggregate', definicao: 'No DDD, um grupo de objetos tratado como unidade de consistência: toda alteração passa pela raiz, e uma transação altera um agregado só. Bom guia para as fronteiras dos recursos.', pagina: '12.01' },
   { id: 'kebab-case', termo: 'kebab-case', definicao: 'Estilo de nome com letras minúsculas e palavras separadas por hífen: ajustes-estoque. Usado nos caminhos de URL.', pagina: '12.02' },
   { id: 'camel-case', termo: 'camelCase', definicao: 'Estilo de nome em que a primeira palavra começa com minúscula e as seguintes com maiúscula, sem separador: quantidadeDisponivel. O snake_case separa com sublinhado (quantidade_disponivel).', pagina: '12.02' },
+  { id: 'maquina-de-estados', termo: 'Máquina de estados', ingles: 'state machine', definicao: 'Conjunto de estados de um recurso e das transições permitidas entre eles. No Bazar, o StatusPedido define, para cada status, para quais outros o pedido pode ir.', pagina: '12.04' },
+  { id: 'metodo-customizado', termo: 'Método customizado', ingles: 'custom method', definicao: 'Ação que não cabe nos métodos padrão, exposta como POST com o verbo depois de dois-pontos no caminho (POST /pedidos/{id}:cancelar). Padrão do Google (AIP-136) e da Microsoft.', pagina: '12.04' },
 ]

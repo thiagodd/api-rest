@@ -13,6 +13,7 @@ import com.bazar.catalogo.dominio.Produto;
 import com.bazar.compartilhado.Dinheiro;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -62,6 +63,10 @@ public class Pedido {
     @Version
     private @Nullable Long versao;
 
+    // null enquanto o pedido não for cancelado (o Hibernate lê as três colunas nulas como um Cancelamento nulo).
+    @Embedded
+    private @Nullable Cancelamento cancelamento;
+
     @Column(nullable = false, updatable = false)
     private Instant criadoEm;
 
@@ -107,8 +112,10 @@ public class Pedido {
         mudarPara(StatusPedido.ENTREGUE);
     }
 
-    public void cancelar() {
+    // A transição é validada primeiro: um pedido que não pode ser cancelado não ganha um Cancelamento.
+    public void cancelar(MotivoCancelamento motivo, @Nullable String observacao) {
         mudarPara(StatusPedido.CANCELADO);
+        cancelamento = new Cancelamento(motivo, observacao, Instant.now().truncatedTo(ChronoUnit.MICROS));
     }
 
     public void reembolsar() {
@@ -156,5 +163,9 @@ public class Pedido {
 
     public Instant getCriadoEm() {
         return criadoEm;
+    }
+
+    public @Nullable Cancelamento getCancelamento() {
+        return cancelamento;
     }
 }

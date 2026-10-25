@@ -8,7 +8,9 @@ import java.util.UUID;
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
+import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.estoque.dominio.EstoqueService;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
@@ -51,6 +53,21 @@ public class PedidoService {
         pedidos.save(pedido);
         // Publicado agora, entregue aos ouvintes @TransactionalEventListener só depois do commit.
         eventos.publishEvent(new PedidoCriado(pedido.getId(), clienteId, pedido.getValorTotal()));
+        return pedido;
+    }
+
+    // Cancela e devolve ao estoque o que estava reservado, numa transação só.
+    @Transactional
+    public Pedido cancelar(UUID id, MotivoCancelamento motivo, @Nullable String observacao) {
+        var pedido = pedidos.findComItensById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("pedido-nao-encontrado", id));
+        pedido.cancelar(motivo, observacao);
+        // Grava o novo status antes de mexer no estoque. Se outra requisição cancelou este pedido ao mesmo tempo,
+        // o UPDATE com "where versao=?" falha aqui (409), e a reserva não é liberada duas vezes.
+        pedidos.flush();
+        var quantidades = new TreeMap<UUID, Integer>();
+        pedido.getItens().forEach(item -> quantidades.merge(item.getProdutoId(), item.getQuantidade(), Integer::sum));
+        quantidades.forEach(estoques::liberar);
         return pedido;
     }
 

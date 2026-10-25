@@ -16,12 +16,14 @@ import com.bazar.estoque.dominio.EstoqueRepository;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -179,6 +181,110 @@ class PedidoControllerTest {
     @Test
     void responde404ParaUmPedidoInexistente() {
         assertThat(mvc.get().uri("/v1/pedidos/{id}", UUID.randomUUID())).hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Nested
+    class Cancelamento {
+
+        String pedido;
+
+        @BeforeEach
+        void criarOPedido() {
+            var resposta = mvc.post().uri("/v1/pedidos").contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "clienteId": "%s", "itens": [ { "produtoId": "%s", "quantidade": 2 } ] }
+                            """.formatted(clienteId, cleanCode))
+                    .exchange();
+            pedido = resposta.getResponse().getHeader(HttpHeaders.LOCATION);
+        }
+
+        @Test
+        void oPedidoCriadoOfereceOCancelamento() {
+            assertThat(mvc.get().uri(pedido).accept(MediaTypes.HAL_JSON))
+                    .hasStatusOk()
+                    .hasContentType(MediaTypes.HAL_JSON)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "status": "CRIADO",
+                              "_links": {
+                                "self": { "href": "%1$s" },
+                                "bazar:cliente": { "href": "http://localhost/v1/clientes/%2$s" },
+                                "bazar:cancelar": { "href": "%1$s/cancelamento" },
+                                "curies": [ { "name": "bazar", "href": "https://api.bazar.example/rels/{rel}",
+                                              "templated": true } ] } }
+                            """.formatted(pedido, clienteId));
+        }
+
+        @Test
+        void cancelaELiberaOEstoque() {
+            assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "motivo": "ENDERECO_ERRADO", "observacao": "Mudei de endereço" }
+                            """))
+                    .hasStatusOk()
+                    .bodyJson()
+                    .hasPathSatisfying("$.status", status -> assertThat(status).isEqualTo("CANCELADO"))
+                    .doesNotHavePath("$._links['bazar:cancelar']");
+
+            assertThat(estoques.findById(cleanCode)).get()
+                    .returns(5, e -> e.getQuantidadeDisponivel())
+                    .returns(0, e -> e.getQuantidadeReservada());
+            assertThat(jdbc.sql("select cancelamento_motivo, cancelamento_observacao from pedido")
+                    .query((rs, n) -> rs.getString(1) + "/" + rs.getString(2)).single())
+                    .isEqualTo("ENDERECO_ERRADO/Mudei de endereço");
+        }
+
+        @Test
+        void naoCancelaDuasVezes() {
+            mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                    .content("{ \"motivo\": \"CLIENTE_DESISTIU\" }").exchange();
+
+            assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                    .content("{ \"motivo\": \"CLIENTE_DESISTIU\" }"))
+                    .hasStatus(HttpStatus.CONFLICT)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "codigo": "TRANSICAO_INVALIDA", "statusAtual": "CANCELADO", "statusDesejado": "CANCELADO" }
+                            """);
+            // A segunda tentativa não devolveu ao estoque o que já tinha sido devolvido.
+            assertThat(estoques.findById(cleanCode)).get().returns(5, e -> e.getQuantidadeDisponivel());
+        }
+
+        @Test
+        void umPedidoPagoNaoOfereceNemAceitaOCancelamento() {
+            jdbc.sql("update pedido set status = 'PAGO'").update();
+
+            assertThat(mvc.get().uri(pedido)).hasStatusOk()
+                    .bodyJson().doesNotHavePath("$._links['bazar:cancelar']");
+            assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                    .content("{ \"motivo\": \"CLIENTE_DESISTIU\" }"))
+                    .hasStatus(HttpStatus.CONFLICT)
+                    .bodyJson().extractingPath("$.statusAtual").isEqualTo("PAGO");
+            assertThat(estoques.findById(cleanCode)).get().returns(2, e -> e.getQuantidadeReservada());
+        }
+
+        @Test
+        void validaOMotivo() {
+            assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("motivo");
+            // Um valor fora do enum nem chega à validação: o Jackson não consegue ler o corpo.
+            assertThat(mvc.post().uri(pedido + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                    .content("{ \"motivo\": \"TALVEZ\" }"))
+                    .hasStatus(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        void comAcceptJsonORespostaEhHalComContentTypeJson() {
+            assertThat(mvc.get().uri(pedido).accept(MediaType.APPLICATION_JSON))
+                    .hasContentType(MediaType.APPLICATION_JSON)
+                    .bodyJson().hasPath("$._links.self.href");
+        }
+    }
+
+    @Test
+    void cancelarUmPedidoInexistenteEh404() {
+        assertThat(mvc.post().uri("/v1/pedidos/{id}/cancelamento", UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON).content("{ \"motivo\": \"CLIENTE_DESISTIU\" }"))
+                .hasStatus(HttpStatus.NOT_FOUND);
     }
 
     private UUID criarProdutoComEstoque(String sku, String nome, long precoEmCentavos, int quantidade) {

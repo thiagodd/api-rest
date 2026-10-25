@@ -80,7 +80,7 @@ class PedidoTest {
             CONFIRMAR_PAGAMENTO(Pedido::confirmarPagamento, PAGO),
             ENVIAR(Pedido::enviar, ENVIADO),
             CONFIRMAR_ENTREGA(Pedido::confirmarEntrega, ENTREGUE),
-            CANCELAR(Pedido::cancelar, CANCELADO),
+            CANCELAR(pedido -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null), CANCELADO),
             REEMBOLSAR(Pedido::reembolsar, REEMBOLSADO);
 
             final Consumer<Pedido> executar;
@@ -144,6 +144,34 @@ class PedidoTest {
         @EnumSource(names = { "ENTREGUE", "CANCELADO", "REEMBOLSADO" })
         void estadosFinaisNaoSaemParaNenhumOutro(StatusPedido finalizado) {
             assertThat(StatusPedido.values()).noneMatch(finalizado::podeIrPara);
+        }
+    }
+
+    @Nested
+    class Cancelamento {
+
+        @Test
+        void registraOMotivoEOMomento() {
+            var pedido = umPedido().build();
+
+            pedido.cancelar(MotivoCancelamento.OUTRO, "Comprei em outra loja");
+
+            assertThat(pedido.getStatus()).isEqualTo(CANCELADO);
+            assertThat(pedido.getCancelamento()).isNotNull()
+                    .returns(MotivoCancelamento.OUTRO, c -> c.motivo())
+                    .returns("Comprei em outra loja", c -> c.observacao())
+                    .satisfies(c -> assertThat(c.canceladoEm()).isNotNull());
+        }
+
+        @Test
+        void umCancelamentoRecusadoNaoDeixaRastro() {
+            var pedido = umPedido().noStatus(PAGO).build();
+
+            catchThrowableOfType(TransicaoInvalidaException.class,
+                    () -> pedido.cancelar(MotivoCancelamento.CLIENTE_DESISTIU, null));
+
+            assertThat(pedido.getStatus()).isEqualTo(PAGO);
+            assertThat(pedido.getCancelamento()).isNull();
         }
     }
 }
