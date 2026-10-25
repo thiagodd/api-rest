@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.bazar.catalogo.dominio.Categoria;
 import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoResumo;
@@ -17,6 +18,7 @@ import com.bazar.compartilhado.DinheiroMapperImpl;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -393,6 +395,70 @@ class ProdutoControllerTest {
 
             assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
             verifyNoInteractions(produtos);
+        }
+    }
+
+    @Nested
+    class RespostasParciais {
+
+        @BeforeEach
+        void umProdutoNaLista() {
+            when(produtos.listar(any(), any(), any(), anyInt())).thenReturn(Window.from(List.of(new ProdutoResumo(
+                    UUID.fromString("0192f39f-2222-7000-8000-000000000042"), "LIV-0042", "Clean Code",
+                    Dinheiro.deCentavos(12990, "BRL"), StatusProduto.ATIVO, PROGRAMACAO,
+                    Instant.parse("2026-10-20T10:00:00Z"))), i -> ScrollPosition.keyset()));
+        }
+
+        @Test
+        void fieldsDevolveSoOsCamposPedidosDeCadaItem() {
+            assertThat(mvc.get().uri("/v1/produtos?fields=id,nome,precoEmCentavos")).hasStatusOk()
+                    .bodyJson().isStrictlyEqualTo("""
+                            { "itens": [ { "id": "0192f39f-2222-7000-8000-000000000042", "nome": "Clean Code",
+                                           "precoEmCentavos": 12990 } ] }
+                            """);
+        }
+
+        @Test
+        void semFieldsAListaSaiCompleta() {
+            assertThat(mvc.get().uri("/v1/produtos")).hasStatusOk()
+                    .bodyJson().extractingPath("$.itens[0]").asMap()
+                    .containsOnlyKeys("id", "sku", "nome", "precoEmCentavos", "categoriaId", "status");
+        }
+
+        @Test
+        void recusaUmCampoQueOItemNaoTem() {
+            assertThat(mvc.get().uri("/v1/produtos?fields=nome,descricao,preco"))
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "type": "https://api.bazar.example/problemas/valor-nao-aceito", "parametro": "fields",
+                              "recusados": [ "descricao", "preco" ],
+                              "aceitos": [ "categoriaId", "id", "nome", "precoEmCentavos", "sku", "status" ] }
+                            """);
+        }
+
+        @Test
+        void embedCategoriaTrazACategoriaDentroDoProduto() {
+            var cleanCode = umProduto().build();
+            when(produtos.detalhar(cleanCode.getId())).thenReturn(cleanCode);
+            when(produtos.categoriaDe(cleanCode)).thenReturn(
+                    new Categoria(PROGRAMACAO, "Programação", "programacao", null));
+
+            assertThat(mvc.get().uri("/v1/produtos/{id}?embed=categoria", cleanCode.getId())).hasStatusOk()
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "categoriaId": "0192f3a0-5555-7000-8000-000000000003",
+                              "categoria": { "id": "0192f3a0-5555-7000-8000-000000000003", "nome": "Programação",
+                                             "slug": "programacao" } }
+                            """);
+            // Sem embed, o campo nem aparece.
+            assertThat(mvc.get().uri("/v1/produtos/{id}", cleanCode.getId()))
+                    .bodyJson().doesNotHavePath("$.categoria");
+        }
+
+        @Test
+        void recusaUmEmbedQueOProdutoNaoOferece() {
+            assertThat(mvc.get().uri("/v1/produtos/{id}?embed=estoque", UUID.randomUUID()))
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.aceitos").asArray().containsExactly("categoria");
         }
     }
 

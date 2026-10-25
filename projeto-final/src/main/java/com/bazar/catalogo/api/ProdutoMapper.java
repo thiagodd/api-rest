@@ -15,6 +15,7 @@ interface ProdutoMapper {
     Produto paraProduto(CriarProdutoRequest request);
 
     @Mapping(target = "precoEmCentavos", source = "preco")
+    @Mapping(target = "categoria", ignore = true)
     ProdutoResponse paraResponse(Produto produto);
 
     @Mapping(target = "precoEmCentavos", source = "preco")

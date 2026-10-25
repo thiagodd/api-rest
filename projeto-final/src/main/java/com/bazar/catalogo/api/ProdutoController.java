@@ -1,16 +1,22 @@
 package com.bazar.catalogo.api;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
+import com.bazar.compartilhado.web.CamposDaResposta;
 import com.bazar.compartilhado.web.CamposOrdenaveis;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
+import com.bazar.compartilhado.web.ValoresDeParametro;
 import jakarta.validation.Valid;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -34,6 +41,8 @@ public class ProdutoController {
             "precoEmCentavos", "preco.valor",
             "sku", "sku",
             "criadoEm", "criadoEm"), Sort.by("nome"));
+
+    private static final SortedSet<String> INCORPORAVEIS = new TreeSet<>(Set.of("categoria"));
 
     // O controller só conhece o serviço e o mapper: no @WebMvcTest, basta substituir o serviço (11.03).
     private final ProdutoService servico;
@@ -49,7 +58,8 @@ public class ProdutoController {
     // limit e cursor (13.04), com first, prev e next no header Link.
     @GetMapping
     public ResponseEntity<Lista<ProdutoResumoResponse>> listar(@Valid @ModelAttribute FiltroProduto filtro, Sort sort,
-            @Valid @ModelAttribute JanelaPedida janela) {
+            @Valid @ModelAttribute JanelaPedida janela, @RequestParam(required = false) @Nullable String fields) {
+        CamposDaResposta.selecionar(fields, ProdutoResumoResponse.class);
         return janela(filtro.paraDominio(), sort, janela);
     }
 
@@ -57,7 +67,8 @@ public class ProdutoController {
     // A ordenação e a paginação continuam na query; o cliente repete o corpo para seguir os links.
     @PostMapping("/buscas")
     public ResponseEntity<Lista<ProdutoResumoResponse>> buscar(@Valid @RequestBody BuscaDeProdutos busca, Sort sort,
-            @Valid @ModelAttribute JanelaPedida janela) {
+            @Valid @ModelAttribute JanelaPedida janela, @RequestParam(required = false) @Nullable String fields) {
+        CamposDaResposta.selecionar(fields, ProdutoResumoResponse.class);
         return janela(busca.paraDominio(), sort, janela);
     }
 
@@ -82,9 +93,15 @@ public class ProdutoController {
         return ResponseEntity.created(location).body(mapper.paraResponse(produto));
     }
 
+    // ?embed=categoria traz a categoria dentro do produto, em vez de só o categoriaId (13.05).
     @GetMapping("/{id}")
-    public ProdutoResponse detalhar(@PathVariable UUID id) {
-        return mapper.paraResponse(servico.detalhar(id));
+    public ProdutoResponse detalhar(@PathVariable UUID id, @RequestParam(required = false) @Nullable String embed) {
+        var incorporar = ValoresDeParametro.ler("embed", embed, INCORPORAVEIS);
+        var produto = servico.detalhar(id);
+        var resposta = mapper.paraResponse(produto);
+        return incorporar.contains("categoria")
+                ? resposta.comCategoria(CategoriaResponse.de(servico.categoriaDe(produto)))
+                : resposta;
     }
 
     @PutMapping("/{id}")

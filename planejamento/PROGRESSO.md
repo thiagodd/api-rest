@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 93 · **rascunho:** 0 · **revisão:** 8 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 92 · **rascunho:** 0 · **revisão:** 9 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -132,7 +132,7 @@
 | 13.02 | Ordenação | basico | importante | `src/content/06-design-de-apis-profissional/13-02-ordenacao.mdx` | revisao |
 | 13.03 | Paginação por offset | basico | essencial | `src/content/06-design-de-apis-profissional/13-03-paginacao-por-offset.mdx` | revisao |
 | 13.04 | Paginação por cursor (keyset) | intermediario | essencial | `src/content/06-design-de-apis-profissional/13-04-paginacao-por-cursor-keyset.mdx` | revisao |
-| 13.05 | Respostas parciais e expansão | avancado | complementar | `src/content/06-design-de-apis-profissional/13-05-respostas-parciais-e-expansao.mdx` | esqueleto |
+| 13.05 | Respostas parciais e expansão | avancado | complementar | `src/content/06-design-de-apis-profissional/13-05-respostas-parciais-e-expansao.mdx` | revisao |
 
 ### M14: Escrita e modificação
 

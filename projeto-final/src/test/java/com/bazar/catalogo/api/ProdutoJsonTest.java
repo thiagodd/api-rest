@@ -32,7 +32,7 @@ class ProdutoJsonTest {
         var response = new ProdutoResponse(
                 UUID.fromString("0192f39f-2222-7000-8000-000000000042"), "LIV-0042", "Clean Code", null, 12990,
                 UUID.fromString("0192f3a0-5555-7000-8000-000000000003"), StatusProduto.ATIVO, Map.of(),
-                Instant.parse("2026-10-24T17:30:00Z"), Instant.parse("2026-10-24T17:30:00Z"));
+                Instant.parse("2026-10-24T17:30:00Z"), Instant.parse("2026-10-24T17:30:00Z"), null);
 
         assertThat(produto.write(response)).isStrictlyEqualToJson("""
                 { "id": "0192f39f-2222-7000-8000-000000000042", "sku": "LIV-0042", "nome": "Clean Code",

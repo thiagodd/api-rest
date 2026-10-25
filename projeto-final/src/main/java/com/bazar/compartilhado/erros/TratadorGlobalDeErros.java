@@ -81,6 +81,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return deDominio(ex, HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(ValorNaoAceitoException.class)
+    ResponseEntity<Object> valorNaoAceito(ValorNaoAceitoException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
     @ExceptionHandler(CursorInvalidoException.class)
     ResponseEntity<Object> cursorInvalido(CursorInvalidoException ex, WebRequest request) {
         return deDominio(ex, HttpStatus.BAD_REQUEST, request);

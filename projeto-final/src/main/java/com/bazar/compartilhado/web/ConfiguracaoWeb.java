@@ -2,6 +2,9 @@ package com.bazar.compartilhado.web;
 
 import java.util.List;
 
+import tools.jackson.databind.ser.std.SimpleFilterProvider;
+
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.UriTemplate;
@@ -32,6 +35,13 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     @Bean
     CurieProvider curieProvider() {
         return new DefaultCurieProvider("bazar", UriTemplate.of("https://api.bazar.example/rels/{rel}"));
+    }
+
+    // Um filtro padrão que não filtra nada: um tipo com @JsonFilter (ProdutoResumoResponse) sai completo quando a
+    // requisição não pede fields. Sem isso, o Jackson falha ao não achar o filtro (13.05).
+    @Bean
+    JsonMapperBuilderCustomizer filtroDeCamposPadrao() {
+        return builder -> builder.filterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
     }
 
     @Override

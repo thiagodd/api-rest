@@ -51,6 +51,12 @@ public class ProdutoService {
         return Janelas.de(encontrados, limite, posicao.scrollsBackward(), produto -> produto.chaves(ordenacao));
     }
 
+    // Para ?embed=categoria (13.05). A categoria sempre existe: a chave estrangeira garante.
+    @Transactional(readOnly = true)
+    public Categoria categoriaDe(Produto produto) {
+        return categorias.findById(produto.getCategoriaId()).orElseThrow();
+    }
+
     @Transactional(readOnly = true)
     public Produto detalhar(UUID id) {
         return produtos.findById(id).orElseThrow(() -> naoEncontrado(id));
