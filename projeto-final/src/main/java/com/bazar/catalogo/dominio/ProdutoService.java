@@ -44,6 +44,10 @@ public class ProdutoService {
     @Transactional
     public Produto criar(Produto produto) {
         exigirCategoria(produto.getCategoriaId());
+        // A constraint unique continua sendo a garantia; a consulta antes existe para responder 409, e não 500.
+        if (produtos.existsBySku(produto.getSku())) {
+            throw new SkuDuplicadoException(produto.getSku());
+        }
         produtos.save(produto);
         estoques.save(new Estoque(produto.getId()));
         return produto;

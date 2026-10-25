@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.LimpezaDoBanco;
-import com.bazar.TestcontainersConfiguration;
+import com.bazar.TesteDeIntegracao;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.clientes.dominio.Cliente;
@@ -22,14 +22,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@TesteDeIntegracao
 class ConsultaDeVendasTest {
 
     static final UUID PROGRAMACAO = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");

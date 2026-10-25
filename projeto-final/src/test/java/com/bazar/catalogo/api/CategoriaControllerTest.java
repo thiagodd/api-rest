@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.LimpezaDoBanco;
-import com.bazar.TestcontainersConfiguration;
+import com.bazar.TesteDeIntegracao;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
@@ -13,11 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,9 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // Testes da camada web: a explicação completa está em 11.03.
 // Desde 10.02 as categorias estão no PostgreSQL, com as três categorias iniciais inseridas pelo Flyway.
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@TesteDeIntegracao
 @ExtendWith(OutputCaptureExtension.class)
 class CategoriaControllerTest {
 

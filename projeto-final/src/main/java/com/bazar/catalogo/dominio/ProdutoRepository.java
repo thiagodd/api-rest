@@ -13,4 +13,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ProdutoRepository extends JpaRepository<Produto, UUID>, JpaSpecificationExecutor<Produto> {
 
     long countByCategoriaId(UUID categoriaId);
+
+    boolean existsBySku(String sku);
 }

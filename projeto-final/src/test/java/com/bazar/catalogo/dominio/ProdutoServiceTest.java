@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.LimpezaDoBanco;
-import com.bazar.TestcontainersConfiguration;
+import com.bazar.TesteDeIntegracao;
 import com.bazar.compartilhado.Dinheiro;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,17 +13,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.logging.LogLevel;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// O log de SQL mostra as colunas que a projeção seleciona.
-@SpringBootTest(properties = "logging.level.org.hibernate.SQL=debug")
-@Import(TestcontainersConfiguration.class)
+// O log de SQL mostra as colunas que a projeção seleciona. O nível do log muda em tempo de execução, e não com
+// properties no @SpringBootTest: uma propriedade a mais criaria outro contexto e outro PostgreSQL (11.04).
+@TesteDeIntegracao
 @ExtendWith(OutputCaptureExtension.class)
 class ProdutoServiceTest {
 
@@ -36,8 +36,12 @@ class ProdutoServiceTest {
     @Autowired
     JdbcClient jdbc;
 
+    @Autowired
+    LoggingSystem logs;
+
     @BeforeEach
     void prepararCatalogo() {
+        logs.setLogLevel("org.hibernate.SQL", LogLevel.DEBUG);
         servico.criar(new Produto("LIV-0042", "Clean Code", "O clássico", Dinheiro.deCentavos(12990, "BRL"), PROGRAMACAO,
                 Map.of("autor", "Robert C. Martin")));
         servico.criar(new Produto("LIV-0043", "Refactoring", null, Dinheiro.deCentavos(15900, "BRL"), PROGRAMACAO, Map.of()));
@@ -47,6 +51,7 @@ class ProdutoServiceTest {
 
     @AfterEach
     void limparOBanco() {
+        logs.setLogLevel("org.hibernate.SQL", null);
         LimpezaDoBanco.limpar(jdbc);
     }
 

@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import com.bazar.ContadorDeConsultas;
 import com.bazar.LimpezaDoBanco;
-import com.bazar.TestcontainersConfiguration;
+import com.bazar.TesteDeIntegracao;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.clientes.dominio.Cliente;
@@ -20,11 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,9 +31,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // As estatísticas do Hibernate permitem contar as consultas de cada requisição (10.04).
-@SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@TesteDeIntegracao
 @ExtendWith(OutputCaptureExtension.class)
 class PedidoControllerTest {
 
