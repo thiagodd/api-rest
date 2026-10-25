@@ -11,7 +11,7 @@ import java.util.SortedSet;
 public class ParametroDesconhecidoException extends ExcecaoDeDominio {
 
     public ParametroDesconhecidoException(SortedSet<String> desconhecidos, SortedSet<String> aceitos) {
-        super("parametro-desconhecido",
+        super(TipoProblema.PARAMETRO_DESCONHECIDO,
                 Map.of("parametros", List.copyOf(desconhecidos), "parametrosAceitos", List.copyOf(aceitos)),
                 String.join(", ", desconhecidos));
     }

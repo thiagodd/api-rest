@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
 import com.bazar.pedidos.dominio.PedidoService;
@@ -61,6 +62,6 @@ public class PedidoController {
     public EntityModel<PedidoResponse> detalhar(@PathVariable UUID id) {
         return servico.buscar(id)
                 .map(assembler::toModel)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("pedido-nao-encontrado", id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.PEDIDO_NAO_ENCONTRADO, id));
     }
 }

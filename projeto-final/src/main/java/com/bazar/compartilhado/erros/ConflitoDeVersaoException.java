@@ -9,11 +9,11 @@ import java.util.Map;
 public class ConflitoDeVersaoException extends RegraDeNegocioException {
 
     public ConflitoDeVersaoException(long versaoAtual) {
-        super("conflito-de-versao", Map.of("versaoAtual", versaoAtual));
+        super(TipoProblema.CONFLITO_DE_VERSAO, Map.of("versaoAtual", versaoAtual));
     }
 
     // Quando o conflito é detectado no UPDATE (@Version), a versão nova não é conhecida.
     public ConflitoDeVersaoException() {
-        super("conflito-de-versao", Map.of());
+        super(TipoProblema.CONFLITO_DE_VERSAO, Map.of());
     }
 }

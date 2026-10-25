@@ -11,7 +11,7 @@ import java.util.SortedSet;
 public class OrdenacaoInvalidaException extends ExcecaoDeDominio {
 
     public OrdenacaoInvalidaException(List<String> recusados, SortedSet<String> aceitos, int maximoDeCampos) {
-        super("ordenacao-invalida",
+        super(TipoProblema.ORDENACAO_INVALIDA,
                 Map.of("ordenacao", List.copyOf(recusados), "camposAceitos", List.copyOf(aceitos),
                         "maximoDeCampos", maximoDeCampos),
                 String.join("; ", recusados), maximoDeCampos, String.join(", ", aceitos));

@@ -8,6 +8,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -48,62 +50,27 @@ import tools.jackson.databind.exc.InvalidFormatException;
 @RestControllerAdvice
 public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
 
-    static final String BASE_DOS_TIPOS = "https://api.bazar.example/problemas/";
-
     private static final Logger log = LoggerFactory.getLogger(TratadorGlobalDeErros.class);
 
     // Exceções do Spring que ganham um type do Bazar; as demais ficam com about:blank.
-    private static final Map<Class<? extends Exception>, String> TIPOS_DO_SPRING = Map.of(
-            HttpMessageNotReadableException.class, "requisicao-invalida",
-            TypeMismatchException.class, "requisicao-invalida",
-            HttpMediaTypeNotAcceptableException.class, "formato-nao-aceito",
-            HttpMediaTypeNotSupportedException.class, "formato-nao-suportado");
+    private static final Map<Class<? extends Exception>, TipoProblema> TIPOS_DO_SPRING = Map.of(
+            HttpMessageNotReadableException.class, TipoProblema.REQUISICAO_INVALIDA,
+            TypeMismatchException.class, TipoProblema.REQUISICAO_INVALIDA,
+            HttpMediaTypeNotAcceptableException.class, TipoProblema.FORMATO_NAO_ACEITO,
+            HttpMediaTypeNotSupportedException.class, TipoProblema.FORMATO_NAO_SUPORTADO);
 
-    @ExceptionHandler(RecursoNaoEncontradoException.class)
-    ResponseEntity<Object> recursoNaoEncontrado(RecursoNaoEncontradoException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.NOT_FOUND, request);
-    }
-
-    @ExceptionHandler(RegraDeNegocioException.class)
-    ResponseEntity<Object> regraDeNegocio(RegraDeNegocioException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.CONFLICT, request);
+    // Toda exceção de domínio aponta um tipo do catálogo (TipoProblema), e o tipo define o status (16.01).
+    @ExceptionHandler(ExcecaoDeDominio.class)
+    ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, WebRequest request) {
+        var problema = Problemas.de(ex, getMessageSource(), LocaleContextHolder.getLocale());
+        return handleExceptionInternal(ex, problema, new HttpHeaders(), ex.getTipo().status(), request);
     }
 
     // Lançada no commit, quando o UPDATE com "where versao=?" não encontra a linha: outra transação
     // alterou o registro entre a leitura e a gravação. A mensagem do Spring cita a entidade; não vai para o cliente.
     @ExceptionHandler(OptimisticLockingFailureException.class)
     ResponseEntity<Object> conflitoDeVersao(OptimisticLockingFailureException ex, WebRequest request) {
-        return deDominio(new ConflitoDeVersaoException(), HttpStatus.CONFLICT, request);
-    }
-
-    @ExceptionHandler(ParametroDesconhecidoException.class)
-    ResponseEntity<Object> parametroDesconhecido(ParametroDesconhecidoException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(OrdenacaoInvalidaException.class)
-    ResponseEntity<Object> ordenacaoInvalida(OrdenacaoInvalidaException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(ValorNaoAceitoException.class)
-    ResponseEntity<Object> valorNaoAceito(ValorNaoAceitoException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(CursorInvalidoException.class)
-    ResponseEntity<Object> cursorInvalido(CursorInvalidoException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(PatchInvalidoException.class)
-    ResponseEntity<Object> patchInvalido(PatchInvalidoException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(TesteDoPatchFalhouException.class)
-    ResponseEntity<Object> testeDoPatchFalhou(TesteDoPatchFalhouException ex, WebRequest request) {
-        return deDominio(ex, HttpStatus.CONFLICT, request);
+        return deDominio(new ConflitoDeVersaoException(), request);
     }
 
     // Um record validado à mão, como o resultado de um PATCH (14.02): o mesmo 422 de um corpo inválido.
@@ -140,7 +107,7 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         if (ex.getMostSpecificCause() instanceof ParametroDesconhecidoException desconhecido) {
-            return parametroDesconhecido(desconhecido, request);
+            return deDominio(desconhecido, request);
         }
         // Um valor fora do enum ("motivo": "TALVEZ") é JSON bem formado com um valor inválido: 422 no campo, com a
         // lista de valores aceitos, como qualquer outra validação (15.04).
@@ -152,14 +119,31 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<Object> valorForaDoEnum(InvalidFormatException ex, WebRequest request) {
-        var aceitos = Arrays.stream(ex.getTargetType().getEnumConstants())
+        var mensagem = mensagemDoEnum(ex.getTargetType());
+        return validacao(ex, List.of(new ErroDeCampo(caminho(ex), mensagem)), new HttpHeaders(), request);
+    }
+
+    private String mensagemDoEnum(Class<?> tipo) {
+        var aceitos = Arrays.stream(tipo.getEnumConstants())
                 .map(valor -> ((Enum<?>) valor).name())
                 .collect(Collectors.joining(", "));
         var fonte = getMessageSource();
-        var mensagem = fonte != null
+        return fonte != null
                 ? fonte.getMessage("bazar.validacao.enum", new Object[] {aceitos}, LocaleContextHolder.getLocale())
                 : aceitos;
-        return validacao(ex, List.of(new ErroDeCampo(caminho(ex), mensagem)), new HttpHeaders(), request);
+    }
+
+    // O enum de um parâmetro que não converteu. Numa lista (status=ATIVO&status=ESGOTADO), o tipo pedido é a List,
+    // e o enum está na falha de conversão do elemento.
+    private static Optional<Class<?>> enumNaoConvertido(FieldError falha) {
+        if (!falha.contains(TypeMismatchException.class)) {
+            return Optional.empty();
+        }
+        var incompativel = falha.unwrap(TypeMismatchException.class);
+        Class<?> alvo = incompativel.getCause() instanceof ConversionFailedException conversao
+                ? conversao.getTargetType().getType()
+                : incompativel.getRequiredType();
+        return alvo != null && alvo.isEnum() ? Optional.of(alvo) : Optional.empty();
     }
 
     // O caminho do campo no corpo, no formato dos outros erros: itens[0].produtoId.
@@ -178,23 +162,25 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        // Num @ModelAttribute, um valor que nem converte (status=ESGOTADO, precoMin=abc) vira erro de binding.
-        // É o mesmo caso de um @PathVariable malformado: 400, sem a mensagem do conversor, que cita tipos Java e
-        // ecoa o valor.
-        var naoConvertidos = ex.getBindingResult().getFieldErrors().stream()
-                .filter(FieldError::isBindingFailure)
-                .map(FieldError::getField)
-                .distinct()
-                .sorted()
-                .toList();
-        if (!naoConvertidos.isEmpty()) {
+        // Num @ModelAttribute, um valor que nem converte (precoMin=abc) vira erro de binding: 400, como um
+        // @PathVariable malformado, sem a mensagem do conversor, que cita tipos Java e ecoa o valor. Um valor fora
+        // de um enum (status=ESGOTADO) tem o tipo certo, texto, e é tratado como no corpo: 422 com os valores
+        // aceitos (16.01).
+        var falhas = ex.getBindingResult().getFieldErrors().stream().filter(FieldError::isBindingFailure).toList();
+        if (falhas.stream().anyMatch(falha -> enumNaoConvertido(falha).isEmpty())) {
+            var naoConvertidos = falhas.stream().map(FieldError::getField).distinct().sorted().toList();
             return valorNaoConvertido(ex, naoConvertidos, request);
         }
-        var erros = ex.getBindingResult().getAllErrors().stream()
+        var erros = new ArrayList<ErroDeCampo>();
+        for (var falha : falhas) {
+            erros.add(new ErroDeCampo(falha.getField(), mensagemDoEnum(enumNaoConvertido(falha).orElseThrow())));
+        }
+        ex.getBindingResult().getAllErrors().stream()
+                .filter(erro -> !(erro instanceof FieldError campo && campo.isBindingFailure()))
                 .map(erro -> new ErroDeCampo(
                         erro instanceof FieldError campo ? campo.getField() : erro.getObjectName(),
                         mensagem(erro.getDefaultMessage())))
-                .toList();
+                .forEach(erros::add);
         return validacao(ex, erros, headers, request);
     }
 
@@ -239,14 +225,9 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(ex, body, cabecalhos, status, request);
     }
 
-    private ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, HttpStatus status, WebRequest request) {
-        var problema = Problemas.de(ex, status, getMessageSource(), LocaleContextHolder.getLocale());
-        return handleExceptionInternal(ex, problema, new HttpHeaders(), status, request);
-    }
-
     private ResponseEntity<Object> valorNaoConvertido(Exception ex, List<String> campos, WebRequest request) {
         var problema = ErrorResponse.builder(ex, HttpStatus.BAD_REQUEST, "Invalid request.")
-                .type(URI.create(BASE_DOS_TIPOS + "requisicao-invalida"))
+                .type(TipoProblema.REQUISICAO_INVALIDA.uri())
                 .titleMessageCode("problemDetail.title.org.springframework.web.method.annotation.MethodArgumentTypeMismatchException")
                 .detailMessageCode("problemDetail.org.springframework.beans.TypeMismatchException")
                 .detailMessageArguments(String.join(", ", campos))
@@ -259,7 +240,7 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     private ResponseEntity<Object> validacao(Exception ex, List<ErroDeCampo> erros, HttpHeaders headers, WebRequest request) {
         var status = HttpStatus.UNPROCESSABLE_CONTENT;
         var problema = ErrorResponse.builder(ex, status, erros.size() + " invalid field(s).")
-                .type(URI.create(BASE_DOS_TIPOS + "validacao"))
+                .type(TipoProblema.VALIDACAO.uri())
                 .titleMessageCode("problemDetail.title.validacao")
                 .detailMessageCode("problemDetail.validacao")
                 .detailMessageArguments(erros.size())
@@ -275,7 +256,7 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
                 .map(Map.Entry::getValue)
                 .findFirst();
         if (tipoDoSpring.isPresent() && isAboutBlank(problema)) {
-            problema.setType(URI.create(BASE_DOS_TIPOS + tipoDoSpring.get()));
+            problema.setType(tipoDoSpring.get().uri());
         }
         problema.setProperty("codigo", codigo(problema, status));
         problema.setInstance(URI.create(caminho(request)));   // o Spring 7.1 deixa de preencher sozinho

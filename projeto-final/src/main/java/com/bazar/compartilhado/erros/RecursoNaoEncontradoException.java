@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public class RecursoNaoEncontradoException extends ExcecaoDeDominio {
 
-    public RecursoNaoEncontradoException(String tipo, Object id) {
+    public RecursoNaoEncontradoException(TipoProblema tipo, Object id) {
         super(tipo, Map.of(), id);
     }
 }

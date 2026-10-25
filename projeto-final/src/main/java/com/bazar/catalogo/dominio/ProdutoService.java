@@ -10,6 +10,7 @@ import com.bazar.compartilhado.Janelas;
 import com.bazar.compartilhado.Keyset;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.estoque.dominio.Estoque;
 import com.bazar.estoque.dominio.EstoqueRepository;
 import org.jspecify.annotations.Nullable;
@@ -102,7 +103,7 @@ public class ProdutoService {
     }
 
     private static RecursoNaoEncontradoException naoEncontrado(UUID id) {
-        return new RecursoNaoEncontradoException("produto-nao-encontrado", id);
+        return new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, id);
     }
 
     // A chave estrangeira do banco também recusaria, mas com um erro 500 e uma mensagem do PostgreSQL.

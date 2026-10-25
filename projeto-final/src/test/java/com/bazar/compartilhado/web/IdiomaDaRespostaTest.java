@@ -3,6 +3,7 @@ package com.bazar.compartilhado.web;
 import java.util.List;
 
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.erros.TratadorGlobalDeErros;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -24,7 +25,7 @@ class IdiomaDaRespostaTest {
 
         @GetMapping("/produtos/1")
         String buscar() {
-            throw new RecursoNaoEncontradoException("produto-nao-encontrado", 1);
+            throw new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, 1);
         }
     }
 

@@ -9,6 +9,6 @@ import java.util.Map;
 public class TesteDoPatchFalhouException extends ExcecaoDeDominio {
 
     public TesteDoPatchFalhouException(int operacao, String caminho) {
-        super("teste-do-patch-falhou", Map.of("operacao", operacao, "path", caminho), caminho);
+        super(TipoProblema.TESTE_DO_PATCH_FALHOU, Map.of("operacao", operacao, "path", caminho), caminho);
     }
 }

@@ -57,10 +57,9 @@ public class AjusteDeEstoqueController {
                     EstoqueResponse.de(estoque), null);
         } catch (RecursoNaoEncontradoException ex) {
             return falha(indice, item,
-                    Problemas.de(ex, HttpStatus.NOT_FOUND, mensagens, LocaleContextHolder.getLocale()));
+                    Problemas.de(ex, mensagens, LocaleContextHolder.getLocale()));
         } catch (OptimisticLockingFailureException ex) {
-            return falha(indice, item, Problemas.de(new ConflitoDeVersaoException(), HttpStatus.CONFLICT, mensagens,
-                    LocaleContextHolder.getLocale()));
+            return falha(indice, item, Problemas.de(new ConflitoDeVersaoException(), mensagens, LocaleContextHolder.getLocale()));
         }
     }
 

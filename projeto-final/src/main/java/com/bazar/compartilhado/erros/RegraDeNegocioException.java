@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public class RegraDeNegocioException extends ExcecaoDeDominio {
 
-    public RegraDeNegocioException(String tipo, Map<String, Object> extensoes, Object... argumentos) {
+    public RegraDeNegocioException(TipoProblema tipo, Map<String, Object> extensoes, Object... argumentos) {
         super(tipo, extensoes, argumentos);
     }
 }

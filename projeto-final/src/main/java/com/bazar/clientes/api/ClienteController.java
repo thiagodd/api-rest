@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.ContextoRequisicao;
 import jakarta.validation.Valid;
@@ -43,6 +44,6 @@ public class ClienteController {
     public ClienteResponse detalhar(@PathVariable UUID id) {
         return repository.findById(id)
                 .map(ClienteResponse::de)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("cliente-nao-encontrado", id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.CLIENTE_NAO_ENCONTRADO, id));
     }
 }

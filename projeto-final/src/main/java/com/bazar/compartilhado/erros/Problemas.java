@@ -19,17 +19,17 @@ public final class Problemas {
     private Problemas() {
     }
 
-    public static ProblemDetail de(ExcecaoDeDominio ex, HttpStatus status, @Nullable MessageSource mensagens,
-            Locale idioma) {
-        var problema = ErrorResponse.builder(ex, status, ex.getTipo())
-                .type(URI.create(TratadorGlobalDeErros.BASE_DOS_TIPOS + ex.getTipo()))
-                .titleMessageCode("problemDetail.title." + ex.getTipo())
-                .detailMessageCode("problemDetail." + ex.getTipo())
+    public static ProblemDetail de(ExcecaoDeDominio ex, @Nullable MessageSource mensagens, Locale idioma) {
+        var tipo = ex.getTipo();
+        var problema = ErrorResponse.builder(ex, tipo.status(), tipo.slug())
+                .type(tipo.uri())
+                .titleMessageCode("problemDetail.title." + tipo.slug())
+                .detailMessageCode("problemDetail." + tipo.slug())
                 .detailMessageArguments(ex.getArgumentos())
                 .build()
                 .updateAndGetBody(mensagens, idioma);
         ex.getExtensoes().forEach(problema::setProperty);
-        problema.setProperty("codigo", ex.getTipo().replace('-', '_').toUpperCase(Locale.ROOT));
+        problema.setProperty("codigo", tipo.name());
         return problema;
     }
 }

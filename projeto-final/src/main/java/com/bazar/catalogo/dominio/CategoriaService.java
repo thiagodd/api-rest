@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.bazar.compartilhado.PadraoLike;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.RegraDeNegocioException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.domain.Page;
@@ -43,13 +44,13 @@ public class CategoriaService {
         var categoria = buscar(id);
         var quantidade = produtos.countByCategoriaId(id);
         if (quantidade > 0) {
-            throw new RegraDeNegocioException("categoria-com-produtos",
+            throw new RegraDeNegocioException(TipoProblema.CATEGORIA_COM_PRODUTOS,
                     Map.of("quantidadeDeProdutos", quantidade), categoria.nome(), quantidade);
         }
         // Sem esta regra, a chave estrangeira de pai_id recusaria a remoção com um erro 500.
         var subcategorias = categorias.countByCategoriaPaiId(id);
         if (subcategorias > 0) {
-            throw new RegraDeNegocioException("categoria-com-subcategorias",
+            throw new RegraDeNegocioException(TipoProblema.CATEGORIA_COM_SUBCATEGORIAS,
                     Map.of("quantidadeDeSubcategorias", subcategorias), categoria.nome(), subcategorias);
         }
         categorias.delete(categoria);
@@ -57,6 +58,6 @@ public class CategoriaService {
 
     private Categoria buscar(UUID id) {
         return categorias.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("categoria-nao-encontrada", id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.CATEGORIA_NAO_ENCONTRADA, id));
     }
 }

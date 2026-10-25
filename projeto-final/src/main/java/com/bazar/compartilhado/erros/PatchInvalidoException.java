@@ -9,6 +9,6 @@ import java.util.Map;
 public class PatchInvalidoException extends ExcecaoDeDominio {
 
     public PatchInvalidoException(int operacao) {
-        super("patch-invalido", Map.of("operacao", operacao), operacao);
+        super(TipoProblema.PATCH_INVALIDO, Map.of("operacao", operacao), operacao);
     }
 }

@@ -153,6 +153,10 @@ O mesmo vale para o corpo de uma busca. Nos corpos de escrita, o Bazar mantém o
 
 Um valor que nem converte (`status=ESGOTADO`, `precoMin=abc`) também é `400`, como um id malformado no caminho. Um valor que converte mas viola uma regra (`q=a`, `precoMin` maior que `precoMax`) é `422`. A divisão é a mesma da [08.01](/construindo-apis-com-spring-boot/problem-details-rfc-9457): `400` quando a requisição está malformada, `422` quando está bem formada mas não pode ser atendida.
 
+<Callout type="info" title="Mudança na 16.01">
+  O catálogo de erros da [16.01](/design-de-apis-profissional/projetando-erros-catalogo-codigos-e-decisoes-dificeis) fixa um critério mais preciso: tipo errado é `400`, tipo certo com valor fora das regras é `422`. Desde então, `precoMin=abc` continua `400`, mas `status=ESGOTADO` (um texto, só que fora da lista) e a mistura `status=RASCUNHO,ATIVO&status=DESCONTINUADO` recebem `422`, com o campo e os valores aceitos, como um enum inválido no corpo ([15.04](/design-de-apis-profissional/enums-evolucao-e-tolerant-reader)). O resto desta página mostra o Bazar como ele era na `pagina-13.01`.
+</Callout>
+
 ### Buscas complexas: GET, POST de busca ou QUERY
 
 O time de catálogo quer buscar por **atributos**: `{"autor": "Martin Fowler"}`. Os atributos são livres (cada categoria tem os seus), e colocá-los na URL exige uma convenção (`?atributo.autor=Martin%20Fowler`? `?atributos=autor:Martin Fowler`?) que se mistura com a lista de parâmetros fixos. Além disso, buscas maiores esbarram no **tamanho da URL**: o Tomcat recusa com `400` uma requisição cuja linha e cabeçalhos passam de 8 KB (`server.max-http-request-header-size`), e proxies e CDNs pelo caminho podem ter limites menores. No Bazar, 300 UUIDs em `categoriaId` já bastam para esse `400`, antes de a requisição chegar ao Spring.

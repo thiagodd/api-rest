@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.compartilhado.erros.ConflitoDeVersaoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,7 @@ public class EstoqueService {
     @Transactional(readOnly = true)
     public Estoque buscar(UUID produtoId) {
         return estoques.findById(produtoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("produto-nao-encontrado", produtoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, produtoId));
     }
 
     // Locking otimista em duas camadas: a versão que o cliente leu é conferida aqui; a corrida entre esta

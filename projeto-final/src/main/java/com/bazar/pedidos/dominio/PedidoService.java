@@ -15,6 +15,7 @@ import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.Janelas;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.estoque.dominio.EstoqueService;
 import org.jspecify.annotations.Nullable;
 
@@ -75,7 +76,7 @@ public class PedidoService {
     @Transactional
     public Pedido cancelar(UUID id, MotivoCancelamento motivo, @Nullable String observacao) {
         var pedido = pedidos.findComItensById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("pedido-nao-encontrado", id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.PEDIDO_NAO_ENCONTRADO, id));
         pedido.cancelar(motivo, observacao, relogio.instant());
         // Grava o novo status antes de mexer no estoque. Se outra requisição cancelou este pedido ao mesmo tempo,
         // o UPDATE com "where versao=?" falha aqui (409), e a reserva não é liberada duas vezes.

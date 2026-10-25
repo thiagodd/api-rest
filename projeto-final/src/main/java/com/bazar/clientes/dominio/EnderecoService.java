@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.RegraDeNegocioException;
+import com.bazar.compartilhado.erros.TipoProblema;
 
 import org.springframework.stereotype.Service;
 
@@ -42,7 +43,7 @@ public class EnderecoService {
         exigirCliente(clienteId);
         var existentes = enderecos.findAllByClienteIdOrderByCriadoEm(clienteId);
         if (existentes.size() >= LIMITE) {
-            throw new RegraDeNegocioException("limite-de-enderecos", Map.of("limite", LIMITE), LIMITE);
+            throw new RegraDeNegocioException(TipoProblema.LIMITE_DE_ENDERECOS, Map.of("limite", LIMITE), LIMITE);
         }
         // O primeiro endereço é o principal, mesmo que o cliente não peça.
         var principal = dados.principal() || existentes.isEmpty();
@@ -56,7 +57,7 @@ public class EnderecoService {
         exigirCliente(clienteId);
         var atual = buscar(clienteId, enderecoId);
         if (atual.principal() && !dados.principal()) {
-            throw new RegraDeNegocioException("endereco-principal-obrigatorio", Map.of());
+            throw new RegraDeNegocioException(TipoProblema.ENDERECO_PRINCIPAL_OBRIGATORIO, Map.of());
         }
         if (dados.principal() && !atual.principal()) {
             desmarcarPrincipal(enderecos.findAllByClienteIdOrderByCriadoEm(clienteId));
@@ -78,14 +79,14 @@ public class EnderecoService {
 
     private void exigirCliente(UUID clienteId) {
         if (clientes.findById(clienteId).isEmpty()) {
-            throw new RecursoNaoEncontradoException("cliente-nao-encontrado", clienteId);
+            throw new RecursoNaoEncontradoException(TipoProblema.CLIENTE_NAO_ENCONTRADO, clienteId);
         }
     }
 
     // A verificação de pertencimento: um endereço de outro cliente é tratado como inexistente (404, não 403).
     private Endereco buscar(UUID clienteId, UUID enderecoId) {
         return enderecos.findByIdAndClienteId(enderecoId, clienteId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("endereco-nao-encontrado", enderecoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.ENDERECO_NAO_ENCONTRADO, enderecoId));
     }
 
     private void desmarcarPrincipal(List<Endereco> existentes) {

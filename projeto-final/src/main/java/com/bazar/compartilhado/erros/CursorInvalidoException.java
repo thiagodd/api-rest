@@ -9,6 +9,6 @@ import java.util.Map;
 public class CursorInvalidoException extends ExcecaoDeDominio {
 
     public CursorInvalidoException() {
-        super("cursor-invalido", Map.of());
+        super(TipoProblema.CURSOR_INVALIDO, Map.of());
     }
 }

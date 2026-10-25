@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.erros.TipoProblema;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -138,7 +139,7 @@ class PedidoTest {
             var erro = catchThrowableOfType(TransicaoInvalidaException.class, () -> acao.executar.accept(pedido));
 
             assertThat(erro).isNotNull();
-            assertThat(erro.getTipo()).isEqualTo("transicao-invalida");
+            assertThat(erro.getTipo()).isEqualTo(TipoProblema.TRANSICAO_INVALIDA);
             assertThat(erro.getExtensoes()).containsEntry("statusAtual", origem).containsEntry("statusDesejado", acao.destino);
             assertThat(pedido.getStatus()).isEqualTo(origem);
         }

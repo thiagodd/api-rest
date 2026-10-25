@@ -17,6 +17,7 @@ import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.DinheiroMapperImpl;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.AplicadorDePatch;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
 import org.junit.jupiter.api.BeforeEach;
@@ -204,7 +205,7 @@ class ProdutoControllerTest {
     @Test
     void responde404ComProblemDetails() {
         var id = UUID.fromString("0192f39f-2222-7000-8000-000000000999");
-        when(produtos.detalhar(id)).thenThrow(new RecursoNaoEncontradoException("produto-nao-encontrado", id));
+        when(produtos.detalhar(id)).thenThrow(new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, id));
 
         assertThat(mvc.get().uri("/v1/produtos/{id}", id).header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))
                 .hasStatus(HttpStatus.NOT_FOUND)
@@ -312,8 +313,10 @@ class ProdutoControllerTest {
         @Test
         void misturarVirgulaERepeticaoNoMesmoParametroNaoConverte() {
             // Cada forma funciona sozinha; juntas, o Spring recebe ["RASCUNHO,ATIVO", "DESCONTINUADO"] e não divide.
+            // "RASCUNHO,ATIVO" é um texto fora da lista: 422, como status=ESGOTADO (16.01).
             assertThat(mvc.get().uri("/v1/produtos?status=RASCUNHO,ATIVO&status=DESCONTINUADO").exchange())
-                    .hasStatus(HttpStatus.BAD_REQUEST);
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("status");
             verifyNoInteractions(produtos);
         }
 
@@ -337,6 +340,7 @@ class ProdutoControllerTest {
             verifyNoInteractions(produtos);
         }
 
+        // Um valor com o tipo errado (precoMin=abc) é 400, e leva junto os outros parâmetros que não converteram.
         @Test
         void recusaUmValorQueNaoConverteSemEcoarOValor() {
             var resposta = mvc.get().uri("/v1/produtos?status=ESGOTADO&precoMin=abc").exchange();
@@ -347,6 +351,20 @@ class ProdutoControllerTest {
                       "parametros": ["precoMin", "status"] }
                     """);
             assertThat(resposta).bodyText().doesNotContain("ESGOTADO", "abc", "java.");
+            verifyNoInteractions(produtos);
+        }
+
+        // Tipo certo (texto), valor fora da lista: 422, como um enum inválido no corpo (16.01).
+        @Test
+        void umStatusQueNaoExisteEhUmErroDeValidacaoComOsValoresAceitos() {
+            var resposta = mvc.get().uri("/v1/produtos?status=ESGOTADO").exchange();
+
+            assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+            assertThat(resposta).bodyJson().isLenientlyEqualTo("""
+                    { "type": "https://api.bazar.example/problemas/validacao",
+                      "erros": [ { "campo": "status",
+                                   "mensagem": "deve ser um destes valores: RASCUNHO, ATIVO, DESCONTINUADO." } ] }
+                    """);
             verifyNoInteractions(produtos);
         }
 

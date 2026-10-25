@@ -11,7 +11,7 @@ import java.util.SortedSet;
 public class ValorNaoAceitoException extends ExcecaoDeDominio {
 
     public ValorNaoAceitoException(String parametro, SortedSet<String> recusados, SortedSet<String> aceitos) {
-        super("valor-nao-aceito",
+        super(TipoProblema.VALOR_NAO_ACEITO,
                 Map.of("parametro", parametro, "recusados", List.copyOf(recusados), "aceitos", List.copyOf(aceitos)),
                 parametro, String.join(", ", recusados), String.join(", ", aceitos));
     }

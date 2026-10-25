@@ -7,6 +7,7 @@ import com.bazar.catalogo.dominio.CategoriaService;
 import com.bazar.compartilhado.Ids;
 import com.bazar.compartilhado.Pagina;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.LinksDePaginacao;
 import com.bazar.compartilhado.web.PaginaPedida;
@@ -86,6 +87,6 @@ public class CategoriaController {
     }
 
     private static RecursoNaoEncontradoException naoEncontrada(UUID id) {
-        return new RecursoNaoEncontradoException("categoria-nao-encontrada", id);
+        return new RecursoNaoEncontradoException(TipoProblema.CATEGORIA_NAO_ENCONTRADA, id);
     }
 }

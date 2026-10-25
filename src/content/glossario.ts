@@ -130,4 +130,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'principio-da-robustez', termo: 'Princípio da robustez (lei de Postel)', definicao: 'Ser conservador no que se envia e liberal no que se aceita. Criticado pela RFC 9413 porque tolerar erros os esconde e os transforma em padrão de fato.', pagina: '15.04' },
   { id: 'bcp-47', termo: 'BCP 47 (tag de idioma)', definicao: 'Formato padrão de identificação de idiomas (RFC 5646): idioma e, opcionalmente, região ou escrita, separados por hífen, como pt-BR, en e es-419.', pagina: '15.05' },
   { id: 'locale-resolver', termo: 'LocaleResolver', definicao: 'Componente do Spring MVC que decide o idioma de cada requisição (por exemplo, pelo Accept-Language), usado pelas mensagens e pelos erros.', pagina: '15.05' },
+  { id: 'catalogo-de-problemas', termo: 'Catálogo de problemas', definicao: 'Lista de todos os tipos de erro de uma API, cada um com URI do type, código, status HTTP e o que o cliente deve fazer ao recebê-lo.', pagina: '16.01' },
 ]
