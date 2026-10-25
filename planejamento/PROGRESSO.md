@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 115 · **rascunho:** 0 · **revisão:** 13 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 114 · **rascunho:** 0 · **revisão:** 14 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -84,7 +84,7 @@
 |---|---|---|---|---|---|
 | 09.01 | O caminho de uma requisição no Spring MVC | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/09-01-o-caminho-de-uma-requisicao-no-spring-mvc.mdx` | revisao |
 | 09.02 | Argument resolvers e return value handlers customizados | avancado | complementar | `src/content/03-construindo-apis-com-spring-boot/09-02-argument-resolvers-e-return-value-handlers-customizados.mdx` | revisao |
-| 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | esqueleto |
+| 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | revisao |
 | 09.04 | Filtros, interceptors e AOP: quando usar cada um | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-04-filtros-interceptors-e-aop-quando-usar-cada-um.mdx` | esqueleto |
 | 09.05 | Functional endpoints (RouterFunction) | intermediario | complementar | `src/content/03-construindo-apis-com-spring-boot/09-05-functional-endpoints-routerfunction.mdx` | esqueleto |
 
@@ -357,3 +357,4 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 | 06.03 | ✅ Conferido: `SORT_PROPERTIES_ALPHABETICALLY=true` e `SORT_CREATOR_PROPERTIES_FIRST=true`; classes saem em ordem alfabética, records na ordem dos componentes. O Bazar desliga a ordem alfabética | 06.03 |
 | 07.01 | ✅ Resolvido com `@NotNull @Positive` (teste `rejeitaUmProdutoSemPreco`): `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |
 | 08.02 | ✅ Feito (testes com `UNPROCESSABLE_CONTENT`). Trocar o status de validação de `400` (padrão do Spring, visto em 07.01/07.02) para `422`, como decidido em 02.03; atualizar os testes `BAD_REQUEST` de validação | 08.02 |
+| 20.01 | Listagens respondem JSON ou CSV pela mesma URI (09.03), mas o Spring MVC não envia `Vary: Accept`; acrescentar junto com o cache HTTP | 20.01 |

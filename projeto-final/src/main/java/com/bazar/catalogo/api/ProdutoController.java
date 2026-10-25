@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import jakarta.validation.Valid;
 
@@ -27,6 +28,12 @@ public class ProdutoController {
     public ProdutoController(ProdutoRepository repository, ProdutoMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
+    }
+
+    // Lista completa por enquanto; filtros, ordenação e paginação chegam em 13.01–13.04.
+    @GetMapping
+    public Lista<ProdutoResponse> listar() {
+        return new Lista<>(repository.findAll().stream().map(mapper::paraResponse).toList());
     }
 
     @PostMapping

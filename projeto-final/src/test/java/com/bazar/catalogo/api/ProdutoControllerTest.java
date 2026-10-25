@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.DinheiroMapperImpl;
+import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +111,36 @@ class ProdutoControllerTest {
                         { "sku": "LIV-0042", "nome": "Clean Code", "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
                         """))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+    }
+
+    @Test
+    void listaEmJsonPorPadraoEEmCsvQuandoPedido() {
+        mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).content("""
+                { "sku": "LIV-0042", "nome": "Clean Code, 2ª edição", "descricao": "O clássico de \\"Uncle Bob\\"",
+                  "precoEmCentavos": 12990, "categoriaId": "0192f3a0-5555-7000-8000-000000000003",
+                  "atributos": { "idioma": "pt-BR", "autor": "Robert C. Martin" } }
+                """).exchange();
+
+        assertThat(mvc.get().uri("/v1/produtos")).hasContentType(MediaType.APPLICATION_JSON);
+
+        var csv = mvc.get().uri("/v1/produtos").accept(ListaCsvHttpMessageConverter.TEXT_CSV).exchange();
+        assertThat(csv).hasStatusOk().hasContentType(ListaCsvHttpMessageConverter.TEXT_CSV);
+        assertThat(csv).bodyText()
+                .startsWith("id,sku,nome,descricao,precoEmCentavos,categoriaId,status,atributos,criadoEm,atualizadoEm\r\n")
+                .contains(",LIV-0042,\"Clean Code, 2ª edição\",\"O clássico de \"\"Uncle Bob\"\"\",12990,")
+                .contains(",RASCUNHO,autor=Robert C. Martin; idioma=pt-BR,");
+    }
+
+    @Test
+    void responde406QuandoPedeCsvDeUmItem() {
+        var location = mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).content("""
+                { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
+                  "categoriaId": "0192f3a0-5555-7000-8000-000000000003" }
+                """).exchange().getResponse().getHeader(HttpHeaders.LOCATION);
+
+        // O CSV só existe para listas: para um item, nenhum conversor escreve text/csv.
+        assertThat(mvc.get().uri(location).accept(ListaCsvHttpMessageConverter.TEXT_CSV))
+                .hasStatus(HttpStatus.NOT_ACCEPTABLE);
     }
 
     @Test
