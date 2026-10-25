@@ -1,5 +1,7 @@
 package com.bazar.catalogo.api;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -8,7 +10,10 @@ import com.bazar.TesteDeIntegracao;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -73,7 +78,7 @@ class CategoriaControllerTest {
                           "title": "Parâmetro desconhecido", "status": 400,
                           "detail": "Parâmetro(s) não aceito(s) por este endpoint: apenas-raizes.",
                           "codigo": "PARAMETRO_DESCONHECIDO",
-                          "parametros": ["apenas-raizes"], "parametrosAceitos": ["apenasRaizes", "q"] }
+                          "parametros": ["apenas-raizes"], "parametrosAceitos": ["apenasRaizes", "limit", "page", "q"] }
                         """);
     }
 
@@ -233,5 +238,89 @@ class CategoriaControllerTest {
         // A ordem dos métodos no Allow não é garantida
         assertThat(resposta.getResponse().getHeader("Allow").split(","))
                 .containsExactlyInAnyOrder("GET", "HEAD", "POST", "OPTIONS");
+    }
+
+    @Nested
+    class Paginacao {
+
+        // Com as 3 iniciais (Eletrônicos, Livros, Programação), são 7 categorias; 4 delas têm "Coleção" no nome.
+        @BeforeEach
+        void criarCategorias() {
+            for (var n = 1; n <= 4; n++) {
+                jdbc.sql("insert into categoria (id, nome, slug, versao) values (?, ?, ?, 0)")
+                        .params(UUID.randomUUID(), "Coleção " + n, "colecao-" + n)
+                        .update();
+            }
+        }
+
+        @Test
+        void devolveAPaginaPedidaComOsTotaisEOsLinks() {
+            var resposta = mvc.get().uri("/v1/categorias?q=cole&limit=3&page=2").exchange();
+
+            assertThat(resposta).hasStatusOk();
+            assertThat(resposta).bodyJson().isLenientlyEqualTo("""
+                    { "itens": [ { "nome": "Coleção 4" } ],
+                      "pagina": { "numero": 2, "tamanho": 3, "totalDeItens": 4, "totalDePaginas": 2 } }
+                    """);
+            // Os links preservam os filtros e o limit; só o page muda.
+            assertThat(resposta).hasHeader(HttpHeaders.LINK, String.join(", ",
+                    "<http://localhost/v1/categorias?q=cole&limit=3&page=1>; rel=\"first\"",
+                    "<http://localhost/v1/categorias?q=cole&limit=3&page=1>; rel=\"prev\"",
+                    "<http://localhost/v1/categorias?q=cole&limit=3&page=2>; rel=\"last\""));
+        }
+
+        @Test
+        void ordenaPeloNomeEmTodasAsPaginas() {
+            var nomes = new ArrayList<String>();
+            for (var pagina = 1; pagina <= 3; pagina++) {
+                var corpo = mvc.get().uri("/v1/categorias?limit=3&page={p}", pagina).exchange()
+                        .getResponse().getContentAsByteArray();
+                nomes.addAll(JsonPath.read(new String(corpo, StandardCharsets.UTF_8), "$.itens[*].nome"));
+            }
+
+            assertThat(nomes).containsExactly("Coleção 1", "Coleção 2", "Coleção 3", "Coleção 4", "Eletrônicos",
+                    "Livros", "Programação");
+        }
+
+        @Test
+        void semParametrosDevolveAPrimeiraPaginaCom20() {
+            assertThat(mvc.get().uri("/v1/categorias").exchange()).bodyJson()
+                    .extractingPath("$.pagina").isEqualTo(Map.of("numero", 1, "tamanho", 20, "totalDeItens", 7,
+                            "totalDePaginas", 1));
+        }
+
+        @Test
+        void umLimiteAcimaDoMaximoViraOMaximo() {
+            assertThat(mvc.get().uri("/v1/categorias?limit=500").exchange()).bodyJson()
+                    .extractingPath("$.pagina.tamanho").isEqualTo(100);
+        }
+
+        @Test
+        void depoisDaUltimaPaginaDevolveUmaListaVazia() {
+            var resposta = mvc.get().uri("/v1/categorias?limit=3&page=9").exchange();
+
+            assertThat(resposta).hasStatusOk();
+            assertThat(resposta).bodyJson().extractingPath("$.itens").asArray().isEmpty();
+            assertThat(resposta.getResponse().getHeader(HttpHeaders.LINK))
+                    .contains("<http://localhost/v1/categorias?limit=3&page=3>; rel=\"prev\"");
+        }
+
+        // O Pageable do Spring transformaria todos estes valores na primeira página com 20 itens, em silêncio.
+        @Test
+        void recusaUmaPaginaOuUmLimiteMenorQue1() {
+            assertThat(mvc.get().uri("/v1/categorias?page=0").exchange())
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("page");
+            assertThat(mvc.get().uri("/v1/categorias?limit=-3").exchange())
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("limit");
+        }
+
+        @Test
+        void recusaUmaPaginaOuUmLimiteQueNaoEhNumero() {
+            assertThat(mvc.get().uri("/v1/categorias?page=abc&limit=dez").exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.parametros").asArray().containsExactly("limit", "page");
+        }
     }
 }

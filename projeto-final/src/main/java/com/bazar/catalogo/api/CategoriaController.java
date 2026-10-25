@@ -1,20 +1,23 @@
 package com.bazar.catalogo.api;
 
-import java.util.Locale;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.catalogo.dominio.CategoriaService;
-import com.bazar.compartilhado.Lista;
+import com.bazar.compartilhado.Pagina;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.web.Auditavel;
+import com.bazar.compartilhado.web.LinksDePaginacao;
+import com.bazar.compartilhado.web.PaginaPedida;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -28,6 +31,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/v1/categorias")
 public class CategoriaController {
 
+    // A listagem não oferece ?sort=: a ordem é sempre pelo nome, com o desempate pelo id (13.02).
+    private static final Sort POR_NOME = Sort.by("nome", "id");
+
     private final CategoriaRepository repository;
     private final CategoriaService servico;
 
@@ -36,16 +42,16 @@ public class CategoriaController {
         this.servico = servico;
     }
 
+    // Paginada por offset (13.03): ?page=1&limit=20, com os totais no corpo e first/prev/next/last no header Link.
     @GetMapping
-    public Lista<CategoriaResponse> listar(
+    public ResponseEntity<Pagina<CategoriaResponse>> listar(
             @RequestParam(required = false) @Nullable @Size(min = 2, max = 60) String q,
-            @RequestParam(defaultValue = "false") boolean apenasRaizes) {
-        var categorias = repository.findAllByOrderByNomeAsc().stream()
-                .filter(c -> q == null || c.nome().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
-                .filter(c -> !apenasRaizes || c.categoriaPaiId() == null)
-                .map(CategoriaResponse::de)
-                .toList();
-        return new Lista<>(categorias);
+            @RequestParam(defaultValue = "false") boolean apenasRaizes,
+            @Valid @ModelAttribute PaginaPedida pagina) {
+        var categorias = servico.listar(q, apenasRaizes, pagina.ordenadaPor(POR_NOME));
+        return ResponseEntity.ok()
+                .headers(LinksDePaginacao.de(categorias))
+                .body(Pagina.de(categorias, CategoriaResponse::de));
     }
 
     @GetMapping("/{id}")

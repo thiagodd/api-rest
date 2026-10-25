@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -137,6 +138,14 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
             HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         var erros = new ArrayList<ErroDeCampo>();
         for (var resultado : ex.getParameterValidationResults()) {
+            // Um objeto validado com @Valid (um record @ModelAttribute, como PaginaPedida): o campo é o do objeto
+            // (page), e não o nome do parâmetro no método (pagina), que o cliente nunca viu (13.03).
+            if (resultado instanceof ParameterErrors errosDoObjeto) {
+                for (var erro : errosDoObjeto.getFieldErrors()) {
+                    erros.add(new ErroDeCampo(erro.getField(), mensagem(erro.getDefaultMessage())));
+                }
+                continue;
+            }
             var parametro = resultado.getMethodParameter().getParameterName();
             for (var erro : resultado.getResolvableErrors()) {
                 erros.add(new ErroDeCampo(String.valueOf(parametro), mensagem(erro.getDefaultMessage())));

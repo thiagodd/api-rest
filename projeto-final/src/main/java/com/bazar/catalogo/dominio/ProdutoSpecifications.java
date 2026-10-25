@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.UUID;
 
+import com.bazar.compartilhado.PadraoLike;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.springframework.data.jpa.domain.PredicateSpecification;
@@ -55,8 +55,7 @@ public final class ProdutoSpecifications {
 
     // O texto vira parâmetro do LIKE, nunca parte do SQL. Os curingas digitados pelo cliente são escapados.
     public static PredicateSpecification<Produto> comNomeContendo(String texto) {
-        var padrao = "%" + texto.toLowerCase(Locale.ROOT)
-                .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        var padrao = PadraoLike.contendo(texto);
         return (produto, cb) -> cb.like(cb.lower(produto.get("nome")), padrao, '\\');
     }
 

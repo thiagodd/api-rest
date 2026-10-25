@@ -84,12 +84,12 @@ Base: `https://api.bazar.example/v1`. As colunas indicam a **página onde o endp
 
 | Método e rota | Descrição | Conceitos | Introduzido em | Consolidado em |
 |---|---|---|---|---|
-| `GET /categorias` | Lista as categorias | GET, 200 | 05.03 | 31.03 |
+| `GET /categorias` | Lista as categorias, paginada por offset (`page`, `limit`) | GET, 200, offset, `Link` | 05.03, 13.03 | 31.03 |
 | `POST /categorias` | Cria uma categoria | 201 + `Location`, validação | 05.04, 07.01 | 31.03 |
 | `GET /categorias/{id}` | Detalha uma categoria | 404 com ProblemDetail | 05.04, 08.02 | 31.03 |
 | `PUT /categorias/{id}` | Substitui uma categoria | PUT idempotente | 05.04 | 31.03 |
 | `DELETE /categorias/{id}` | Remove uma categoria | 204, 409 quando há produtos | 05.04, 14.03 | 31.03 |
-| `GET /produtos` | Lista com filtros (`categoria`, `status`, `precoMin`, `precoMax`, `q`), ordenação (`sort`) e paginação (`limit`, `cursor`) | Filtros, keyset, `Link` | 13.01–13.04 | 31.03 |
+| `GET /produtos` | Lista com filtros (`categoriaId`, `status`, `precoMin`, `precoMax`, `criadoApos`, `sku`, `q`), ordenação (`sort`) e paginação (`limit`, `cursor`) | Filtros, keyset, `Link` | 13.01–13.04 | 31.03 |
 | `GET /produtos?fields=id,nome,preco` | Resposta parcial | *Sparse fieldsets* | 13.05 | 31.03 |
 | `QUERY /produtos` / `POST /produtos/buscas` | Busca complexa no corpo | Método QUERY (RFC 10008) e alternativa com POST | 13.01 | 31.03 |
 | `POST /produtos` | Cria um produto | DTO, MapStruct, validação | 06.01, 06.02, 07.02 | 31.03 |

@@ -11,6 +11,12 @@ spring:
   web:
     # Sem Accept-Language, o Bazar responde em português.
     locale: pt_BR
+  data:
+    web:
+      pageable:
+        # Um Page devolvido por engano sai como PagedModel ({content, page}), e não com os campos internos do
+        # PageImpl. O Bazar não devolve Page: as listagens paginadas usam Pagina (itens + pagina), 13.03.
+        serialization-mode: via-dto
   jpa:
     # Sem Open Session in View: nenhuma consulta escondida acontece depois do controller (10.01).
     open-in-view: false

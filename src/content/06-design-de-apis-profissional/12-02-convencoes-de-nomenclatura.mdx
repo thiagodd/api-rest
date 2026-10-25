@@ -236,7 +236,7 @@ Alguns detalhes:
 - **A lista de aceitos é calculada uma vez por método** e guardada num `ConcurrentHashMap`. As requisições seguintes só consultam o mapa.
 - **`request.getParameterMap()` inclui os campos de formulário** num `POST application/x-www-form-urlencoded`. O Bazar só aceita JSON, então isso não é um problema aqui. Numa API com formulários, use `getQueryString()` e separe os nomes.
 - **O `@RequestParam Map` desliga a verificação**, porque o método declarou que aceita qualquer coisa.
-- **Na 13.01, os filtros viram um *record*** com `@ModelAttribute` (`FiltroProduto`), e este interceptor passa a ler os componentes do *record*. Na 13.03, o `Pageable` acrescenta `page`, `size` e `sort`.
+- **Na 13.01, os filtros viram um *record*** com `@ModelAttribute` (`FiltroProduto`), e este interceptor passa a ler os componentes do *record*. A 13.02 acrescenta o `sort` de um parâmetro `Sort`, e a 13.03, o `page` e o `limit` de um *record* de paginação.
 
 A exceção segue o padrão das outras do Bazar ([08.02](/construindo-apis-com-spring-boot/problemdetail-no-spring-tratamento-global-de-erros)): ela não conhece HTTP, e as listas vão como extensões do Problem Details para que um programa possa lê-las.
 
