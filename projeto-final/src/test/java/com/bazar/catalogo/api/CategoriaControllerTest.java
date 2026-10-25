@@ -62,6 +62,35 @@ class CategoriaControllerTest {
                         """);
     }
 
+    // Sem o ParametrosDeConsultaInterceptor, o nome errado seria ignorado e a resposta traria as 3 categorias (12.02).
+    @Test
+    void recusaUmParametroDeQueryDesconhecido() {
+        assertThat(mvc.get().uri("/v1/categorias?apenas-raizes=true").header("Accept-Language", "pt-BR"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/parametro-desconhecido",
+                          "title": "Parâmetro desconhecido", "status": 400,
+                          "detail": "Parâmetro(s) não aceito(s) por este endpoint: apenas-raizes.",
+                          "codigo": "PARAMETRO_DESCONHECIDO",
+                          "parametros": ["apenas-raizes"], "parametrosAceitos": ["apenasRaizes", "q"] }
+                        """);
+    }
+
+    @Test
+    void aceitaOsParametrosDeclarados() {
+        assertThat(mvc.get().uri("/v1/categorias?apenasRaizes=true"))
+                .hasStatusOk()
+                .bodyJson().extractingPath("$.itens.length()").isEqualTo(2);
+    }
+
+    @Test
+    void endpointSemParametrosRecusaQualquerUm() {
+        assertThat(mvc.get().uri("/v1/categorias/{id}?expand=pai", "0192f3a0-5555-7000-8000-000000000003"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson().extractingPath("$.parametrosAceitos").asArray().isEmpty();
+    }
+
     @Test
     void auditaARemocaoEMedeOTempo(CapturedOutput saida) {
         var location = mvc.post().uri("/v1/categorias").contentType(MediaType.APPLICATION_JSON)

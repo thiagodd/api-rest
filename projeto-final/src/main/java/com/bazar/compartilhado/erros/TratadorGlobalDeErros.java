@@ -70,6 +70,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return deDominio(new ConflitoDeVersaoException(), HttpStatus.CONFLICT, request);
     }
 
+    @ExceptionHandler(ParametroDesconhecidoException.class)
+    ResponseEntity<Object> parametroDesconhecido(ParametroDesconhecidoException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
     @ExceptionHandler(CampoInvalidoException.class)
     ResponseEntity<Object> campoInvalido(CampoInvalidoException ex, WebRequest request) {
         var fonte = getMessageSource();

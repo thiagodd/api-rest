@@ -21,6 +21,7 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AuditoriaInterceptor()).addPathPatterns("/v1/**");
+        registry.addInterceptor(new ParametrosDeConsultaInterceptor()).addPathPatterns("/v1/**");
     }
 
     @Override

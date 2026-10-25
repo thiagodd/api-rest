@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 100 · **rascunho:** 0 · **revisão:** 1 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 99 · **rascunho:** 0 · **revisão:** 2 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -120,7 +120,7 @@
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
 | 12.01 | Modelando recursos a partir do domínio | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-01-modelando-recursos-a-partir-do-dominio.mdx` | revisao |
-| 12.02 | Convenções de nomenclatura | basico | essencial | `src/content/06-design-de-apis-profissional/12-02-convencoes-de-nomenclatura.mdx` | esqueleto |
+| 12.02 | Convenções de nomenclatura | basico | essencial | `src/content/06-design-de-apis-profissional/12-02-convencoes-de-nomenclatura.mdx` | revisao |
 | 12.03 | Relacionamentos e sub-recursos | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-03-relacionamentos-e-sub-recursos.mdx` | esqueleto |
 | 12.04 | Ações que não são CRUD e máquinas de estado | intermediario | essencial | `src/content/06-design-de-apis-profissional/12-04-acoes-que-nao-sao-crud-e-maquinas-de-estado.mdx` | esqueleto |
 
