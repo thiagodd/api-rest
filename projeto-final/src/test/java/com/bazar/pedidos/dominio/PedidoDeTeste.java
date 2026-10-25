@@ -46,7 +46,7 @@ public final class PedidoDeTeste {
     }
 
     public Pedido build() {
-        var pedido = new Pedido(clienteId, Instant.parse("2026-10-25T13:30:00Z"));
+        var pedido = new Pedido(clienteId, "BZR-2026-000001", Instant.parse("2026-10-25T13:30:00Z"));
         if (itens.isEmpty()) {
             pedido.adicionarItem(umProduto().build(), 1);
         }

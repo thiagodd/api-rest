@@ -12,6 +12,11 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PedidoRepository extends JpaRepository<Pedido, UUID> {
 
+    // O próximo sequencial do número do pedido (15.03). Uma sequence nunca devolve o mesmo valor duas vezes, mesmo
+    // com pedidos simultâneos; um pedido desfeito deixa um buraco na numeração, e isso é aceitável.
+    @Query(value = "select nextval('pedido_numero_seq')", nativeQuery = true)
+    long proximoNumero();
+
     // Traz os itens na mesma consulta: com o OSIV desligado, eles não podem ser carregados depois (10.04).
     @EntityGraph(attributePaths = "itens")
     Optional<Pedido> findComItensById(UUID id);

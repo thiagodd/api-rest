@@ -413,11 +413,11 @@ class PedidoControllerTest {
 
         private void inserirPedido(int n, String criadoEm) {
             jdbc.sql("""
-                    insert into pedido (id, cliente_id, status, moeda, valor_itens, valor_frete, valor_total, versao,
-                                        criado_em)
-                    values (?, ?, 'CRIADO', 'BRL', 10, 0, 10, 0, ?)
+                    insert into pedido (id, numero, cliente_id, status, moeda, valor_itens, valor_frete, valor_total,
+                                        versao, criado_em)
+                    values (?, ?, ?, 'CRIADO', 'BRL', 10, 0, 10, 0, ?)
                     """)
-                    .params(id(n), clienteId, Timestamp.from(Instant.parse(criadoEm)))
+                    .params(id(n), "BZR-2026-%06d".formatted(n), clienteId, Timestamp.from(Instant.parse(criadoEm)))
                     .update();
         }
 

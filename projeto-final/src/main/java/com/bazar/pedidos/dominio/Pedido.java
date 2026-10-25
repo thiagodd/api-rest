@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.Ids;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -35,6 +36,10 @@ public class Pedido {
 
     @Id
     private UUID id;
+
+    // O número para pessoas (BZR-2026-000123); o id continua sendo o da API (15.03).
+    @Column(nullable = false, updatable = false, length = 20)
+    private String numero;
 
     @Column(nullable = false)
     private UUID clienteId;
@@ -74,9 +79,9 @@ public class Pedido {
     }
 
     // O instante vem de fora (o Clock do serviço, 15.01): o pedido não decide que horas são.
-    public Pedido(UUID clienteId, Instant criadoEm) {
-        // UUID v4 por enquanto; UUID v7 e o número legível (BZR-2026-000123) chegam em 15.03.
-        this.id = UUID.randomUUID();
+    public Pedido(UUID clienteId, String numero, Instant criadoEm) {
+        this.id = Ids.novo();
+        this.numero = numero;
         this.clienteId = clienteId;
         this.status = StatusPedido.CRIADO;
         this.moeda = REAL;
@@ -144,6 +149,10 @@ public class Pedido {
 
     public List<ItemPedido> getItens() {
         return Collections.unmodifiableList(itens);
+    }
+
+    public String getNumero() {
+        return numero;
     }
 
     public Dinheiro getValorItens() {

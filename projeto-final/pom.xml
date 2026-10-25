@@ -31,6 +31,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- UUID v7 (RFC 9562) gerado na hora, antes de gravar: o JDK 25 só gera v4, e o @UuidGenerator do
+             Hibernate só atribui o id no persist (15.03). -->
+        <dependency>
+            <groupId>com.github.f4b6a3</groupId>
+            <artifactId>uuid-creator</artifactId>
+            <version>6.1.1</version>
+        </dependency>
         <!-- JSON Patch (RFC 6902) da Jakarta JSON Processing, com a implementação Eclipse Parsson: as bibliotecas de
              patch para Jackson (json-patch, zjsonpatch) só suportam o Jackson 2 (14.02). -->
         <dependency>

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.compartilhado.Dinheiro;
+import com.bazar.compartilhado.Ids;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -74,7 +75,7 @@ public class Produto {
     public Produto(String sku, String nome, @Nullable String descricao, Dinheiro preco,
             UUID categoriaId, Map<String, String> atributos) {
         // Ainda é UUID v4; o Bazar passa a gerar UUID v7 em 15.03.
-        this.id = UUID.randomUUID();
+        this.id = Ids.novo();
         this.sku = sku;
         this.nome = nome;
         this.descricao = descricao;

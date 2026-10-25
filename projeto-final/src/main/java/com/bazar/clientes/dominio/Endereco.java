@@ -3,6 +3,7 @@ package com.bazar.clientes.dominio;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.bazar.compartilhado.Ids;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -13,7 +14,7 @@ public record Endereco(
         String cidade, String uf, boolean principal, Instant criadoEm) {
 
     public static Endereco novo(UUID clienteId, Dados dados) {
-        return new Endereco(UUID.randomUUID(), clienteId, dados.cep(), dados.logradouro(), dados.numero(),
+        return new Endereco(Ids.novo(), clienteId, dados.cep(), dados.logradouro(), dados.numero(),
                 dados.complemento(), dados.cidade(), dados.uf(), dados.principal(), Instant.now());
     }
 

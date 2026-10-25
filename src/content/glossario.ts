@@ -126,4 +126,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'rfc-3339', termo: 'RFC 3339', definicao: 'Perfil do ISO 8601 para a internet: data e hora como 2026-10-25T13:30:00Z, com segundos e offset (Z ou ±hh:mm) obrigatórios. É o formato de datas das APIs JSON.', pagina: '15.01' },
   { id: 'intervalo-semiaberto', termo: 'Intervalo semiaberto', ingles: 'half-open interval', definicao: 'Período [início, fim) em que o início entra e o fim não. Períodos consecutivos se encaixam sem buracos nem sobreposições, e não é preciso escrever 23:59:59.', pagina: '15.01' },
   { id: 'value-object', termo: 'Value object', definicao: 'Objeto definido pelos seus valores, e não por uma identidade: dois Dinheiro com 129,90 reais são iguais. Imutável, concentra as validações e as operações do conceito.', pagina: '15.02' },
+  { id: 'ulid', termo: 'ULID', definicao: 'Identificador de 128 bits com 48 bits de tempo e 80 aleatórios, escrito em 26 caracteres Base32. Ordenável pelo tempo, como o UUID v7, mas fora do padrão UUID.', pagina: '15.03' },
 ]

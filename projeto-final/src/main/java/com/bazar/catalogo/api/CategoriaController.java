@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.catalogo.dominio.CategoriaService;
+import com.bazar.compartilhado.Ids;
 import com.bazar.compartilhado.Pagina;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.web.Auditavel;
@@ -64,7 +65,7 @@ public class CategoriaController {
     @PostMapping
     public ResponseEntity<CategoriaResponse> criar(@Valid @RequestBody CategoriaRequest request) {
         // Ainda é UUID v4; o Bazar passa a gerar UUID v7 em 15.03.
-        var categoria = repository.save(request.paraCategoria(UUID.randomUUID()));
+        var categoria = repository.save(request.paraCategoria(Ids.novo()));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(categoria.id())

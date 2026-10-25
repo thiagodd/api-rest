@@ -3,6 +3,7 @@ package com.bazar.pedidos.dominio;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.bazar.compartilhado.Ids;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -51,7 +52,7 @@ public class ItemPedido {
 
     ItemPedido(Pedido pedido, int posicao, UUID produtoId, String sku, String nomeProduto, int quantidade,
             BigDecimal precoUnitario) {
-        this.id = UUID.randomUUID();
+        this.id = Ids.novo();
         this.pedido = pedido;
         this.posicao = posicao;
         this.produtoId = produtoId;

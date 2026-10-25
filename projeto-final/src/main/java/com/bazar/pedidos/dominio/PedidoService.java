@@ -2,12 +2,14 @@ package com.bazar.pedidos.dominio;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.Janelas;
@@ -49,13 +51,18 @@ public class PedidoService {
         if (clientes.findById(clienteId).isEmpty()) {
             throw new CampoInvalidoException("clienteId", "bazar.pedido.cliente-inexistente");
         }
-        var pedido = new Pedido(clienteId, relogio.instant());
+        var encontrados = new ArrayList<Produto>();
         for (int i = 0; i < itens.size(); i++) {
-            var solicitado = itens.get(i);
             var campo = "itens[" + i + "].produtoId";
-            var produto = produtos.findById(solicitado.produtoId())
-                    .orElseThrow(() -> new CampoInvalidoException(campo, "bazar.pedido.produto-inexistente"));
-            pedido.adicionarItem(produto, solicitado.quantidade());
+            encontrados.add(produtos.findById(itens.get(i).produtoId())
+                    .orElseThrow(() -> new CampoInvalidoException(campo, "bazar.pedido.produto-inexistente")));
+        }
+        // O número só é pedido depois das validações: um pedido recusado não gasta um número. Uma sequence não
+        // volta atrás no rollback, então a falta de estoque ainda deixa um buraco na numeração (15.03).
+        var agora = relogio.instant();
+        var pedido = new Pedido(clienteId, NumeroDoPedido.de(pedidos.proximoNumero(), agora), agora);
+        for (int i = 0; i < itens.size(); i++) {
+            pedido.adicionarItem(encontrados.get(i), itens.get(i).quantidade());
         }
         reservarEstoque(itens);
         pedidos.save(pedido);

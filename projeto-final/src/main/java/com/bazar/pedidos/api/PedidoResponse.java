@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
  */
 public record PedidoResponse(
         UUID id,
+        String numero,
         UUID clienteId,
         StatusPedido status,
         List<Item> itens,
@@ -41,8 +42,8 @@ public record PedidoResponse(
         var cancelamento = pedido.getCancelamento() == null ? null
                 : new Cancelamento(pedido.getCancelamento().motivo(), pedido.getCancelamento().observacao(),
                         pedido.getCancelamento().canceladoEm());
-        return new PedidoResponse(pedido.getId(), pedido.getClienteId(), pedido.getStatus(), itens,
-                pedido.getValorItens(), pedido.getValorFrete(), pedido.getValorTotal(), pedido.getCriadoEm(),
+        return new PedidoResponse(pedido.getId(), pedido.getNumero(), pedido.getClienteId(), pedido.getStatus(),
+                itens, pedido.getValorItens(), pedido.getValorFrete(), pedido.getValorTotal(), pedido.getCriadoEm(),
                 cancelamento);
     }
 }

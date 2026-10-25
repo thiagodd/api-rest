@@ -73,8 +73,11 @@ class PedidoServiceTest {
         var cleanCode = umProduto().comPreco(12990).build();
         when(produtos.findById(cleanCode.getId())).thenReturn(Optional.of(cleanCode));
 
+        when(pedidos.proximoNumero()).thenReturn(123L);
+
         var pedido = service.criar(maria.id(), List.of(new ItemSolicitado(cleanCode.getId(), 2)));
 
+        assertThat(pedido.getNumero()).isEqualTo("BZR-2026-000123");
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CRIADO);
         assertThat(pedido.getCriadoEm()).isEqualTo(Instant.parse("2026-10-25T13:30:00Z"));
         assertThat(pedido.getValorTotal()).isEqualTo(Dinheiro.deCentavos(25980, "BRL"));
