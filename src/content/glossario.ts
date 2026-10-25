@@ -122,4 +122,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'expansao-de-recursos', termo: 'Expansão de recursos', ingles: 'resource expansion / embedding', definicao: 'Incluir na resposta um recurso relacionado (como a categoria de um produto) quando o cliente pede, em geral com um parâmetro embed ou expand, para evitar uma segunda chamada.', pagina: '13.05' },
   { id: 'upsert', termo: 'Upsert', ingles: 'upsert', definicao: 'Escrita que cria o recurso se ele não existe e o substitui se existe. Em HTTP, é o PUT com o id escolhido pelo cliente, que é idempotente.', pagina: '14.01' },
   { id: 'accept-patch', termo: 'Accept-Patch', definicao: 'Header de resposta (RFC 5789) que lista os formatos de patch que um recurso aceita, como application/merge-patch+json.', pagina: '14.02' },
+  { id: 'operacao-em-lote', termo: 'Operação em lote', ingles: 'batch / bulk', definicao: 'Uma requisição que aplica muitas operações de uma vez. Pode ser atômica (tudo ou nada) ou parcial, com um resultado por item (207 Multi-Status, na regra da Zalando).', pagina: '14.04' },
 ]

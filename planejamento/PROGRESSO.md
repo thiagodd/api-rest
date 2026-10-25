@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 89 · **rascunho:** 0 · **revisão:** 12 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 88 · **rascunho:** 0 · **revisão:** 13 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -141,7 +141,7 @@
 | 14.01 | Criação com POST (e PUT com id do cliente) | basico | essencial | `src/content/06-design-de-apis-profissional/14-01-criacao-com-post-e-put-com-id-do-cliente.mdx` | revisao |
 | 14.02 | PUT × PATCH: JSON Merge Patch e JSON Patch | intermediario | essencial | `src/content/06-design-de-apis-profissional/14-02-put-patch-json-merge-patch-e-json-patch.mdx` | revisao |
 | 14.03 | DELETE, soft delete e arquivamento | basico | importante | `src/content/06-design-de-apis-profissional/14-03-delete-soft-delete-e-arquivamento.mdx` | revisao |
-| 14.04 | Operações em lote | avancado | importante | `src/content/06-design-de-apis-profissional/14-04-operacoes-em-lote.mdx` | esqueleto |
+| 14.04 | Operações em lote | avancado | importante | `src/content/06-design-de-apis-profissional/14-04-operacoes-em-lote.mdx` | revisao |
 
 ### M15: Tipos de dados no contrato
 

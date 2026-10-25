@@ -2,78 +2,446 @@
 id: "14.04"
 titulo: "Operações em lote"
 descricao: "Integrações (por exemplo, o ERP de um lojista) precisam atualizar centenas de itens. Fazer N chamadas é lento; um lote mal projetado gera falhas parciais confusas."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "google.aip.dev: 233"
-    url: "https://google.aip.dev/233"
-  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST use code 207 for batch or bulk requests\"; note que o Zalando torna o 207 obrigatório)"
+  - titulo: "Zalando: MUST use code 207 for batch or bulk requests [152]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#152"
-  - titulo: "RFC 4918 §13 (207)"
+  - titulo: "Google AIP-233: Batch methods: Create"
+    url: "https://google.aip.dev/233"
+  - titulo: "Google AIP-231: Batch methods: Get"
+    url: "https://google.aip.dev/231"
+  - titulo: "RFC 4918: WebDAV, 207 Multi-Status (§11.1 e §13)"
+    url: "https://www.rfc-editor.org/rfc/rfc4918.html#section-13"
+  - titulo: "RFC 9110: 413 Content Too Large (§15.5.14)"
+    url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.14"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Integrações (por exemplo, o ERP de um lojista) precisam atualizar centenas de itens. Fazer N chamadas é lento; um lote mal projetado gera falhas parciais confusas.
+Toda noite, o ERP de um lojista conta o estoque do depósito e manda as quantidades para o Bazar: 400 produtos. Com a API que existe até aqui, isso são 400 chamadas `PUT /v1/produtos/{id}/estoque`, cada uma com a sua conexão, a sua autenticação, a sua transação e a sua latência. Com 50 ms por chamada, são 20 segundos, e o ERP precisa tratar 400 respostas.
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+A tentação é criar um endpoint que recebe tudo de uma vez. É a decisão certa, mas ela abre perguntas que a chamada individual não tinha:
+
+- Se o item 237 falha (o produto não existe mais), os outros 399 são aplicados ou nenhum é?
+- Como a resposta diz **qual** item falhou e **por quê**?
+- Que status a resposta tem, quando 399 itens deram certo e um deu errado? `200`? `400`? Outro?
+- E se o lote tiver 100 mil itens?
+- E se a rede cair no meio e o ERP reenviar o lote?
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Lote atômico (tudo ou nada) × parcial (resultado por item)
-- Formato do resultado por item (status e ProblemDetail por item)
-- 200 com resultados × 207 Multi-Status (WebDAV, uso controverso)
-- Limites de tamanho; lote assíncrono (ligação com 21.02)
-- Idempotência do lote
-- Google AIP-231/233 (*batch get/create*)
-</Draft>
+### Batch e bulk
 
-## Diagrama
+Os dois nomes aparecem nos guias, às vezes como sinônimos:
 
-<Draft title="Diagramas previstos">
-fluxo de um lote parcial com itens OK e itens com erro.
-</Draft>
+- ***Batch***: várias operações **independentes** numa só requisição (criar estes 10, ler aqueles 20). É o termo do Google.
+- ***Bulk***: a **mesma** operação aplicada a muitos itens (ajustar o estoque de 400 produtos).
+
+A Zalando trata os dois juntos (*"batch or bulk requests"*), e as regras são as mesmas. O ajuste de estoque do Bazar é um *bulk*. Esta página chama os dois de <Term id="operacao-em-lote">operação em lote</Term>.
+
+### Atômico ou parcial?
+
+A primeira decisão, e a que muda todo o resto:
+
+| | Lote atômico | Lote parcial |
+|---|---|---|
+| Um item falha | Nada é aplicado | Os outros são aplicados |
+| Resposta de sucesso | Todos os itens | O resultado de **cada** item |
+| Resposta de falha | Um erro, dizendo qual item | Não existe "o lote falhou": cada item tem o seu resultado |
+| Implementação | Uma transação para tudo | Uma transação por item |
+| O cliente precisa | Corrigir e reenviar tudo | Tratar os itens que falharam |
+| Bom para | Itens que dependem uns dos outros (um pedido e os seus itens) | Itens independentes (o estoque de cada produto) |
+
+O lote atômico é mais simples para o cliente. O parcial é o único que funciona quando os itens são independentes e uma falha isolada não pode bloquear o resto: o ERP não quer que um produto removido do Bazar impeça o estoque dos outros 399 de ser atualizado.
+
+Os guias divergem aqui:
+
+- O **Google** (AIP-233) diz que o *batch create* *"may support atomic (…) or partial success behavior"*, mas que um **síncrono** *"must be atomic"*. O sucesso parcial fica para os métodos assíncronos, que devolvem uma operação de longa duração e um campo `return_partial_success` no pedido. O *batch get* (AIP-231) é sempre atômico: *"it must fail for all resources or succeed for all resources (no partial success)"*.
+- A **Zalando** assume o lote parcial como caso comum e define como responder a ele (o `207`, a seguir).
+
+O Bazar faz um lote **parcial e síncrono**, que o Google não permite e a Zalando prevê. O motivo é o caso de uso: 500 ajustes de estoque cabem numa requisição, e o ERP prefere saber na hora o que falhou a acompanhar uma operação assíncrona. Para lotes maiores, a resposta do Google é a certa, e ela aparece no fim desta página.
+
+### O fluxo de um lote parcial
+
+```mermaid title="Um lote parcial: cada item na sua transação, um resultado por item"
+sequenceDiagram
+    participant ERP
+    participant API as API do Bazar
+    participant DB as Banco
+    ERP->>API: POST /v1/ajustes-estoque/lotes<br/>{ itens: [livro=30, inexistente=5, caneca=12] }
+    Note over API: Valida o lote inteiro antes de aplicar:<br/>tamanho, campos, produtos repetidos
+    API->>DB: transação 1: estoque do livro = 30
+    DB-->>API: commit
+    API->>DB: transação 2: estoque de 0192…999 = 5
+    DB-->>API: produto não existe (rollback só desta)
+    API->>DB: transação 3: estoque da caneca = 12
+    DB-->>API: commit
+    API-->>ERP: 207 Multi-Status<br/>{ sucessos: 2, falhas: 1,<br/>itens: [200, 404 + problema, 200] }
+```
+
+Note as duas fases. Primeiro, o lote é validado **inteiro**: um lote com 501 itens, um item sem `produtoId` ou o mesmo produto duas vezes é recusado antes de qualquer item ser aplicado, com um `422` comum. Esses são erros do **lote**, e não de um item. Depois, cada item é aplicado na sua própria transação, e os erros de cada um (produto inexistente, conflito de versão) vão para o resultado daquele item.
+
+### O resultado por item
+
+Cada item da resposta precisa responder a três perguntas: **qual** item é, **o que aconteceu** e, se falhou, **por quê**.
+
+```json
+{
+  "indice": 1,
+  "produtoId": "0192f39f-2222-7000-8000-000000000999",
+  "status": 404,
+  "problema": {
+    "type": "https://api.bazar.example/problemas/produto-nao-encontrado",
+    "title": "Produto não encontrado",
+    "status": 404,
+    "detail": "Não existe produto com id 0192f39f-2222-7000-8000-000000000999.",
+    "codigo": "PRODUTO_NAO_ENCONTRADO"
+  }
+}
+```
+
+- **`indice`**: a posição no pedido. O `produtoId` identifica o item enquanto ele for único no lote, e o índice continua funcionando quando não for (e quando o item nem tem um id válido).
+- **`status`**: o código HTTP que aquele item teria recebido numa chamada individual. O cliente que já sabe tratar `404` e `409` usa o mesmo código para os itens.
+- **`problema`**: o mesmo Problem Details ([08.01](/construindo-apis-com-spring-boot/problem-details-rfc-9457)) que a chamada individual devolveria, com o mesmo `type`. Sem `instance` nem `traceId`, que pertencem à requisição, e não ao item.
+
+A resposta traz os itens **na mesma ordem** do pedido (o Google exige isso no *batch get*) e os totais `sucessos` e `falhas`, para que o cliente saiba sem contar se precisa olhar os itens.
+
+### 200 ou 207?
+
+Qual o status de uma resposta em que 399 itens deram certo e um deu errado?
+
+- **`200 OK`**: a requisição foi processada; o resultado de cada item está no corpo. É o mais comum na prática.
+- **`207 Multi-Status`**: definido pela RFC 4918 (WebDAV) para *"status for multiple independent operations"*. O nome descreve exatamente a situação.
+- **`400` ou `422`**: errado. Diz que a requisição falhou, e 399 itens foram aplicados.
+
+O `207` é controverso. Ele vem do WebDAV, onde o corpo é um XML `multistatus` definido pela própria RFC, e usá-lo com um corpo JSON pega emprestado o código sem o formato. Muitos clientes e ferramentas tratam qualquer `2xx` como "deu tudo certo", e um cliente que olha só o status não vê os itens que falharam, seja `200` ou `207`.
+
+A **Zalando** decide pelo `207`, e de forma obrigatória (regra 152, *MUST*):
+
+> *"A batch or bulk request always responds with HTTP status code 207 unless a non-item-specific failure occurs."*
+
+E rejeita explicitamente o atalho de responder `200` quando todos os itens dão certo: *"We explicitly reject the option to apply 200 for a completely successful batch (…) as we want to avoid risks and expect clients to handle partial batch failures anyway"*. O argumento é bom: se o status varia (`200` quando tudo deu certo, `207` quando não), o cliente que testa só o `200` funciona nos testes e falha em produção no primeiro lote parcial. Com `207` **sempre**, o cliente é obrigado a ler os itens desde o primeiro dia.
+
+O Bazar segue a Zalando: **`207` sempre**, mesmo com todos os itens com sucesso ou todos com falha. `4xx` e `5xx` ficam para o que não é de um item: o lote inválido (`422`), a falta de autenticação (`401`), o servidor sobrecarregado (`503`).
+
+### Limites
+
+Um lote sem limite é um convite a problemas: uma requisição de 100 mil itens segura uma *thread* por minutos, estoura o *timeout* do *gateway* e, quando falha no meio, deixa o cliente sem saber até onde foi.
+
+| Limite | Como | Resposta |
+|---|---|---|
+| Número de itens | `@Size(max = 500)` | `422`, com o limite na mensagem |
+| Tamanho do corpo em bytes | No *gateway* ou no servidor | `413 Content Too Large` |
+| Tempo | O *timeout* do *gateway* | `504` (que o cliente não deveria ver: o limite de itens deve vir antes) |
+
+O Google pede que o limite seja **documentado** no contrato (o exemplo da AIP-233 é *"A maximum of 1000 books can be created in a batch"*). O número certo depende do custo de cada item: 500 ajustes de estoque levam menos de um segundo; 500 pedidos com pagamento, não.
+
+Acima do limite, o caminho é o lote **assíncrono**: o cliente envia o lote (ou um arquivo), recebe `202 Accepted` com o endereço de um recurso que acompanha o processamento, e consulta o progresso e o resultado por item quando estiver pronto ([21.02](/padroes-avancados-de-http/operacoes-assincronas-e-de-longa-duracao-202-polling)). É o modelo do Google para o sucesso parcial, e a forma certa de importar um catálogo de 50 mil produtos.
+
+### Idempotência do lote
+
+O ERP enviou o lote, a rede caiu, e ele não sabe se o Bazar recebeu. Reenviar é seguro?
+
+Depende do que o item **diz**:
+
+- **"A quantidade disponível é 30"** (valor absoluto): reenviar dá o mesmo resultado. O lote é idempotente por natureza.
+- **"Some 5 à quantidade"** (delta): reenviar soma 10. O lote não é idempotente, e o reenvio corrompe o estoque.
+
+Por isso o ajuste do Bazar é **absoluto**: o ERP manda a contagem do depósito, e não a diferença. É também o que faz sentido para uma sincronização: quem contou o estoque físico é a fonte da verdade.
+
+Quando o lote não pode ser absoluto (criar 500 produtos, registrar 500 movimentações), a solução é a **chave de idempotência** ([21.01](/padroes-avancados-de-http/idempotency-keys)): o cliente manda um `Idempotency-Key` por lote, e o servidor devolve a mesma resposta para o reenvio, sem aplicar nada de novo.
 
 ## Na prática
 
-<Draft title="Código previsto">
-`POST /v1/ajustes-estoque/lotes` com até 500 itens e resultado por item.
-</Draft>
+### O pedido
+
+```java title="src/main/java/com/bazar/estoque/api/AjusteDeEstoqueEmLoteRequest.java"
+/**
+ * Um lote de ajustes de estoque (14.04). Cada item define a quantidade disponível de um produto: um valor
+ * absoluto, e não um "some 5", para que reenviar o lote dê o mesmo resultado.
+ */
+public record AjusteDeEstoqueEmLoteRequest(
+        @NotEmpty @Size(max = AjusteDeEstoqueEmLoteRequest.MAXIMO) List<@Valid @NotNull Item> itens) {
+
+    public static final int MAXIMO = 500;
+
+    public record Item(
+            @NotNull UUID produtoId,
+            @NotNull @PositiveOrZero @Max(1_000_000) Integer quantidadeDisponivel) {
+    }
+}
+```
+
+O corpo é um objeto com a lista em `itens`, e não a lista solta. Um objeto no topo pode ganhar campos depois (um `modo`, uma `observacao`) sem quebrar ninguém ([02.06](/comecando-e-fundamentos-de-http/json-para-apis)).
+
+### O controller
+
+```java title="src/main/java/com/bazar/estoque/api/AjusteDeEstoqueController.java (trecho)"
+@PostMapping
+public ResponseEntity<ResultadoDoLote> ajustar(@Valid @RequestBody AjusteDeEstoqueEmLoteRequest lote) {
+    exigirProdutosDistintos(lote);
+    var resultados = new ArrayList<ResultadoDoLote.Item>();
+    for (var i = 0; i < lote.itens().size(); i++) {
+        resultados.add(ajustar(i, lote.itens().get(i)));
+    }
+    return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(ResultadoDoLote.de(resultados));
+}
+
+// O controller não é transacional: cada chamada ao serviço é uma transação, confirmada ou desfeita sozinha.
+private ResultadoDoLote.Item ajustar(int indice, AjusteDeEstoqueEmLoteRequest.Item item) {
+    try {
+        var estoque = servico.ajustarDisponivel(item.produtoId(), item.quantidadeDisponivel());
+        return new ResultadoDoLote.Item(indice, item.produtoId(), HttpStatus.OK.value(),
+                EstoqueResponse.de(estoque), null);
+    } catch (RecursoNaoEncontradoException ex) {
+        return falha(indice, item,
+                Problemas.de(ex, HttpStatus.NOT_FOUND, mensagens, LocaleContextHolder.getLocale()));
+    } catch (OptimisticLockingFailureException ex) {
+        return falha(indice, item, Problemas.de(new ConflitoDeVersaoException(), HttpStatus.CONFLICT, mensagens,
+                LocaleContextHolder.getLocale()));
+    }
+}
+```
+
+A transação por item vem de onde ela **não** está: o `ajustarDisponivel` do serviço é `@Transactional`, e o controller não é. Cada chamada abre e confirma (ou desfaz) a sua transação, como a [10.03](/persistencia-para-apis/transacoes-na-camada-de-servico) explicou. Um `@Transactional` no controller, ou um método de serviço que fizesse o laço, transformaria o lote em atômico, e de um jeito ruim, como mostra a seção de erros comuns.
+
+O `catch` pega só as falhas **de um item** que o Bazar conhece. Qualquer outra exceção (o banco fora do ar) sobe e vira um `500` para o lote inteiro: é uma falha *"non-item-specific"*, nos termos da Zalando. Os itens já confirmados continuam confirmados, e como o ajuste é absoluto, o ERP pode reenviar o lote inteiro.
+
+O `Problemas.de` é o mesmo código que o tratador global usa para montar o Problem Details de uma exceção de domínio, extraído para que um item de lote tenha **exatamente** o mesmo problema que a chamada individual.
+
+```java title="src/main/java/com/bazar/estoque/api/AjusteDeEstoqueController.java (trecho)"
+// Dois ajustes do mesmo produto no mesmo lote: qual vale? Em vez de escolher em silêncio, o lote é recusado.
+private static void exigirProdutosDistintos(AjusteDeEstoqueEmLoteRequest lote) {
+    var vistos = new HashSet<UUID>();
+    for (var i = 0; i < lote.itens().size(); i++) {
+        if (!vistos.add(lote.itens().get(i).produtoId())) {
+            throw new CampoInvalidoException("itens[" + i + "].produtoId", "bazar.lote.produto-repetido");
+        }
+    }
+}
+```
+
+### A resposta
+
+```java title="src/main/java/com/bazar/estoque/api/ResultadoDoLote.java"
+public record ResultadoDoLote(int sucessos, int falhas, List<Item> itens) {
+
+    static ResultadoDoLote de(List<Item> itens) {
+        var sucessos = (int) itens.stream().filter(item -> item.problema() == null).count();
+        return new ResultadoDoLote(sucessos, itens.size() - sucessos, itens);
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Item(
+            int indice,
+            UUID produtoId,
+            int status,
+            @Nullable EstoqueResponse estoque,
+            @Nullable ProblemDetail problema) {
+    }
+}
+```
+
+### Pela API
+
+<HttpExchange
+  title="Um lote com um item que falha"
+  request={{ method: 'POST', url: '/v1/ajustes-estoque/lotes', headers: { 'Content-Type': 'application/json', 'Accept-Language': 'pt-BR' }, body: { itens: [ { produtoId: '0192f39f-2222-7000-8000-000000000042', quantidadeDisponivel: 30 }, { produtoId: '0192f39f-2222-7000-8000-000000000999', quantidadeDisponivel: 5 }, { produtoId: '0192f39f-2222-7000-8000-000000000077', quantidadeDisponivel: 12 } ] } }}
+  response={{ status: 207, headers: { 'Content-Type': 'application/json' }, body: { sucessos: 2, falhas: 1, itens: [ { indice: 0, produtoId: '0192f39f-2222-7000-8000-000000000042', status: 200, estoque: { produtoId: '0192f39f-2222-7000-8000-000000000042', quantidadeDisponivel: 30, quantidadeReservada: 0, versao: 1 } }, { indice: 1, produtoId: '0192f39f-2222-7000-8000-000000000999', status: 404, problema: { type: 'https://api.bazar.example/problemas/produto-nao-encontrado', title: 'Produto não encontrado', status: 404, detail: 'Não existe produto com id 0192f39f-2222-7000-8000-000000000999.', codigo: 'PRODUTO_NAO_ENCONTRADO' } }, { indice: 2, produtoId: '0192f39f-2222-7000-8000-000000000077', status: 200, estoque: { produtoId: '0192f39f-2222-7000-8000-000000000077', quantidadeDisponivel: 12, quantidadeReservada: 0, versao: 1 } } ] } }}
+>
+O livro e a caneca foram atualizados. O produto inexistente falhou sozinho.
+</HttpExchange>
+
+<HttpExchange
+  title="O mesmo produto duas vezes"
+  request={{ method: 'POST', url: '/v1/ajustes-estoque/lotes', headers: { 'Content-Type': 'application/json', 'Accept-Language': 'pt-BR' }, body: { itens: [ { produtoId: '0192f39f-2222-7000-8000-000000000042', quantidadeDisponivel: 30 }, { produtoId: '0192f39f-2222-7000-8000-000000000042', quantidadeDisponivel: 5 } ] } }}
+  response={{ status: 422, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/validacao', title: 'Dados inválidos', status: 422, detail: 'A requisição tem 1 campo inválido.', instance: '/v1/ajustes-estoque/lotes', erros: [ { campo: 'itens[1].produtoId', mensagem: 'Este produto já aparece em outro item do lote.' } ], codigo: 'VALIDACAO', traceId: '9f1c…' } }}
+>
+Um erro do lote, e não de um item: nada foi aplicado.
+</HttpExchange>
+
+### Os testes
+
+O `AjusteDeEstoqueEmLoteTest` cobre os cinco comportamentos do contrato, contra o PostgreSQL:
+
+- o item que falha não impede os outros, que ficam gravados no banco;
+- o resultado tem um item por item, na ordem, com `estoque` ou `problema`;
+- um lote em que tudo falha continua sendo `207`;
+- 501 itens dão `422` no campo `itens`;
+- o mesmo produto duas vezes dá `422` no `itens[1].produtoId`, sem gravar nada.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Um lote 'parcial' com uma transação só" why="Com o laço dentro de um método @Transactional, a exceção de um item, ao sair do método transacional chamado, marca a transação inteira para rollback. Ou o lote vira atômico sem ninguém ter decidido isso, ou, se a exceção for engolida, o commit falha no fim com UnexpectedRollbackException e um 500.">
+<Bad title="Laço transacional">
+
+```java
+// Num serviço de lotes, chamando o EstoqueService (outro bean, também @Transactional):
+@Transactional
+public List<Resultado> ajustarEmLote(List<Item> itens) {
+    for (var item : itens) {
+        try {
+            estoque.ajustarDisponivel(item.produtoId(), item.quantidade());   // entra na mesma transação
+        } catch (RecursoNaoEncontradoException ex) {
+            // "falhou só este item"... mas a transação já está marcada para rollback
+        }
+    }
+}
+```
+
+</Bad>
+<Good title="Uma transação por item">
+
+```java
+// No controller, que não é transacional:
+for (var i = 0; i < lote.itens().size(); i++) {
+    resultados.add(ajustar(i, lote.itens().get(i)));   // cada chamada, uma transação
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="O status da resposta mudar conforme o resultado" why="Um cliente que só testou lotes perfeitos trata o 200 e quebra no primeiro 207. Com o status sempre igual, ele lê os itens desde o primeiro dia.">
+<Bad title="200 quando tudo deu certo, 207 quando não">
+
+```java
+var status = falhas == 0 ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
+```
+
+</Bad>
+<Good title="Sempre 207">
+
+```java
+return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(ResultadoDoLote.de(resultados));
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **Responder `400` porque um item falhou**, com os outros itens aplicados. O cliente acha que nada foi gravado e reenvia tudo.
+- **Resultado sem o índice ou sem a ordem do pedido.** O cliente não consegue ligar a falha ao item.
+- **Uma mensagem de erro por item diferente da chamada individual.** O cliente precisa de dois tratadores para o mesmo erro.
+- **Lote sem limite** de itens.
+- **Itens com delta** (`+5`) num lote que o cliente vai reenviar sem chave de idempotência.
+- **Escolher em silêncio** entre dois itens que mexem no mesmo recurso.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Decida e documente** se o lote é atômico ou parcial.
+- **Valide o lote inteiro antes** de aplicar qualquer item: tamanho, formato, repetições.
+- **Um resultado por item**, na ordem do pedido, com o índice, o status e o mesmo Problem Details da chamada individual.
+- **Totais** de sucessos e falhas no topo da resposta.
+- **`207` sempre** para o lote parcial (Zalando [152]), e `4xx`/`5xx` só para falhas do lote inteiro.
+- **Limite e documente** o número de itens; acima dele, ofereça um lote assíncrono com `202`.
+- **Prefira operações absolutas**, que tornam o reenvio seguro; quando não der, use `Idempotency-Key`.
+- **Uma transação por item** no lote parcial; uma transação para tudo no atômico.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="Ajuste de estoque em lote" module="estoque" tag="pagina-14.04" files={[
+  { path: 'src/main/java/com/bazar/estoque/api/AjusteDeEstoqueController.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/estoque/api/AjusteDeEstoqueEmLoteRequest.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/estoque/api/ResultadoDoLote.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/estoque/dominio/EstoqueService.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/Problemas.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/TratadorGlobalDeErros.java', change: 'alterado' },
+  { path: 'src/main/resources/messages.properties', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/estoque/AjusteDeEstoqueEmLoteTest.java', change: 'novo' },
+]}>
+`POST /v1/ajustes-estoque/lotes` recebe até 500 ajustes absolutos de estoque e aplica cada um na sua própria transação. A resposta é sempre `207 Multi-Status`, com `sucessos`, `falhas` e um resultado por item (índice, status, estoque ou Problem Details). Lotes vazios, com mais de 500 itens ou com produto repetido dão `422` sem aplicar nada. A montagem do Problem Details de uma exceção de domínio saiu do tratador global para `Problemas.de`, usada pelos dois. O `AjusteDeEstoqueEmLoteTest` tem 5 testes, e a suíte, 225.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Lotes trocam N chamadas por uma. O preço é decidir o que acontece quando parte deles falha.
+- **Atômico** (tudo ou nada, uma transação) para itens que dependem uns dos outros; **parcial** (uma transação por item, resultado por item) para itens independentes.
+- O Google exige que um *batch* síncrono seja atômico e deixa o sucesso parcial para os assíncronos. A Zalando define o `207` para o lote parcial. O Bazar faz um lote parcial e síncrono, limitado a 500 itens.
+- Cada item da resposta tem o índice, o status e o mesmo Problem Details da chamada individual.
+- `207 Multi-Status` **sempre** no lote parcial (Zalando [152], *MUST*), para que o cliente leia os itens desde o primeiro dia. `4xx`/`5xx` só para falhas do lote inteiro.
+- Limite o número de itens e documente-o. Lotes maiores são assíncronos (`202`).
+- Itens absolutos tornam o reenvio seguro; deltas exigem `Idempotency-Key`.
+
+<Exercise title="Importar o catálogo do ERP" difficulty="dificil">
+O mesmo lojista quer importar o catálogo inteiro do ERP: 12 mil produtos, com SKU, nome, preço e categoria. Cada produto do ERP tem um código próprio (`codigoErp`), e o lojista vai repetir a importação toda semana, com produtos novos e alterados.
+
+1. Lote síncrono ou assíncrono? Desenhe as requisições e as respostas.
+2. Na segunda importação, como o Bazar sabe se um item é um produto novo ou a atualização de um existente?
+3. Um item tem uma categoria que não existe. Outro tem um SKU que já pertence a outro produto do Bazar. Como esses erros aparecem no resultado?
+4. A importação pode ser reenviada com segurança?
+
+<Hint>Releia o *upsert* da [14.01](/design-de-apis-profissional/criacao-com-post-e-put-com-id-do-cliente): o `codigoErp` é um id que já existe fora da API.</Hint>
+
+<Solution>
+
+1. **Assíncrono.** 12 mil produtos, cada um com validação, SKU único e estoque, passam do limite de uma requisição. O fluxo:
+   - `POST /v1/importacoes-de-catalogo` com o arquivo ou os itens → `202 Accepted`, `Location: /v1/importacoes-de-catalogo/{id}`;
+   - `GET /v1/importacoes-de-catalogo/{id}` → `200` com `status: PROCESSANDO`, `processados: 4200`, `total: 12000`;
+   - quando termina: `status: CONCLUIDA`, `sucessos`, `falhas` e o resultado por item, possivelmente paginado ([13.04](/design-de-apis-profissional/paginacao-por-cursor-keyset)) ou como um arquivo para baixar.
+
+   É o modelo da [21.02](/padroes-avancados-de-http/operacoes-assincronas-e-de-longa-duracao-202-polling), e o do Google para o sucesso parcial.
+
+2. Pelo `codigoErp`. Cada item é um ***upsert*** com um id que pertence ao cliente: se já existe um produto com aquele `codigoErp` para aquele lojista, ele é atualizado; senão, é criado. É exatamente o caso em que a 14.01 recomenda o id do cliente. O resultado de cada item diz o que aconteceu (`201` criado, `200` atualizado), como um `PUT` individual diria.
+
+3. Como itens com falha, com o mesmo Problem Details da criação individual:
+   - categoria inexistente: `422` com o erro no campo `categoriaId`;
+   - SKU de outro produto: `409 sku-duplicado` (14.01).
+
+   O índice e o `codigoErp` do item permitem ao lojista achar a linha na planilha do ERP. Os outros 11.998 produtos são importados normalmente.
+
+4. Sim, porque cada item é um *upsert* com valores absolutos: importar duas vezes deixa o catálogo no mesmo estado. Ainda assim, um `Idempotency-Key` no `POST` evita **duas importações** rodando ao mesmo tempo para o mesmo arquivo (o reenvio recebe o mesmo `202` com o mesmo `Location`, em vez de começar outra).
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Um lote parcial com 400 itens teve 399 sucessos e 1 falha. Segundo a Zalando, qual o status da resposta?',
+    options: [
+      '200 OK',
+      '207 Multi-Status, com o resultado de cada item no corpo',
+      '400 Bad Request, porque um item falhou',
+      '422 Unprocessable Content',
+    ],
+    answer: 1,
+    explanation: 'A regra 152 da Zalando torna o 207 obrigatório para lotes que podem falhar parcialmente, inclusive quando todos os itens dão certo ou todos falham. 4xx e 5xx ficam para falhas que não são de um item.',
+  },
+  {
+    question: 'Por que o laço do lote parcial do Bazar fica no controller, e não num método @Transactional do serviço?',
+    options: [
+      'Porque controllers são mais rápidos',
+      'Porque numa única transação a falha de um item marca tudo para rollback; fora dela, cada chamada ao serviço é uma transação independente',
+      'Porque o Spring proíbe laços em serviços',
+      'Porque o @Transactional não funciona com listas',
+    ],
+    answer: 1,
+    explanation: 'Uma exceção de runtime dentro da transação a marca para rollback, mesmo se capturada. O lote parcial precisa de uma transação por item, que vem de chamar o método transacional uma vez por item.',
+  },
+  {
+    question: 'O ERP reenvia um lote de ajustes de estoque depois de um timeout. Por que isso é seguro no Bazar?',
+    options: [
+      'Porque o Bazar detecta lotes repetidos pelo conteúdo',
+      'Porque cada item define a quantidade absoluta (= 30), e não uma diferença (+5): aplicar duas vezes dá o mesmo resultado',
+      'Porque o 207 impede reenvios',
+      'Não é seguro',
+    ],
+    answer: 1,
+    explanation: 'Operações absolutas são idempotentes. Um lote de deltas somaria duas vezes, e precisaria de uma Idempotency-Key (21.01).',
+  },
+  {
+    question: 'Qual destes é um erro do lote inteiro, que deve ser recusado antes de aplicar qualquer item?',
+    options: [
+      'Um item cujo produto não existe',
+      'Um item que perdeu uma corrida de concorrência',
+      'Um lote com 501 itens, acima do limite documentado de 500',
+      'Um item com estoque igual ao atual',
+    ],
+    answer: 2,
+    explanation: 'Limite, formato e itens repetidos são do lote: 422, nada aplicado. Produto inexistente e conflito de versão são de um item, e vão para o resultado daquele item.',
+  },
+]} />
 
 ## Referências
 

@@ -35,6 +35,15 @@ public class EstoqueService {
         return estoque;
     }
 
+    // O ajuste de um item de lote (14.04): sem a versão, porque quem sincroniza (o ERP) manda a quantidade que
+    // contou, e ela vale mais que a do Bazar. A corrida com uma reserva ainda é pega pelo @Version.
+    @Transactional
+    public Estoque ajustarDisponivel(UUID produtoId, int quantidade) {
+        var estoque = buscar(produtoId);
+        estoque.definirDisponivel(quantidade);
+        return estoque;
+    }
+
     // Participa da transação de quem chama (o PedidoService): se o pedido for desfeito, a reserva também é.
     @Transactional
     public void reservar(UUID produtoId, int quantidade) {

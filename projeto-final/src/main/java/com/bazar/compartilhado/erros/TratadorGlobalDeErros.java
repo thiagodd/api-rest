@@ -200,14 +200,7 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, HttpStatus status, WebRequest request) {
-        var problema = ErrorResponse.builder(ex, status, ex.getTipo())
-                .type(URI.create(BASE_DOS_TIPOS + ex.getTipo()))
-                .titleMessageCode("problemDetail.title." + ex.getTipo())
-                .detailMessageCode("problemDetail." + ex.getTipo())
-                .detailMessageArguments(ex.getArgumentos())
-                .build()
-                .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
-        ex.getExtensoes().forEach(problema::setProperty);
+        var problema = Problemas.de(ex, status, getMessageSource(), LocaleContextHolder.getLocale());
         return handleExceptionInternal(ex, problema, new HttpHeaders(), status, request);
     }
 
