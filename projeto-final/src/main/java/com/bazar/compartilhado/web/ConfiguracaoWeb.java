@@ -1,6 +1,7 @@
 package com.bazar.compartilhado.web;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import tools.jackson.databind.ser.std.SimpleFilterProvider;
@@ -13,6 +14,8 @@ import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.RequestPath;
+import org.springframework.util.Assert;
+import org.springframework.web.accept.StandardApiVersionDeprecationHandler;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
@@ -35,8 +38,11 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AuditoriaInterceptor()).addPathPatterns("/v1/**");
-        registry.addInterceptor(new ParametrosDeConsultaInterceptor()).addPathPatterns("/v1/**");
+        // /v*/**: todas as versões (18.03). Com /v1/**, a v2 ficaria sem auditoria e sem a recusa de parâmetros
+        // desconhecidos.
+        registry.addInterceptor(new AuditoriaInterceptor()).addPathPatterns("/v*/**");
+        registry.addInterceptor(new ParametrosDeConsultaInterceptor()).addPathPatterns("/v*/**");
+        registry.addInterceptor(new UsoDeVersaoDepreciadaInterceptor()).addPathPatterns("/v*/**");
     }
 
     // A versão é o primeiro segmento do caminho (/v1, /v2), conforme o ADR-0003 (18.03). O predicado separa as rotas
@@ -47,7 +53,26 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
         configurer.usePathSegment(0, ConfiguracaoWeb::rotaDaApi)
                 .addSupportedVersions("1", "2")
                 // Obrigatória por padrão: sem isto, /problemas/... (sem versão no caminho) seria um 400.
-                .setVersionRequired(false);
+                .setVersionRequired(false)
+                .setDeprecationHandler(depreciacoes());
+    }
+
+    // Os headers Deprecation, Sunset e Link (18.04), a partir do calendário de depreciação. O handler padrão guarda
+    // uma entrada por versão: dois recursos depreciando a mesma versão sobrescreveriam um ao outro.
+    static StandardApiVersionDeprecationHandler depreciacoes() {
+        var versoes = Depreciacao.CALENDARIO.stream().map(Depreciacao::versao).toList();
+        Assert.state(versoes.size() == Set.copyOf(versoes).size(),
+                "Uma depreciação por versão: o StandardApiVersionDeprecationHandler guarda uma entrada por versão");
+        var handler = new StandardApiVersionDeprecationHandler();
+        for (var depreciacao : Depreciacao.CALENDARIO) {
+            handler.configureVersion(depreciacao.versao())
+                    .setRequestPredicate(request -> depreciacao.vale(request.getRequestURI()))
+                    .setDeprecationDate(depreciacao.inicio())
+                    .setDeprecationLink(depreciacao.guia())
+                    .setSunsetDate(depreciacao.fim())
+                    .setSunsetLink(Depreciacao.POLITICA);
+        }
+        return handler;
     }
 
     static boolean rotaDaApi(RequestPath caminho) {

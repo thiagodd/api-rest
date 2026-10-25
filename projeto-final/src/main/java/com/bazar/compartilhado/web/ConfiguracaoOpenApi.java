@@ -11,12 +11,14 @@ import com.bazar.compartilhado.Dinheiro;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.HeaderParameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.servers.Server;
@@ -125,6 +127,37 @@ public class ConfiguracaoOpenApi {
                 }));
             }
             esquemas.forEach(ConfiguracaoOpenApi::nullPorUltimo);
+        };
+    }
+
+    /**
+     * As operações de uma versão em depreciação (18.04) saem com deprecated: true e a data do sunset em x-sunset, que
+     * o oasdiff exige para depreciar (api-deprecated-sunset-missing) e confere antes de aceitar a remoção. As
+     * respostas de sucesso documentam os headers Deprecation e Sunset.
+     */
+    @Bean
+    GlobalOpenApiCustomizer depreciacoesNoContrato() {
+        return openApi -> {
+            if (openApi.getPaths() == null) {
+                return;
+            }
+            openApi.getPaths().forEach((caminho, item) -> Depreciacao.CALENDARIO.stream()
+                    .filter(depreciacao -> depreciacao.vale(caminho))
+                    .findFirst()
+                    .ifPresent(depreciacao -> item.readOperations().forEach(operacao -> {
+                        operacao.setDeprecated(true);
+                        operacao.addExtension("x-sunset", depreciacao.sunset().toString());
+                        operacao.getResponses().forEach((status, resposta) -> {
+                            if (status.startsWith("2")) {
+                                resposta.addHeaderObject("Deprecation", new Header()
+                                        .description("Desde quando a operação está depreciada (RFC 9745).")
+                                        .schema(new StringSchema().example("@1792972800")));
+                                resposta.addHeaderObject("Sunset", new Header()
+                                        .description("Quando a operação deixa de existir (RFC 8594).")
+                                        .schema(new StringSchema().example("Fri, 30 Apr 2027 00:00:00 GMT")));
+                            }
+                        });
+                    })));
         };
     }
 

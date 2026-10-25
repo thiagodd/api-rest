@@ -37,6 +37,9 @@ public enum TipoProblema {
     ENDERECO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
     PEDIDO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
 
+    // 410: a versão do recurso existiu, mas foi desligada depois do sunset (18.04).
+    VERSAO_DESLIGADA(HttpStatus.GONE, CORRIGIR_A_REQUISICAO),
+
     // 406 e 415: negociação de formato (02.05).
     FORMATO_NAO_ACEITO(HttpStatus.NOT_ACCEPTABLE, CORRIGIR_A_REQUISICAO),
     FORMATO_NAO_SUPORTADO(HttpStatus.UNSUPPORTED_MEDIA_TYPE, CORRIGIR_A_REQUISICAO),

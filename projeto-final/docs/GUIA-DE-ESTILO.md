@@ -114,6 +114,7 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 | BZR-EVO-03 | Mudanças incompatíveis **NÃO DEVEM** entrar numa versão publicada. O que é incompatível está na 18.01. | lint | 18.01 |
 | BZR-EVO-04 | Uma versão maior nova **DEVE** existir só para os recursos com mudanças incompatíveis, e só a versão maior vai no caminho (ADR-0003). | revisão | 18.02 |
 | BZR-EVO-05 | No máximo duas versões maiores de um recurso **PODEM** estar em produção. A anterior **DEVE** ser depreciada no lançamento da nova e desligada com pelo menos seis meses de aviso. | revisão | 18.02, 18.04 |
+| BZR-EVO-06 | Uma operação depreciada **DEVE** responder com `Deprecation`, `Sunset` e `Link` (RFC 9745 e 8594) e ter `deprecated: true` e `x-sunset` no contrato. Depois do sunset, a versão desligada **DEVE** responder `410` com o guia de migração. | lint (oasdiff), teste | 18.04 |
 
 ---
 

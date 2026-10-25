@@ -502,6 +502,7 @@ paths:
       - pedidos
   /v1/produtos:
     get:
+      deprecated: true
       description: "Os filtros se combinam com E; os valores de um mesmo filtro, com\
         \ OU (13.01)."
       operationId: listarProdutos
@@ -623,12 +624,22 @@ paths:
                 $ref: "#/components/schemas/ListaProdutoResumoResponse"
           description: Uma página de produtos
           headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
             Link:
               description: "Os links `first`, `prev` e `next` (RFC 8288). Siga-os\
                 \ sem montar a URL."
               schema:
                 type: string
               style: simple
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "422":
@@ -636,7 +647,9 @@ paths:
       summary: "Lista produtos, paginando por cursor"
       tags:
       - produtos
+      x-sunset: 2027-04-30
     post:
+      deprecated: true
       description: O produto nasce em `RASCUNHO`. Campos somente leitura enviados
         são ignorados. Um SKU repetido dá `409` (14.01).
       operationId: criarProduto
@@ -664,6 +677,11 @@ paths:
                 $ref: "#/components/schemas/ProdutoResponse"
           description: "O produto foi criado. Sem corpo com `Prefer: return=minimal`."
           headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
             Location:
               description: A URI do produto
               schema:
@@ -674,6 +692,11 @@ paths:
               schema:
                 type: string
               style: simple
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "409":
@@ -683,8 +706,10 @@ paths:
       summary: Cadastra um produto
       tags:
       - produtos
+      x-sunset: 2027-04-30
   /v1/produtos/buscas:
     post:
+      deprecated: true
       description: "Não altera nada. Para seguir os links do header `Link`, repita\
         \ o corpo."
       operationId: buscarProdutos
@@ -741,11 +766,21 @@ paths:
                 $ref: "#/components/schemas/ListaProdutoResumoResponse"
           description: Uma página de produtos
           headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
             Link:
               description: "Os links `first`, `prev` e `next` (RFC 8288)."
               schema:
                 type: string
               style: simple
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "422":
@@ -753,8 +788,10 @@ paths:
       summary: Busca produtos com os critérios no corpo
       tags:
       - produtos
+      x-sunset: 2027-04-30
   /v1/produtos/{id}:
     delete:
+      deprecated: true
       description: O produto fica `DESCONTINUADO` e continua acessível pelo id. Repetir
         dá o mesmo `204`.
       operationId: removerProduto
@@ -768,6 +805,17 @@ paths:
       responses:
         "204":
           description: O produto foi descontinuado
+          headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "404":
@@ -775,7 +823,9 @@ paths:
       summary: Descontinua um produto
       tags:
       - produtos
+      x-sunset: 2027-04-30
     get:
+      deprecated: true
       operationId: detalharProduto
       parameters:
       - in: path
@@ -800,6 +850,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProdutoResponse"
           description: O produto
+          headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "404":
@@ -807,7 +868,9 @@ paths:
       summary: Detalha um produto
       tags:
       - produtos
+      x-sunset: 2027-04-30
     patch:
+      deprecated: true
       description: JSON Merge Patch (RFC 7396) ou JSON Patch (RFC 6902). O resultado
         passa pelas mesmas validações do `PUT` (14.02). Um `test` do JSON Patch que
         falha dá `409`.
@@ -840,6 +903,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProdutoResponse"
           description: O produto atualizado
+          headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "404":
@@ -851,7 +925,9 @@ paths:
       summary: Muda só alguns campos de um produto
       tags:
       - produtos
+      x-sunset: 2027-04-30
     put:
+      deprecated: true
       description: "Um campo ausente vira `null` ou vazio. Para mudar só alguns campos,\
         \ use o `PATCH`."
       operationId: substituirProduto
@@ -875,6 +951,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProdutoResponse"
           description: O produto atualizado
+          headers:
+            Deprecation:
+              description: Desde quando a operação está depreciada (RFC 9745).
+              schema:
+                type: string
+                example: '@1792972800'
+            Sunset:
+              description: Quando a operação deixa de existir (RFC 8594).
+              schema:
+                type: string
+                example: "Fri, 30 Apr 2027 00:00:00 GMT"
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "404":
@@ -884,6 +971,7 @@ paths:
       summary: Substitui a parte editável de um produto
       tags:
       - produtos
+      x-sunset: 2027-04-30
   /v1/produtos/{produtoId}/estoque:
     get:
       operationId: detalharEstoque

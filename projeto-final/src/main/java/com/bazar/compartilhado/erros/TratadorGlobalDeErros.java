@@ -1,6 +1,7 @@
 package com.bazar.compartilhado.erros;
 
 import java.net.URI;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import com.bazar.compartilhado.web.Depreciacao;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.jspecify.annotations.Nullable;
@@ -19,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -41,6 +45,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
@@ -60,6 +65,42 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
             HttpMediaTypeNotAcceptableException.class, TipoProblema.FORMATO_NAO_ACEITO,
             HttpMediaTypeNotSupportedException.class, TipoProblema.FORMATO_NAO_SUPORTADO,
             InvalidApiVersionException.class, TipoProblema.VERSAO_NAO_SUPORTADA);
+
+    private final Clock relogio;
+
+    // O Clock vem da ConfiguracaoDoRelogio (15.01). Nos testes de fatia (@WebMvcTest), que não a carregam, vale o
+    // relógio do sistema.
+    @Autowired
+    public TratadorGlobalDeErros(ObjectProvider<Clock> relogio) {
+        this.relogio = relogio.getIfAvailable(Clock::systemUTC);
+    }
+
+    // Para os testes standalone do MockMvc, que criam o tratador à mão.
+    public TratadorGlobalDeErros() {
+        this.relogio = Clock.systemUTC();
+    }
+
+    // Depois do sunset, os handlers da versão saem do código. Enquanto outra versão do recurso existe, o Spring não
+    // acha handler para a antiga (404); quando a versão sai da lista de suportadas, ele a recusa (400). Nos dois
+    // casos, para uma versão que existiu, o Bazar responde 410 Gone, com o guia de migração (18.04).
+    @ExceptionHandler(InvalidApiVersionException.class)
+    ResponseEntity<Object> versaoRecusada(InvalidApiVersionException ex, WebRequest request) throws Exception {
+        var desligada = desligada(request);
+        return desligada != null ? desligada : handleException(ex, request);
+    }
+
+    @Override
+    protected @Nullable ResponseEntity<Object> handleNoResourceFoundException(
+            NoResourceFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        var desligada = desligada(request);
+        return desligada != null ? desligada : super.handleNoResourceFoundException(ex, headers, status, request);
+    }
+
+    private @Nullable ResponseEntity<Object> desligada(WebRequest request) {
+        return Depreciacao.desligada(caminho(request), relogio.instant())
+                .map(depreciacao -> deDominio(new VersaoDesligadaException(depreciacao), request))
+                .orElse(null);
+    }
 
     // Toda exceção de domínio aponta um tipo do catálogo (TipoProblema), e o tipo define o status (16.01).
     @ExceptionHandler(ExcecaoDeDominio.class)

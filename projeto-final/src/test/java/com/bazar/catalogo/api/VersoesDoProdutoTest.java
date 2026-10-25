@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -50,6 +51,23 @@ class VersoesDoProdutoTest {
                     json.assertThat().doesNotHavePath("$.precoEmCentavos");
                     json.assertThat().extractingPath("$.preco.valor").isEqualTo("129.90");
                 });
+    }
+
+    @Test
+    void aV1AvisaQueEstaDepreciadaEAV2Nao() {
+        var produto = umProduto().build();
+        when(produtos.detalhar(produto.getId())).thenReturn(produto);
+
+        var v1 = mvc.get().uri("/v1/produtos/{id}", produto.getId()).exchange();
+        assertThat(v1).hasStatusOk()
+                .hasHeader("Deprecation", "@1792972800")
+                .hasHeader("Sunset", "Fri, 30 Apr 2027 00:00:00 GMT");
+        assertThat(v1.getResponse().getHeaders(HttpHeaders.LINK)).containsExactly(
+                "<https://api.bazar.example/docs/migracao/produtos-v2>; rel=\"deprecation\"; type=\"text/html\"",
+                "<https://api.bazar.example/docs/politica-de-versoes>; rel=\"sunset\"; type=\"text/html\"");
+        assertThat(mvc.get().uri("/v2/produtos/{id}", produto.getId()))
+                .hasStatusOk()
+                .doesNotContainHeader("Deprecation");
     }
 
     @Test
