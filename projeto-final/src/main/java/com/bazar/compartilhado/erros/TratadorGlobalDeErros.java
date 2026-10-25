@@ -62,6 +62,15 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return deDominio(ex, HttpStatus.CONFLICT, request);
     }
 
+    @ExceptionHandler(CampoInvalidoException.class)
+    ResponseEntity<Object> campoInvalido(CampoInvalidoException ex, WebRequest request) {
+        var fonte = getMessageSource();
+        var mensagem = fonte != null
+                ? fonte.getMessage(ex.getCodigoDaMensagem(), null, ex.getCodigoDaMensagem(), LocaleContextHolder.getLocale())
+                : ex.getCodigoDaMensagem();
+        return validacao(ex, List.of(new ErroDeCampo(ex.getCampo(), mensagem(mensagem))), new HttpHeaders(), request);
+    }
+
     // Último recurso: nada de mensagem nem stack trace para o cliente; o detalhe fica no log, ligado pelo traceId.
     @ExceptionHandler(Exception.class)
     ResponseEntity<Object> inesperado(Exception ex, WebRequest request) {

@@ -1,44 +1,67 @@
 package com.bazar.catalogo.api;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import com.bazar.TestcontainersConfiguration;
 import com.bazar.catalogo.dominio.CategoriaRepository;
+import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoRepository;
+import com.bazar.compartilhado.Dinheiro;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 
 // Testes da camada web: a explicação completa está em 11.03.
-@WebMvcTest(CategoriaController.class)
+// Desde 10.02 as categorias estão no PostgreSQL, com as três categorias iniciais inseridas pelo Flyway.
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
 @ExtendWith(OutputCaptureExtension.class)
-@Import(CategoriaRepository.class)
 class CategoriaControllerTest {
+
+    static final Set<UUID> CATEGORIAS_INICIAIS = Set.of(
+            UUID.fromString("0192f3a0-5555-7000-8000-000000000001"),
+            UUID.fromString("0192f3a0-5555-7000-8000-000000000002"),
+            UUID.fromString("0192f3a0-5555-7000-8000-000000000003"));
 
     @Autowired
     MockMvcTester mvc;
 
-    // Os produtos estão no banco (10.01); aqui basta simular a contagem.
-    @MockitoBean
+    @Autowired
+    CategoriaRepository categorias;
+
+    @Autowired
     ProdutoRepository produtos;
+
+    // O banco é compartilhado pelos testes: cada um desfaz o que criou, e as categorias iniciais ficam.
+    @AfterEach
+    void limparOBanco() {
+        produtos.deleteAll();
+        categorias.findAll().stream()
+                .filter(categoria -> !CATEGORIAS_INICIAIS.contains(categoria.id()))
+                .forEach(categorias::delete);
+    }
 
     @Test
     void naoRemoveUmaCategoriaComProdutos() {
         var programacao = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
-        given(produtos.countByCategoriaId(programacao)).willReturn(1L);
+        produtos.save(new Produto("LIV-0042", "Clean Code", null, Dinheiro.deCentavos(12990, "BRL"), programacao, Map.of()));
 
         assertThat(mvc.delete().uri("/v1/categorias/{id}", programacao).header("Accept-Language", "pt-BR"))
                 .hasStatus(HttpStatus.CONFLICT)

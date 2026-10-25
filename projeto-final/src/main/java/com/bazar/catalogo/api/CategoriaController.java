@@ -42,7 +42,7 @@ public class CategoriaController {
     public Lista<CategoriaResponse> listar(
             @RequestParam(required = false) @Nullable @Size(min = 2, max = 60) String q,
             @RequestParam(defaultValue = "false") boolean apenasRaizes) {
-        var categorias = repository.findAll().stream()
+        var categorias = repository.findAllByOrderByNomeAsc().stream()
                 .filter(c -> q == null || c.nome().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
                 .filter(c -> !apenasRaizes || c.categoriaPaiId() == null)
                 .map(CategoriaResponse::de)
@@ -70,10 +70,9 @@ public class CategoriaController {
 
     @PutMapping("/{id}")
     public CategoriaResponse substituir(@PathVariable UUID id, @Valid @RequestBody CategoriaRequest request) {
-        if (!repository.existsById(id)) {
-            throw naoEncontrada(id);
-        }
-        return CategoriaResponse.de(repository.save(request.paraCategoria(id)));
+        var categoria = repository.findById(id).orElseThrow(() -> naoEncontrada(id));
+        categoria.substituir(request.nome(), request.slug(), request.categoriaPaiId());
+        return CategoriaResponse.de(repository.save(categoria));
     }
 
     @Auditavel("categoria.remover")

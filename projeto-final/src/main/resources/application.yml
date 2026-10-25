@@ -15,8 +15,8 @@ spring:
     # Sem Open Session in View: nenhuma consulta escondida acontece depois do controller (10.01).
     open-in-view: false
     hibernate:
-      # Provisório: o Hibernate cria as tabelas a cada inicialização. O Flyway assume em 10.02.
-      ddl-auto: create-drop
+      # O esquema é do Flyway (src/main/resources/db/migration); o Hibernate só confere se as entidades batem.
+      ddl-auto: validate
 
 server:
   port: 8080

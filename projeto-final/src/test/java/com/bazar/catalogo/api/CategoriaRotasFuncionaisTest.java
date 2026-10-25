@@ -1,11 +1,15 @@
 package com.bazar.catalogo.api;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
+import com.bazar.catalogo.dominio.Categoria;
 import com.bazar.catalogo.dominio.CategoriaRepository;
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,7 @@ import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 
@@ -32,11 +37,23 @@ import static org.springframework.web.servlet.function.RouterFunctions.route;
  * esta versão vive só no teste, que mostra o que muda.
  */
 @WebMvcTest(CategoriaController.class)
-@Import({ CategoriaRepository.class, CategoriaRotasFuncionaisTest.Rotas.class })
+@Import(CategoriaRotasFuncionaisTest.Rotas.class)
 class CategoriaRotasFuncionaisTest {
+
+    // O teste é da camada web: as categorias vêm de um repositório simulado, com as três categorias iniciais.
+    @MockitoBean
+    CategoriaRepository categorias;
 
     @MockitoBean
     ProdutoRepository produtos;
+
+    @BeforeEach
+    void categoriasIniciais() {
+        var livros = new Categoria(UUID.fromString("0192f3a0-5555-7000-8000-000000000001"), "Livros", "livros", null);
+        var eletronicos = new Categoria(UUID.fromString("0192f3a0-5555-7000-8000-000000000002"), "Eletrônicos", "eletronicos", null);
+        var programacao = new Categoria(UUID.fromString("0192f3a0-5555-7000-8000-000000000003"), "Programação", "programacao", livros.id());
+        given(categorias.findAllByOrderByNomeAsc()).willReturn(List.of(eletronicos, livros, programacao));
+    }
 
     static final ParameterizedTypeReference<Lista<CategoriaResponse>> LISTA_DE_CATEGORIAS =
             new ParameterizedTypeReference<>() { };
@@ -81,7 +98,7 @@ class CategoriaRotasFuncionaisTest {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "q deve ter entre 2 e 60 caracteres");
             }
             var apenasRaizes = Boolean.parseBoolean(request.param("apenasRaizes").orElse("false"));
-            return new Lista<>(repository.findAll().stream()
+            return new Lista<>(repository.findAllByOrderByNomeAsc().stream()
                     .filter(c -> q == null || c.nome().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
                     .filter(c -> !apenasRaizes || c.categoriaPaiId() == null)
                     .map(CategoriaResponse::de)

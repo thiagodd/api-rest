@@ -157,6 +157,20 @@ class ProdutoControllerTest {
     }
 
     @Test
+    void recusaUmaCategoriaQueNaoExisteCom422() {
+        assertThat(mvc.post().uri("/v1/produtos").contentType(MediaType.APPLICATION_JSON).header("Accept-Language", "pt-BR")
+                .content("""
+                        { "sku": "LIV-0042", "nome": "Clean Code", "precoEmCentavos": 12990,
+                          "categoriaId": "0192f3a0-5555-7000-8000-000000000999" }
+                        """))
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                .bodyJson().isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/validacao", "codigo": "VALIDACAO",
+                          "erros": [ { "campo": "categoriaId", "mensagem": "A categoria informada não existe." } ] }
+                        """);
+    }
+
+    @Test
     void responde404ComProblemDetails() {
         assertThat(mvc.get().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999")
                 .header(HttpHeaders.ACCEPT_LANGUAGE, "pt-BR"))

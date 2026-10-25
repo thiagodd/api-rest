@@ -91,7 +91,7 @@ Eles fazem, para um grupo de rotas, o papel de um interceptor ([09.04](/construi
 
 ### Versionamento por rota
 
-O Spring Framework 7 trouxe suporte nativo a versionamento de API. Com ele configurado ([18.02](/contratos-documentacao-e-ciclo-de-vida/estrategias-de-versionamento)), o predicado `version` escolhe a rota pela versão pedida:
+O Spring Framework 7 trouxe suporte nativo a versionamento de API. Com ele configurado ([18.03](/contratos-documentacao-e-ciclo-de-vida/versionamento-nativo-no-spring-framework-7)), o predicado `version` escolhe a rota pela versão pedida:
 
 ```java
 route()
@@ -100,7 +100,7 @@ route()
     .build();
 ```
 
-Uma versão fixa (`"1.0"`) casa só com ela mesma; uma versão-base (`"1.1+"`) casa com ela e com as superiores, até a maior versão suportada. O Bazar usa a versão no caminho (`/v1`); o assunto volta em 18.02.
+Uma versão fixa (`"1.0"`) casa só com ela mesma; uma versão-base (`"1.1+"`) casa com ela e com as superiores, até a maior versão suportada. O Bazar usa a versão no caminho (`/v1`); as estratégias de versionamento são comparadas em [18.02](/contratos-documentacao-e-ciclo-de-vida/estrategias-de-versionamento).
 
 ### A diferença que surpreende: não há negociação pelo `Accept`
 
