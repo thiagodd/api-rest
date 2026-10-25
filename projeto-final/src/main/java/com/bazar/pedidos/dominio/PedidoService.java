@@ -2,12 +2,13 @@ package com.bazar.pedidos.dominio;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
-import com.bazar.estoque.dominio.EstoqueRepository;
+import com.bazar.estoque.dominio.EstoqueService;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
@@ -19,11 +20,11 @@ public class PedidoService {
 
     private final PedidoRepository pedidos;
     private final ProdutoRepository produtos;
-    private final EstoqueRepository estoques;
+    private final EstoqueService estoques;
     private final ClienteRepository clientes;
     private final ApplicationEventPublisher eventos;
 
-    public PedidoService(PedidoRepository pedidos, ProdutoRepository produtos, EstoqueRepository estoques,
+    public PedidoService(PedidoRepository pedidos, ProdutoRepository produtos, EstoqueService estoques,
             ClienteRepository clientes, ApplicationEventPublisher eventos) {
         this.pedidos = pedidos;
         this.produtos = produtos;
@@ -44,16 +45,22 @@ public class PedidoService {
             var campo = "itens[" + i + "].produtoId";
             var produto = produtos.findById(solicitado.produtoId())
                     .orElseThrow(() -> new CampoInvalidoException(campo, "bazar.pedido.produto-inexistente"));
-            var estoque = estoques.findById(produto.getId())
-                    .orElseThrow(() -> new IllegalStateException("Produto sem estoque: " + produto.getId()));
-            // Sem save: o estoque está gerenciado pela transação, e o dirty checking grava a mudança no commit.
-            estoque.reservar(solicitado.quantidade());
             pedido.adicionarItem(produto, solicitado.quantidade());
         }
+        reservarEstoque(itens);
         pedidos.save(pedido);
         // Publicado agora, entregue aos ouvintes @TransactionalEventListener só depois do commit.
         eventos.publishEvent(new PedidoCriado(pedido.getId(), clienteId, pedido.getValorTotal()));
         return pedido;
+    }
+
+    // Cada reserva trava a linha do estoque até o commit. Reservando sempre na mesma ordem (por produtoId),
+    // dois pedidos com os mesmos produtos esperam um pelo outro em vez de entrar em deadlock (10.06).
+    // Itens repetidos do mesmo produto viram uma reserva só.
+    private void reservarEstoque(List<ItemSolicitado> itens) {
+        var quantidades = new TreeMap<UUID, Integer>();
+        itens.forEach(item -> quantidades.merge(item.produtoId(), item.quantidade(), Integer::sum));
+        quantidades.forEach(estoques::reservar);
     }
 
     // Os mais recentes primeiro. A paginação de verdade, com cursor, chega em 13.04.

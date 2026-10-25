@@ -91,4 +91,8 @@ export const glossario: TermoGlossario[] = [
   { id: 'transacao', termo: 'Transação', definicao: 'Conjunto de operações no banco que é confirmado (commit) ou desfeito (rollback) como uma unidade: ou tudo acontece, ou nada.', pagina: '10.03' },
   { id: 'pool-de-conexoes', termo: 'Pool de conexões', definicao: 'Conjunto limitado de conexões abertas com o banco, reaproveitadas entre requisições. No Spring Boot, o padrão é o HikariCP, com 10 conexões.', pagina: '10.03' },
   { id: 'propagacao', termo: 'Propagação', definicao: 'Regra que define o que um método @Transactional faz quando já existe uma transação em andamento: participar dela (REQUIRED), abrir outra (REQUIRES_NEW) etc.', pagina: '10.03' },
+  { id: 'lost-update', termo: 'Lost update', definicao: 'Atualização perdida: duas transações leem o mesmo valor, calculam um novo e gravam; a segunda gravação apaga o efeito da primeira.', pagina: '10.06' },
+  { id: 'locking-otimista', termo: 'Locking otimista', definicao: 'Controle de concorrência sem travas: cada registro tem uma versão, e a gravação só acontece se a versão ainda for a lida. Se não for, a operação falha e pode ser repetida.', pagina: '10.06' },
+  { id: 'locking-pessimista', termo: 'Locking pessimista', definicao: 'Controle de concorrência com travas: a linha é bloqueada na leitura (SELECT ... FOR UPDATE), e as outras transações esperam até o commit.', pagina: '10.06' },
+  { id: 'deadlock', termo: 'Deadlock', definicao: 'Duas ou mais transações esperando, em círculo, travas que as outras seguram. O banco detecta e desfaz uma delas.', pagina: '10.06' },
 ]

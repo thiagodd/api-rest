@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -60,6 +61,13 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     @ExceptionHandler(RegraDeNegocioException.class)
     ResponseEntity<Object> regraDeNegocio(RegraDeNegocioException ex, WebRequest request) {
         return deDominio(ex, HttpStatus.CONFLICT, request);
+    }
+
+    // Lançada no commit, quando o UPDATE com "where versao=?" não encontra a linha: outra transação
+    // alterou o registro entre a leitura e a gravação. A mensagem do Spring cita a entidade; não vai para o cliente.
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    ResponseEntity<Object> conflitoDeVersao(OptimisticLockingFailureException ex, WebRequest request) {
+        return deDominio(new ConflitoDeVersaoException(), HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(CampoInvalidoException.class)

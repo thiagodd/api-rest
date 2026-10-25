@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 107 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 31
+**Total:** 143 páginas · **esqueleto:** 106 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 31
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -99,7 +99,7 @@
 | 10.03 | Transações na camada de serviço | intermediario | essencial | `src/content/04-persistencia-para-apis/10-03-transacoes-na-camada-de-servico.mdx` | revisao |
 | 10.04 | O problema N+1 e estratégias de fetch | intermediario | essencial | `src/content/04-persistencia-para-apis/10-04-o-problema-n-1-e-estrategias-de-fetch.mdx` | revisao |
 | 10.05 | Projeções e consultas para leitura | intermediario | importante | `src/content/04-persistencia-para-apis/10-05-projecoes-e-consultas-para-leitura.mdx` | revisao |
-| 10.06 | Concorrência no banco: locking otimista e pessimista | intermediario | essencial | `src/content/04-persistencia-para-apis/10-06-concorrencia-no-banco-locking-otimista-e-pessimista.mdx` | esqueleto |
+| 10.06 | Concorrência no banco: locking otimista e pessimista | intermediario | essencial | `src/content/04-persistencia-para-apis/10-06-concorrencia-no-banco-locking-otimista-e-pessimista.mdx` | revisao |
 
 ## Parte 5: Testes de API
 

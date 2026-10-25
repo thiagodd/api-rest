@@ -35,18 +35,16 @@ public class Estoque {
         this.produtoId = produtoId;
     }
 
-    // Reservar tira do disponível e guarda para o pedido; a baixa definitiva acontece no envio.
-    // A proteção contra duas reservas simultâneas do mesmo saldo é assunto de 10.06.
-    public void reservar(int quantidade) {
-        if (quantidade > quantidadeDisponivel) {
-            throw new EstoqueInsuficienteException(produtoId, quantidadeDisponivel, quantidade);
-        }
-        quantidadeDisponivel -= quantidade;
-        quantidadeReservada += quantidade;
-    }
-
     public void repor(int quantidade) {
         quantidadeDisponivel += quantidade;
+    }
+
+    // A reserva não passa por aqui: é um UPDATE atômico no EstoqueRepository (10.06).
+    public void definirDisponivel(int quantidade) {
+        if (quantidade < 0) {
+            throw new IllegalArgumentException("Quantidade negativa: " + quantidade);
+        }
+        quantidadeDisponivel = quantidade;
     }
 
     public UUID getProdutoId() {
@@ -59,5 +57,9 @@ public class Estoque {
 
     public int getQuantidadeReservada() {
         return quantidadeReservada;
+    }
+
+    public long getVersao() {
+        return versao == null ? 0 : versao;
     }
 }
