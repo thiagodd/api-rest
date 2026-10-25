@@ -1,11 +1,8 @@
 package com.bazar.clientes.api;
 
-import com.bazar.clientes.dominio.ClienteRepository;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,8 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@WebMvcTest(ClienteController.class)
-@Import(ClienteRepository.class)
+@TesteWebDeClientes
 class ClienteControllerTest {
 
     @Autowired

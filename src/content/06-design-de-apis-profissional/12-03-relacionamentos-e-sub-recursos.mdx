@@ -2,77 +2,703 @@
 id: "12.03"
 titulo: "Relacionamentos e sub-recursos"
 descricao: "Decide entre aninhar URIs, usar links ou embutir dados. Isso impacta cache, permissões e o número de chamadas do cliente."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "opensource.zalando.com: restful-api-guidelines (regra \"MUST identify resources and sub-resources via path segments\")"
+  - titulo: "Zalando: MUST identify resources and sub-resources via path segments [143]"
     url: "https://opensource.zalando.com/restful-api-guidelines/#143"
-  - titulo: "google.aip.dev: 124"
+  - titulo: "Zalando: MAY consider using (non-) nested URLs [145]"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#145"
+  - titulo: "Google AIP-124: Resource association"
     url: "https://google.aip.dev/124"
+  - titulo: "Google AIP-122: Resource names"
+    url: "https://google.aip.dev/122"
+  - titulo: "OWASP API Security Top 10 (2023): API1 Broken Object Level Authorization"
+    url: "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Decide entre aninhar URIs, usar links ou embutir dados. Isso impacta *cache*, permissões e o número de chamadas do cliente.
+Os recursos do Bazar não vivem isolados. Um produto pertence a uma categoria, um pedido é de um cliente e tem itens que apontam para produtos, e o cliente tem endereços. A API precisa expressar essas relações, e há várias formas de fazer isso:
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+```text noCopy
+/clientes/{id}/enderecos/{enderecoId}            ← aninhar na URI
+/enderecos/{enderecoId}                          ← recurso de primeiro nível
+{ "categoriaId": "0192f3a0-…" }                  ← referência por id
+{ "categoria": { "id": "…", "nome": "Livros" } } ← embutir
+/categorias/{id}/produtos/{produtoId}/estoque    ← aninhar tudo
+```
+
+Cada escolha tem consequências que aparecem depois:
+
+- **Aninhar demais** prende a URI a uma hierarquia que pode mudar. Se o produto troca de categoria, `/categorias/livros/produtos/{id}` deixa de existir, e todos os links salvos quebram.
+- **Achatar demais** cria brechas. Se o endereço é `/enderecos/{enderecoId}` e o servidor busca só pelo id, qualquer pessoa que descubra um id lê o endereço de outro cliente. Essa é a vulnerabilidade número 1 do OWASP API Security Top 10.
+- **Embutir demais** gera respostas enormes e dados que envelhecem em *cache*. **Referenciar demais** obriga o cliente a fazer dezenas de chamadas.
+
+Esta página dá os critérios para cada decisão, e implementa os endereços do cliente, o primeiro sub-recurso do Bazar com coleção, regras e verificação de pertencimento.
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Sub-recursos de composição (`/clientes/{id}/enderecos`) × referência (`categoriaId` no produto)
-- Profundidade máxima (um nível)
-- Coleções filtradas × aninhamento (`/pedidos?clienteId=` × `/clientes/{id}/pedidos`)
-- Embutir × referenciar (*embed/expand*, ligação com 13.05)
-- Muitos-para-muitos
-- Implementação: `@RequestMapping("/v1/clientes/{clienteId}/enderecos")` e verificação de pertencimento (prévia de BOLA, 26.03)
-</Draft>
+### Composição × referência
+
+A pergunta que decide quase tudo: **o recurso filho pode existir sem o pai?**
+
+| | Composição | Referência |
+|---|---|---|
+| O filho existe sem o pai? | Não | Sim |
+| Removido o pai, o filho... | some junto | continua existindo |
+| O filho muda de pai? | Nunca | Pode mudar |
+| Na URI | **Sub-recurso**: `/clientes/{id}/enderecos/{enderecoId}` | **Primeiro nível**: `/produtos/{id}` |
+| Na representação | O filho não precisa repetir o id do pai | Um campo com o id: `categoriaId`, `clienteId` |
+| No Bazar | Endereços do cliente, estoque do produto, imagens do produto | Produto → categoria, pedido → cliente, item → produto |
+
+Um endereço só faz sentido como "um endereço **deste** cliente". Ele nasce no cadastro do cliente, nunca passa para outro cliente e deixa de existir junto com ele. É composição, e por isso a URI o coloca debaixo do cliente. A Zalando chama isso de identificar sub-recursos por segmentos de caminho (regra [143]), e o AIP-122 do Google descreve o mesmo formato: segmentos alternados de coleção e id, como `clientes/{id}/enderecos/{enderecoId}`.
+
+Um produto, ao contrário, existe sem a categoria, e pode mudar de categoria. A relação é uma **referência**: o produto tem um campo `categoriaId`, e a URI dele é `/produtos/{id}`, sem a categoria no caminho. O AIP-124 do Google diz que um recurso tem "no máximo um pai canônico". O produto não tem nenhum: está no primeiro nível.
+
+### Profundidade: um nível
+
+A Zalando aceita até 3 níveis de aninhamento (regra [147]). O Bazar se limita a **um nível** de sub-recurso: `/clientes/{id}/enderecos/{enderecoId}` e nunca `/clientes/{id}/pedidos/{pedidoId}/itens/{itemId}`. Cada nível extra tem um custo:
+
+- **O cliente precisa conhecer toda a cadeia** para montar a URI. Para ler um item, precisa do id do cliente, do pedido e do item.
+- **O servidor precisa verificar cada elo.** O item é deste pedido? O pedido é deste cliente? Cada verificação esquecida é uma brecha.
+- **A URI fica presa à hierarquia.** Se um nível muda, todas as URIs abaixo mudam.
+
+Se você sente necessidade de um segundo nível, quase sempre o recurso do meio merece ser de primeiro nível. Os pagamentos do Bazar são o exemplo: são criados a partir do pedido (`POST /pedidos/{id}/pagamentos`), mas os reembolsos ficam em `/pagamentos/{id}/reembolsos`, e não em `/pedidos/{id}/pagamentos/{pagamentoId}/reembolsos`. A regra [145] da Zalando diz exatamente isso: se o sub-recurso pode ser acessado pelo próprio id, exponha-o também no primeiro nível.
+
+### Coleção filtrada × aninhamento
+
+Os pedidos de um cliente poderiam ser `/clientes/{id}/pedidos` ou `/pedidos?clienteId={id}`. As duas formas funcionam, mas não querem dizer a mesma coisa:
+
+| | `/clientes/{id}/pedidos` | `/pedidos?clienteId={id}` |
+|---|---|---|
+| Significado | "A coleção de pedidos **deste** cliente" | "Todos os pedidos, filtrados por cliente" |
+| Cliente inexistente | `404`: o pai não existe, então a coleção também não | `200` com lista vazia: nenhum pedido passou no filtro |
+| Combinar critérios | Difícil: `/clientes/{id}/pedidos?status=PAGO` funciona, mas e "pedidos pagos de qualquer cliente"? | Natural: `?clienteId=…&status=PAGO`, ou só `?status=PAGO` |
+| Permissão | A URI já diz de quem é: fácil aplicar "só os seus" | O filtro precisa ser obrigatório ou forçado pelo servidor para quem não é administrador |
+| Indicado quando | O filho é composição e só é listado a partir do pai | O filho é um agregado próprio, com URI própria, listado por vários critérios |
+
+O Bazar usa as duas, cada uma no seu caso. Os **endereços** são composição e só existem dentro do cliente: `/clientes/{id}/enderecos`. Os **pedidos** são um agregado próprio, acessados pelo próprio id (`/pedidos/{id}`), e listados por cliente, por status e por data. Por isso ficam em `/pedidos?clienteId=`. Na aplicação rodando, a diferença aparece no status:
+
+```text noCopy
+GET /v1/pedidos?clienteId=<id que não existe>            → 200 { "itens": [] }
+GET /v1/clientes/<id que não existe>/enderecos           → 404 cliente-nao-encontrado
+```
+
+Oferecer as duas formas para a mesma coleção cria dois nomes para o mesmo conjunto, e o AIP-122 pede um nome canônico. Evite, a não ser que um dos nomes seja um atalho documentado (como `/clientes/me`, assunto da segurança).
+
+### Embutir × referenciar
+
+A representação de um recurso pode trazer o relacionado de três formas:
+
+| Forma | Exemplo no Bazar | Vantagem | Custo |
+|---|---|---|---|
+| **Só o id** (padrão) | `"categoriaId": "0192f3a0-…"` no produto | Resposta pequena; cada recurso é cacheado separadamente; nada fica desatualizado | Uma chamada extra se o cliente precisar dos dados |
+| **Cópia no momento** | `nomeProduto`, `precoUnitario` no item do pedido | É o dado histórico: o preço **da compra**, e não o de hoje | Não acompanha mudanças, e isso é intencional |
+| **Expansão sob demanda** | `GET /produtos/{id}?expand=categoria` | O cliente escolhe quando quer o dado junto | Mais código no servidor, e o *cache* precisa variar pela query |
+
+A cópia no momento é diferente de embutir. O item do pedido guarda `nomeProduto` e `precoUnitario` porque o pedido é um documento histórico ([10.03](/persistencia-para-apis/transacoes-na-camada-de-servico)). Se o preço do livro subir amanhã, o pedido de ontem não muda. Já embutir a categoria inteira no produto traria um problema: renomear a categoria deixaria desatualizadas as respostas cacheadas de todos os produtos dela.
+
+A expansão sob demanda é o assunto da [13.05](/design-de-apis-profissional/respostas-parciais-e-expansao). Até lá, o padrão do Bazar é: **referencie por id; copie só o que precisa ser histórico.**
+
+### Muitos-para-muitos
+
+O Bazar ainda não tem uma relação muitos-para-muitos, mas vai ter: "coleções promocionais" (Volta às aulas, Black Friday) que agrupam produtos, e um produto pode estar em várias coleções. Há três formas de modelar:
+
+| Forma | Como fica | Quando usar |
+|---|---|---|
+| **Lista de ids no recurso** | `"produtoIds": ["…", "…"]` na coleção, alterada com `PUT`/`PATCH` | Poucos itens, sem dados próprios na relação. É o padrão do AIP-124 ("um campo repetido com a lista de nomes de recursos") |
+| **Sub-recurso de vínculo** | `PUT /colecoes/{id}/produtos/{produtoId}` (incluir), `DELETE` no mesmo caminho (retirar) | Muitos itens, alterados um a um. O `PUT` é idempotente: incluir duas vezes não duplica |
+| **Recurso de associação** | `/colecoes/{id}/itens/{itemId}` com `{ "produtoId", "posicao", "destaque" }` | A relação tem dados próprios (ordem, destaque, desconto). O AIP-124 só recomenda sub-recursos de associação "se forem necessários metadados adicionais na relação" |
+
+Em nenhum dos casos a tabela de junção do banco (`colecao_produto`) vira um recurso por si só. O que define a forma é como o cliente usa a relação, e não como ela está guardada.
+
+### Pertencimento: a verificação que não pode faltar
+
+Num sub-recurso, a URI carrega **dois** ids: o do pai e o do filho. O servidor precisa verificar que o filho pertence ao pai. Buscar só pelo id do filho e ignorar o do pai é o erro clássico:
+
+```java noCopy
+// Errado: o clienteId da URI é ignorado
+enderecos.findById(enderecoId)
+// Certo: o endereço precisa ser DESTE cliente
+enderecos.findByIdAndClienteId(enderecoId, clienteId)
+```
+
+Com a versão errada, `GET /clientes/{bia}/enderecos/{enderecoDaAna}` devolve o endereço da Ana. O endereço de outro cliente deve ser tratado como **inexistente**, com `404`, e não `403`. Do ponto de vista da API, o recurso `/clientes/{bia}/enderecos/{enderecoDaAna}` realmente não existe, e um `403` confirmaria que aquele id é válido.
+
+Esse é o primeiro degrau do que o OWASP chama de <Term id="bola">BOLA</Term> (*Broken Object Level Authorization*). Ainda não há autenticação no Bazar, então qualquer um pode chamar `/clientes/{qualquerId}/enderecos`. A [26.03](/seguranca-essencial-para-apis/autorizacao-por-objeto-exposicao-de-dados-e-validacao) completa a verificação: o cliente autenticado só acessa o próprio `clienteId`. A verificação desta página é o que impede que, mesmo então, um id de endereço "vaze" de um cliente para outro. A [documentação de segurança](https://security-doc-beta.vercel.app/) trata o assunto em profundidade.
 
 ## Diagrama
 
-<Draft title="Diagramas previstos">
-grafo de relacionamentos do Bazar e as opções de URI.
-</Draft>
+```mermaid title="Relacionamentos do Bazar: composição vira sub-recurso, referência vira campo"
+flowchart TB
+    CLI["Cliente<br/>/clientes/{id}"]
+    END["Endereço<br/>/clientes/{id}/enderecos/{enderecoId}"]
+    CAT["Categoria<br/>/categorias/{id}"]
+    PROD["Produto<br/>/produtos/{id}"]
+    EST["Estoque<br/>/produtos/{id}/estoque"]
+    PED["Pedido<br/>/pedidos/{id}"]
+    ITEM["Item do pedido<br/>(embutido em itens[])"]
+    PAG["Pagamento<br/>/pagamentos/{id}"]
+
+    CLI ==>|"composição"| END
+    PROD ==>|"composição (singleton)"| EST
+    PED ==>|"composição (embutido)"| ITEM
+    CAT -.->|"categoriaPaiId"| CAT
+    PROD -.->|"categoriaId"| CAT
+    PED -.->|"clienteId"| CLI
+    ITEM -.->|"produtoId + cópia de nome e preço"| PROD
+    PAG -.->|"pedidoId"| PED
+```
+
+As setas grossas são composição: o filho vive na URI do pai ou dentro da representação dele. As tracejadas são referências por id, e cada recurso referenciado tem a própria URI de primeiro nível.
+
+```mermaid title="A verificação de pertencimento em GET /clientes/{bia}/enderecos/{enderecoDaAna}"
+sequenceDiagram
+    participant C as Cliente HTTP
+    participant CT as EnderecoController
+    participant S as EnderecoService
+    participant R as EnderecoRepository
+    C->>CT: GET /v1/clientes/{bia}/enderecos/{enderecoDaAna}
+    CT->>S: detalhar(bia, enderecoDaAna)
+    S->>S: exigirCliente(bia): existe
+    S->>R: findByIdAndClienteId(enderecoDaAna, bia)
+    R-->>S: Optional.empty (o endereço é da Ana)
+    S-->>CT: RecursoNaoEncontradoException
+    CT-->>C: 404 endereco-nao-encontrado
+```
 
 ## Na prática
 
-<Draft title="Código previsto">
-`EnderecoController`; validação de que o endereço pertence ao cliente.
-</Draft>
+O Bazar ganha os endereços do cliente, como planejado em [12.01](/design-de-apis-profissional/modelando-recursos-a-partir-do-dominio):
+
+| Método e rota | Descrição | Respostas |
+|---|---|---|
+| `GET /v1/clientes/{clienteId}/enderecos` | Lista os endereços, do mais antigo para o mais novo | `200`, `404` (cliente) |
+| `POST /v1/clientes/{clienteId}/enderecos` | Adiciona um endereço | `201` + `Location`, `404`, `409` (limite), `422` |
+| `GET /v1/clientes/{clienteId}/enderecos/{enderecoId}` | Detalha | `200`, `404` |
+| `PUT /v1/clientes/{clienteId}/enderecos/{enderecoId}` | Substitui | `200`, `404`, `409` (principal), `422` |
+| `DELETE /v1/clientes/{clienteId}/enderecos/{enderecoId}` | Remove | `204`, `404` |
+
+E as regras de negócio:
+
+- Um cliente tem **no máximo 10 endereços**. Uma coleção de composição deve ter um limite: assim ela não precisa de paginação e a representação do cliente nunca cresce sem controle.
+- Quando há endereços, **exatamente um é o principal**. O primeiro endereço é o principal automaticamente. Marcar outro como principal desmarca o anterior. Removido o principal, o mais antigo assume.
+- O principal **não pode ser desmarcado diretamente**: o cliente marca outro endereço como principal. Isso evita o estado "endereços sem principal".
+
+Os clientes do Bazar ainda estão em memória (07.02), e os endereços seguem o mesmo caminho por enquanto. O repositório usa os nomes do Spring Data, para que a troca por JPA seja só uma questão de infraestrutura.
+
+### O controller
+
+```java title="src/main/java/com/bazar/clientes/api/EnderecoController.java"
+/**
+ * Endereços como sub-recurso de composição do cliente (12.03). O clienteId da URI chega a todas as operações
+ * do serviço, que só enxerga os endereços daquele cliente.
+ */
+@RestController
+@RequestMapping("/v1/clientes/{clienteId}/enderecos")
+public class EnderecoController {
+
+    private final EnderecoService servico;
+
+    public EnderecoController(EnderecoService servico) {
+        this.servico = servico;
+    }
+
+    @GetMapping
+    public Lista<EnderecoResponse> listar(@PathVariable UUID clienteId) {
+        return new Lista<>(servico.listar(clienteId).stream().map(EnderecoResponse::de).toList());
+    }
+
+    @PostMapping
+    public ResponseEntity<EnderecoResponse> adicionar(@PathVariable UUID clienteId,
+            @Valid @RequestBody EnderecoRequest request) {
+        var endereco = servico.adicionar(clienteId, request.paraDados());
+        var location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{enderecoId}")
+                .buildAndExpand(endereco.id())
+                .toUri();
+        return ResponseEntity.created(location).body(EnderecoResponse.de(endereco));
+    }
+
+    @GetMapping("/{enderecoId}")
+    public EnderecoResponse detalhar(@PathVariable UUID clienteId, @PathVariable UUID enderecoId) {
+        return EnderecoResponse.de(servico.detalhar(clienteId, enderecoId));
+    }
+
+    @PutMapping("/{enderecoId}")
+    public EnderecoResponse substituir(@PathVariable UUID clienteId, @PathVariable UUID enderecoId,
+            @Valid @RequestBody EnderecoRequest request) {
+        return EnderecoResponse.de(servico.substituir(clienteId, enderecoId, request.paraDados()));
+    }
+
+    @DeleteMapping("/{enderecoId}")
+    public ResponseEntity<Void> remover(@PathVariable UUID clienteId, @PathVariable UUID enderecoId) {
+        servico.remover(clienteId, enderecoId);
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+- **O `{clienteId}` está no `@RequestMapping` da classe.** Todos os métodos o recebem com `@PathVariable`, e nenhum consegue "esquecer" o pai.
+- **O `Location` é montado a partir da URI atual** (`fromCurrentRequest`), então já inclui `/clientes/{clienteId}/enderecos`.
+- **A lista vem no envelope `Lista`** (`{ "itens": [...] }`), como todas as coleções do Bazar ([02.06](/comecando-e-fundamentos-de-http/json-para-apis)).
+
+### O corpo e a representação
+
+```java title="src/main/java/com/bazar/clientes/api/EnderecoRequest.java"
+/**
+ * Corpo do POST e do PUT de um endereço. O numero é texto: "S/N" e "120-A" são números de endereço válidos.
+ * O principal é opcional (ausente = false); um boolean primitivo ausente seria um erro no Jackson 3 (06.01).
+ */
+public record EnderecoRequest(
+        @NotBlank @Pattern(regexp = "\\d{8}", message = "{bazar.validacao.cep.message}") String cep,
+        @NotBlank @Size(max = 120) String logradouro,
+        @NotBlank @Size(max = 10) String numero,
+        @Nullable @Size(max = 60) String complemento,
+        @NotBlank @Size(max = 60) String cidade,
+        @NotBlank @Pattern(regexp = "[A-Z]{2}", message = "{bazar.validacao.uf.message}") String uf,
+        @Nullable Boolean principal) {
+
+    Endereco.Dados paraDados() {
+        return new Endereco.Dados(cep, logradouro, numero, complemento, cidade, uf, Boolean.TRUE.equals(principal));
+    }
+}
+```
+
+```java title="src/main/java/com/bazar/clientes/api/EnderecoResponse.java"
+/**
+ * Sem clienteId: ele já está na URI de onde a representação veio.
+ */
+public record EnderecoResponse(
+        UUID id, String cep, String logradouro, String numero, @Nullable String complemento, String cidade,
+        String uf, boolean principal, Instant criadoEm) {
+
+    static EnderecoResponse de(Endereco endereco) {
+        return new EnderecoResponse(endereco.id(), endereco.cep(), endereco.logradouro(), endereco.numero(),
+                endereco.complemento(), endereco.cidade(), endereco.uf(), endereco.principal(), endereco.criadoEm());
+    }
+}
+```
+
+Note a diferença entre os dois. O `principal` do corpo é `Boolean` porque é opcional na entrada. Na resposta, é `boolean`, porque sempre tem valor. E a resposta não tem `clienteId`: numa composição, o pai está na URI. Compare com o pedido, que é um recurso de primeiro nível e por isso precisa do campo `clienteId`.
+
+### O serviço e o repositório
+
+```java title="src/main/java/com/bazar/clientes/dominio/EnderecoService.java"
+/**
+ * As regras dos endereços de um cliente: no máximo {@value #LIMITE}, e exatamente um principal quando há algum.
+ * Toda operação começa confirmando que o cliente existe e só enxerga os endereços dele.
+ */
+@Service
+public class EnderecoService {
+
+    public static final int LIMITE = 10;
+
+    private final ClienteRepository clientes;
+    private final EnderecoRepository enderecos;
+
+    public EnderecoService(ClienteRepository clientes, EnderecoRepository enderecos) {
+        this.clientes = clientes;
+        this.enderecos = enderecos;
+    }
+
+    public List<Endereco> listar(UUID clienteId) {
+        exigirCliente(clienteId);
+        return enderecos.findAllByClienteIdOrderByCriadoEm(clienteId);
+    }
+
+    public Endereco detalhar(UUID clienteId, UUID enderecoId) {
+        exigirCliente(clienteId);
+        return buscar(clienteId, enderecoId);
+    }
+
+    // synchronized: com os endereços em memória, é o que impede dois "principal" em requisições simultâneas.
+    // No banco, um índice único parcial faz esse papel (ver a página 12.03).
+    public synchronized Endereco adicionar(UUID clienteId, Endereco.Dados dados) {
+        exigirCliente(clienteId);
+        var existentes = enderecos.findAllByClienteIdOrderByCriadoEm(clienteId);
+        if (existentes.size() >= LIMITE) {
+            throw new RegraDeNegocioException("limite-de-enderecos", Map.of("limite", LIMITE), LIMITE);
+        }
+        // O primeiro endereço é o principal, mesmo que o cliente não peça.
+        var principal = dados.principal() || existentes.isEmpty();
+        if (principal) {
+            desmarcarPrincipal(existentes);
+        }
+        return enderecos.save(Endereco.novo(clienteId, dados).comPrincipal(principal));
+    }
+
+    public synchronized Endereco substituir(UUID clienteId, UUID enderecoId, Endereco.Dados dados) {
+        exigirCliente(clienteId);
+        var atual = buscar(clienteId, enderecoId);
+        if (atual.principal() && !dados.principal()) {
+            throw new RegraDeNegocioException("endereco-principal-obrigatorio", Map.of());
+        }
+        if (dados.principal() && !atual.principal()) {
+            desmarcarPrincipal(enderecos.findAllByClienteIdOrderByCriadoEm(clienteId));
+        }
+        return enderecos.save(atual.com(dados));
+    }
+
+    public synchronized void remover(UUID clienteId, UUID enderecoId) {
+        exigirCliente(clienteId);
+        var endereco = buscar(clienteId, enderecoId);
+        enderecos.delete(endereco);
+        // Removido o principal, o endereço mais antigo que restou assume.
+        if (endereco.principal()) {
+            enderecos.findAllByClienteIdOrderByCriadoEm(clienteId).stream()
+                    .findFirst()
+                    .ifPresent(maisAntigo -> enderecos.save(maisAntigo.comPrincipal(true)));
+        }
+    }
+
+    private void exigirCliente(UUID clienteId) {
+        if (clientes.findById(clienteId).isEmpty()) {
+            throw new RecursoNaoEncontradoException("cliente-nao-encontrado", clienteId);
+        }
+    }
+
+    // A verificação de pertencimento: um endereço de outro cliente é tratado como inexistente (404, não 403).
+    private Endereco buscar(UUID clienteId, UUID enderecoId) {
+        return enderecos.findByIdAndClienteId(enderecoId, clienteId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("endereco-nao-encontrado", enderecoId));
+    }
+
+    private void desmarcarPrincipal(List<Endereco> existentes) {
+        existentes.stream()
+                .filter(Endereco::principal)
+                .forEach(endereco -> enderecos.save(endereco.comPrincipal(false)));
+    }
+}
+```
+
+```java title="src/main/java/com/bazar/clientes/dominio/EnderecoRepository.java"
+/**
+ * Endereços em memória, como os clientes. Não há busca só pelo id do endereço: toda consulta exige o clienteId,
+ * e os nomes seguem o Spring Data para a troca por um repositório JPA ser direta.
+ */
+@Repository
+public class EnderecoRepository {
+
+    private final Map<UUID, Endereco> enderecos = new ConcurrentHashMap<>();
+
+    public List<Endereco> findAllByClienteIdOrderByCriadoEm(UUID clienteId) {
+        return enderecos.values().stream()
+                .filter(endereco -> endereco.clienteId().equals(clienteId))
+                .sorted(Comparator.comparing(Endereco::criadoEm).thenComparing(Endereco::id))
+                .toList();
+    }
+
+    public Optional<Endereco> findByIdAndClienteId(UUID id, UUID clienteId) {
+        return Optional.ofNullable(enderecos.get(id)).filter(endereco -> endereco.clienteId().equals(clienteId));
+    }
+
+    public Endereco save(Endereco endereco) {
+        enderecos.put(endereco.id(), endereco);
+        return endereco;
+    }
+
+    public void delete(Endereco endereco) {
+        enderecos.remove(endereco.id());
+    }
+}
+```
+
+O detalhe mais importante do repositório é o que **não** existe nele: não há `findById(enderecoId)`. Sem esse método, a única forma de buscar um endereço exige o `clienteId`, e a verificação de pertencimento passa a ser imposta pelo próprio repositório, e não por disciplina de quem escreve o serviço.
+
+Os dois `404` também são diferentes, e a diferença ajuda quem integra: `cliente-nao-encontrado` diz que o pai não existe (o id do cliente está errado). `endereco-nao-encontrado` diz que o cliente existe, mas não tem aquele endereço.
+
+<DeepDive title="Quando os endereços forem para o PostgreSQL">
+
+O `synchronized` resolve a concorrência numa instância só e com os dados em memória. Com o banco e várias instâncias, a regra "no máximo um principal por cliente" passa a ser garantida pelo próprio PostgreSQL, com um **índice único parcial**:
+
+```sql noCopy
+-- Prévia: ainda não está nas migrations do Bazar.
+create unique index endereco_um_principal_por_cliente
+    on endereco (cliente_id) where principal;
+```
+
+O índice só considera as linhas com `principal = true`, então cada cliente pode ter vários endereços, mas só um principal. Duas transações que tentem marcar dois principais ao mesmo tempo terminam com uma delas recebendo um erro de violação de unicidade, que vira um `409`, como o SKU duplicado da 11.04. O limite de 10 endereços continua no serviço, com um *lock* na linha do cliente (`SELECT ... FOR UPDATE`, 10.06) para que duas inclusões simultâneas não passem as duas pela contagem.
+
+E o repositório vira uma interface do Spring Data com os mesmos métodos:
+
+```java noCopy
+interface EnderecoRepository extends Repository<Endereco, UUID> {
+    List<Endereco> findAllByClienteIdOrderByCriadoEm(UUID clienteId);
+    Optional<Endereco> findByIdAndClienteId(UUID id, UUID clienteId);
+    Endereco save(Endereco endereco);
+    void delete(Endereco endereco);
+}
+```
+
+Estender `Repository`, e não `JpaRepository`, mantém a garantia: o `findById` "solto" não é herdado.
+</DeepDive>
+
+### Na prática, pela API
+
+<HttpExchange
+  title="Adicionar o primeiro endereço"
+  request={{ method: 'POST', url: '/v1/clientes/0192f3a1-7777-7000-8000-000000000001/enderecos', headers: { 'Content-Type': 'application/json' }, body: { cep: '01310100', logradouro: 'Avenida Paulista', numero: '1578', cidade: 'São Paulo', uf: 'SP' } }}
+  response={{ status: 201, headers: { Location: 'http://localhost:8080/v1/clientes/0192f3a1-7777-7000-8000-000000000001/enderecos/0192f3a2-1111-7000-8000-000000000010', 'Content-Type': 'application/json' }, body: { id: '0192f3a2-1111-7000-8000-000000000010', cep: '01310100', logradouro: 'Avenida Paulista', numero: '1578', complemento: null, cidade: 'São Paulo', uf: 'SP', principal: true, criadoEm: '2026-10-25T14:02:11.482913Z' } }}
+>
+O corpo não pediu `principal`, mas o primeiro endereço é sempre o principal.
+</HttpExchange>
+
+<HttpExchange
+  title="O mesmo endereço pela URI de outra cliente"
+  request={{ method: 'GET', url: '/v1/clientes/0192f3a1-7777-7000-8000-000000000002/enderecos/0192f3a2-1111-7000-8000-000000000010', headers: { 'Accept-Language': 'pt-BR' } }}
+  response={{ status: 404, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/endereco-nao-encontrado', title: 'Endereço não encontrado', status: 404, detail: 'Não existe endereço com id 0192f3a2-1111-7000-8000-000000000010 para este cliente.', instance: '/v1/clientes/0192f3a1-7777-7000-8000-000000000002/enderecos/0192f3a2-1111-7000-8000-000000000010', codigo: 'ENDERECO_NAO_ENCONTRADO', traceId: '5f2a…' } }}
+>
+A cliente `…0002` existe, e o endereço `…0010` também, mas não é dela. Para a API, esse recurso não existe.
+</HttpExchange>
+
+<HttpExchange
+  title="Tentar desmarcar o principal"
+  request={{ method: 'PUT', url: '/v1/clientes/0192f3a1-7777-7000-8000-000000000001/enderecos/0192f3a2-1111-7000-8000-000000000010', headers: { 'Content-Type': 'application/json', 'Accept-Language': 'pt-BR' }, body: { cep: '01310100', logradouro: 'Avenida Paulista', numero: '1578', cidade: 'São Paulo', uf: 'SP', principal: false } }}
+  response={{ status: 409, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/endereco-principal-obrigatorio', title: 'Endereço principal obrigatório', status: 409, detail: 'Este é o endereço principal. Para trocar, marque outro endereço como principal.', instance: '/v1/clientes/0192f3a1-7777-7000-8000-000000000001/enderecos/0192f3a2-1111-7000-8000-000000000010', codigo: 'ENDERECO_PRINCIPAL_OBRIGATORIO', traceId: '9c41…' } }}
+/>
+
+### Os testes
+
+O `EnderecoControllerTest` é um teste da camada web ([11.03](/testes-de-api/testando-a-camada-web-webmvctest-mockmvctester)) com os repositórios em memória de verdade. Para que ele e o `ClienteControllerTest` compartilhem o mesmo contexto, a configuração fica numa anotação, como a `@TesteDeIntegracao` da [11.04](/testes-de-api/testes-de-integracao-com-springboottest-e-testcontainers):
+
+```java title="src/test/java/com/bazar/clientes/api/TesteWebDeClientes.java"
+/**
+ * A camada web dos clientes, com os repositórios em memória de verdade. As classes que usam esta anotação
+ * compartilham um único contexto (11.04).
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@WebMvcTest({ ClienteController.class, EnderecoController.class })
+@Import({ ClienteRepository.class, EnderecoRepository.class, EnderecoService.class })
+public @interface TesteWebDeClientes {
+}
+```
+
+Os testes de pertencimento ficam num `@Nested`, com duas clientes:
+
+```java title="src/test/java/com/bazar/clientes/api/EnderecoControllerTest.java (trecho)"
+// A verificação de pertencimento (prévia de 26.03): o id do endereço existe, mas é de outra cliente.
+@Nested
+class EnderecoDeOutroCliente {
+
+    UUID bia;
+    UUID enderecoDaAna;
+
+    @BeforeEach
+    void cadastrarOutraCliente() {
+        bia = novoCliente("Bia Lima");
+        enderecoDaAna = adicionar(ana, PAULISTA);
+    }
+
+    @Test
+    void naoAparecePelaUriDeOutroCliente() {
+        assertThat(mvc.get().uri("/v1/clientes/{clienteId}/enderecos/{id}", bia, enderecoDaAna)
+                .header("Accept-Language", "pt-BR"))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyJson().isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/endereco-nao-encontrado",
+                          "detail": "Não existe endereço com id %s para este cliente." }
+                        """.formatted(enderecoDaAna));
+    }
+
+    @Test
+    void naoPodeSerAlteradoNemRemovido() {
+        assertThat(mvc.put().uri("/v1/clientes/{clienteId}/enderecos/{id}", bia, enderecoDaAna)
+                .contentType(MediaType.APPLICATION_JSON).content(COPACABANA))
+                .hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(mvc.delete().uri("/v1/clientes/{clienteId}/enderecos/{id}", bia, enderecoDaAna))
+                .hasStatus(HttpStatus.NOT_FOUND);
+
+        assertThat(mvc.get().uri("/v1/clientes/{clienteId}/enderecos/{id}", ana, enderecoDaAna))
+                .hasStatusOk()
+                .bodyJson().extractingPath("$.logradouro").isEqualTo("Avenida Paulista");
+    }
+}
+
+@Test
+void clienteInexistenteEh404MesmoNaListagem() {
+    assertThat(mvc.get().uri("/v1/clientes/{clienteId}/enderecos", UUID.randomUUID()))
+            .hasStatus(HttpStatus.NOT_FOUND)
+            .bodyJson().extractingPath("$.codigo").isEqualTo("CLIENTE_NAO_ENCONTRADO");
+}
+```
+
+O último passo do `naoPodeSerAlteradoNemRemovido` é o que dá valor ao teste: depois das tentativas da Bia, o endereço da Ana continua lá, intacto. Um teste que só verificasse o `404` não perceberia uma implementação que responde `404` **depois** de apagar.
+
+A suíte passou para 150 testes e continua com 5 contextos: o `EnderecoControllerTest` reaproveita o contexto do `ClienteControllerTest`.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Ignorar o id do pai" why="O clienteId da URI vira decoração: qualquer endereço é acessível por qualquer cliente. É a vulnerabilidade número 1 do OWASP API Security Top 10 (BOLA).">
+<Bad title="Busca só pelo id do filho">
+
+```java
+@GetMapping("/{enderecoId}")
+public EnderecoResponse detalhar(@PathVariable UUID clienteId,
+        @PathVariable UUID enderecoId) {
+    return enderecos.findById(enderecoId)   // clienteId ignorado
+            .map(EnderecoResponse::de)
+            .orElseThrow(...);
+}
+```
+
+</Bad>
+<Good title="Busca pelo par">
+
+```java
+@GetMapping("/{enderecoId}")
+public EnderecoResponse detalhar(@PathVariable UUID clienteId,
+        @PathVariable UUID enderecoId) {
+    return EnderecoResponse.de(
+            servico.detalhar(clienteId, enderecoId));
+    // → findByIdAndClienteId(enderecoId, clienteId)
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="Referência como hierarquia" why="O produto não pertence à categoria: ele pode mudar de categoria, e a URI não pode mudar junto. Referências ficam num campo; a URI do produto é de primeiro nível.">
+<Bad title="A categoria no caminho do produto">
+
+```text
+GET /v1/categorias/{categoriaId}/produtos/{produtoId}
+GET /v1/categorias/{categoriaId}/produtos/{produtoId}/estoque
+```
+
+</Bad>
+<Good title="Primeiro nível + campo + filtro">
+
+```text
+GET /v1/produtos/{produtoId}          → { "categoriaId": "…" }
+GET /v1/produtos/{produtoId}/estoque
+GET /v1/produtos?categoriaId=…        (13.01)
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **`200` com lista vazia para um pai inexistente.** `GET /clientes/{idErrado}/enderecos → 200 []` faz o cliente achar que a pessoa não tem endereços, quando na verdade o id está errado. Numa coleção aninhada, o pai inexistente é `404`. (Numa coleção filtrada, `?clienteId=`, o `200 []` está certo.)
+- **`403` para o recurso de outro dono.** Confirma que o id existe e ajuda quem está enumerando ids. Use `404`.
+- **Coleção de composição sem limite.** Sem limite, a coleção precisa de paginação, e as operações que percorrem todos os filhos (como desmarcar o principal) ficam cada vez mais caras.
+- **Repetir o pai na representação do filho e aceitar mudá-lo.** Se o corpo do `PUT` aceitasse `clienteId`, um endereço poderia "mudar de dono", e a URI dele mudaria. Numa composição, o pai vem da URI e não do corpo.
+- **Expor a tabela de junção.** `/produto-colecao/{id}` obriga o cliente a entender o banco. Modele o vínculo pelo uso.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Pergunte se o filho existe sem o pai.** Se não, é composição e vira sub-recurso. Se sim, é referência e vira um campo `...Id`, com a URI no primeiro nível.
+- **Limite-se a um nível de sub-recurso.** Se precisar de mais, promova o recurso do meio ao primeiro nível.
+- **Use coleções filtradas para agregados próprios** e coleções aninhadas para composição.
+- **Referencie por id; copie só o que precisa ser histórico;** deixe a expansão para quando o cliente pedir (13.05).
+- **Verifique o pertencimento no repositório:** sem `findById` solto para sub-recursos, só `findByIdAndPaiId`.
+- **Responda `404`** tanto para o pai inexistente quanto para o filho de outro pai, com tipos de problema diferentes.
+- **Limite as coleções de composição** e documente o limite.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="Endereços do cliente como sub-recurso" module="clientes" tag="pagina-12.03" files={[
+  { path: 'src/main/java/com/bazar/clientes/dominio/Endereco.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/clientes/dominio/EnderecoRepository.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/clientes/dominio/EnderecoService.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/clientes/api/EnderecoController.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/clientes/api/EnderecoRequest.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/clientes/api/EnderecoResponse.java', change: 'novo' },
+  { path: 'src/main/resources/messages.properties', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/main/resources/ValidationMessages.properties', change: 'alterado' },
+  { path: 'src/main/resources/ValidationMessages_pt.properties', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/clientes/api/TesteWebDeClientes.java', change: 'novo' },
+  { path: 'src/test/java/com/bazar/clientes/api/ClienteControllerTest.java', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/clientes/api/EnderecoControllerTest.java', change: 'novo' },
+]}>
+Os endereços chegam como sub-recurso de `/v1/clientes/{clienteId}`, ainda em memória como os clientes: limite de 10, um principal e verificação de pertencimento no repositório. Os novos tipos de problema são `endereco-nao-encontrado` (404), `limite-de-enderecos` (409) e `endereco-principal-obrigatorio` (409). A suíte tem 150 testes e continua com 5 contextos.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- Composição (o filho não existe sem o pai) vira sub-recurso na URI. Referência vira um campo com o id e URI de primeiro nível.
+- O Bazar usa um nível de sub-recurso no máximo. Recursos acessados pelo próprio id também ficam no primeiro nível.
+- Coleção aninhada e coleção filtrada respondem diferente a um pai inexistente: `404` × `200 []`.
+- Embutir, copiar e referenciar são decisões diferentes. A cópia guarda o histórico (preço da compra), a referência mantém tudo atualizado.
+- Muitos-para-muitos: lista de ids, sub-recurso de vínculo ou recurso de associação, conforme a relação tenha ou não dados próprios.
+- Todo acesso a um sub-recurso precisa verificar o pertencimento. O Bazar faz isso no repositório e responde `404` para o endereço de outro cliente.
+
+<Exercise title="Coleções promocionais" difficulty="medio">
+O Bazar vai ter coleções promocionais: uma coleção tem `nome`, `inicio` e `fim`, e agrupa produtos. Cada produto aparece numa coleção com uma `posicao` (a ordem na vitrine) e um `destaque` (booleano). Um produto pode estar em várias coleções.
+
+1. Desenhe as URIs, os métodos e as respostas para: criar uma coleção, incluir um produto, mudar a posição dele, retirá-lo e listar os produtos de uma coleção.
+2. Uma tela do backoffice precisa mostrar "em quais coleções este produto está". Como você expõe isso?
+3. Quais verificações de pertencimento e de existência o servidor precisa fazer?
+
+<Hint>A relação tem dados próprios (`posicao`, `destaque`). Pelo AIP-124, isso pede um recurso de associação. Pense também em quem identifica o item da coleção: um id novo ou o próprio `produtoId`?</Hint>
+
+<Solution>
+
+**1. URIs**
+
+| Método e rota | Resposta |
+|---|---|
+| `POST /v1/colecoes` | `201` + `Location` |
+| `PUT /v1/colecoes/{colecaoId}/itens/{produtoId}` com `{ "posicao": 3, "destaque": true }` | `201` na inclusão, `200` na atualização |
+| `DELETE /v1/colecoes/{colecaoId}/itens/{produtoId}` | `204` |
+| `GET /v1/colecoes/{colecaoId}/itens` | `200`, ordenado por `posicao` |
+
+- A relação tem dados próprios, então é um **recurso de associação** (`itens`), e não uma simples lista de ids.
+- O item é identificado pelo `produtoId`, porque um produto aparece no máximo uma vez em cada coleção. Isso permite o `PUT` idempotente para incluir e para atualizar ([14.01](/design-de-apis-profissional/criacao-com-post-e-put-com-id-do-cliente)). Repetir a requisição não duplica nada.
+- O item é composição da coleção: some quando a coleção é removida. O produto, não: é referência.
+
+**2. "Em quais coleções este produto está"**
+
+`GET /v1/colecoes?produtoId={id}`, uma coleção filtrada. **Não** `/v1/produtos/{id}/colecoes`: a coleção promocional não é composição do produto, e criar esse caminho daria um segundo nome para a mesma relação.
+
+**3. Verificações**
+
+- `colecaoId` inexistente: `404 colecao-nao-encontrada` em todas as rotas de `itens`, inclusive no `GET` (é uma coleção aninhada).
+- `produtoId` inexistente no `PUT`: o produto é referência, então a URI está bem formada, mas aponta para algo que não existe. Responda `422` (campo inválido), como o `categoriaId` inexistente no cadastro do produto.
+- `DELETE` ou `PUT` de um `produtoId` que existe mas não está na coleção: no `PUT`, inclui. No `DELETE`, `404 item-nao-encontrado`.
+- A busca do item é sempre pelo par (`colecaoId`, `produtoId`).
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'GET /v1/clientes/{bia}/enderecos/{enderecoDaAna}: o endereço existe, mas é da Ana. O que o Bazar responde, e por quê?',
+    options: [
+      '200 com o endereço, porque o id é válido',
+      '403 Forbidden, porque a Bia não tem permissão',
+      '404, porque o recurso /clientes/{bia}/enderecos/{enderecoDaAna} não existe, e um 403 confirmaria que o id é válido',
+      '409 Conflict, porque o endereço pertence a outro cliente',
+    ],
+    answer: 2,
+    explanation: 'O pertencimento faz parte da identidade do sub-recurso: aquela URI não identifica nada. Responder 403 vazaria a informação de que o id existe e ajudaria quem enumera ids. O 200 é a falha de BOLA que a verificação existe para evitar.',
+  },
+  {
+    question: 'Por que os pedidos do Bazar são listados em /pedidos?clienteId=, e não em /clientes/{id}/pedidos?',
+    options: [
+      'Porque o Spring não aceita @PathVariable em listagens',
+      'Porque o pedido é um agregado próprio, acessado pelo próprio id, e listado por vários critérios combináveis (cliente, status, data)',
+      'Porque URIs aninhadas não podem ser cacheadas',
+      'Porque a Zalando proíbe sub-recursos',
+    ],
+    answer: 1,
+    explanation: 'O pedido não é composição do cliente no sentido da API: tem URI própria (/pedidos/{id}) e é consultado também sem cliente (por status, por data, por um administrador). O filtro combina critérios naturalmente. Os endereços, que só existem dentro do cliente, são aninhados.',
+  },
+  {
+    question: 'O item do pedido guarda nomeProduto e precoUnitario, mas o produto guarda só categoriaId, e não a categoria inteira. Qual é a lógica?',
+    options: [
+      'Não há lógica: é uma inconsistência que a 13.05 corrige',
+      'Strings podem ser copiadas, objetos não',
+      'O item precisa do valor no momento da compra, que não pode mudar. A categoria do produto deve sempre refletir a atual, então é só referenciada',
+      'O pedido é maior que o produto, então pode ter mais campos',
+    ],
+    answer: 2,
+    explanation: 'A cópia no item do pedido é histórica de propósito: o preço pago não muda se o produto ficar mais caro. A categoria, se fosse copiada no produto, ficaria desatualizada quando renomeada e invalidaria caches. Referência por id é o padrão; cópia só quando o dado precisa ser histórico.',
+  },
+]} />
 
 ## Referências
 

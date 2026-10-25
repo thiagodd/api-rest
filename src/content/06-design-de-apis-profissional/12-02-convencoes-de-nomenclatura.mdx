@@ -404,6 +404,20 @@ Outros erros frequentes:
 - **Decida a língua do contrato conscientemente** e aplique-a em todo o vocabulário próprio.
 - **Automatize a verificação.** O que só depende de revisão humana se perde com o tempo. A 17.04 mostra como recusar nomes fora do padrão no CI com um *linter* de OpenAPI.
 
+## No projeto Bazar
+
+<ProjectStep title="Parâmetros de query desconhecidos viram 400" module="compartilhado" tag="pagina-12.02" files={[
+  { path: 'src/main/java/com/bazar/compartilhado/web/ParametrosDeConsultaInterceptor.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/ParametroDesconhecidoException.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/TratadorGlobalDeErros.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/compartilhado/web/ConfiguracaoWeb.java', change: 'alterado' },
+  { path: 'src/main/resources/messages.properties', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/api/CategoriaControllerTest.java', change: 'alterado' },
+]}>
+Todos os endpoints de `/v1/**` recusam parâmetros de *query* que o método não declara, com `400 parametro-desconhecido` e a lista dos aceitos. Os nomes já seguiam as convenções desta página, então nenhum endpoint mudou de contrato. A suíte passou de 138 para 141 testes.
+</ProjectStep>
+
 ## Resumo
 
 - Convenções tornam a API previsível e verificável. A escolha específica importa menos do que aplicá-la em todo lugar.
