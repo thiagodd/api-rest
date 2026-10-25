@@ -9,6 +9,7 @@ import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.RegraDeNegocioException;
+import com.bazar.compartilhado.web.Auditavel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
@@ -75,6 +76,7 @@ public class CategoriaController {
         return CategoriaResponse.de(repository.save(request.paraCategoria(id)));
     }
 
+    @Auditavel("categoria.remover")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remover(@PathVariable UUID id) {
         var categoria = repository.findById(id).orElseThrow(() -> naoEncontrada(id));

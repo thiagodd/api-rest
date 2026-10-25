@@ -8,10 +8,14 @@ import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoRepository;
 import com.bazar.compartilhado.Dinheiro;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -21,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // Testes da camada web: a explicação completa está em 11.03.
 @WebMvcTest(CategoriaController.class)
+@ExtendWith(OutputCaptureExtension.class)
 @Import({ CategoriaRepository.class, ProdutoRepository.class })
 class CategoriaControllerTest {
 
@@ -44,6 +49,30 @@ class CategoriaControllerTest {
                           "detail": "A categoria \\"Programação\\" tem 1 produto(s). Mova ou descontinue os produtos antes de removê-la.",
                           "codigo": "CATEGORIA_COM_PRODUTOS", "quantidadeDeProdutos": 1 }
                         """);
+    }
+
+    @Test
+    void auditaARemocaoEMedeOTempo(CapturedOutput saida) {
+        var location = mvc.post().uri("/v1/categorias").contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "nome": "Brinquedos", "slug": "brinquedos", "categoriaPaiId": null }
+                        """)
+                .exchange().getResponse().getHeader(HttpHeaders.LOCATION);
+        var id = location.substring(location.lastIndexOf('/') + 1);
+
+        assertThat(mvc.delete().uri(location).header("Bazar-Canal", "app")).hasStatus(HttpStatus.NO_CONTENT);
+
+        // O @WebMvcTest inclui os filtros (@Component Filter) e a ConfiguracaoWeb com o interceptor.
+        assertThat(saida).contains("acao=categoria.remover metodo=DELETE caminho=/v1/categorias/" + id
+                + " status=204 canal=APP");
+        assertThat(saida).containsPattern("DELETE /v1/categorias/" + id + " → 204 em \\d+ ms");
+    }
+
+    @Test
+    void naoAuditaUmaLeitura(CapturedOutput saida) {
+        assertThat(mvc.get().uri("/v1/categorias")).hasStatusOk();
+
+        assertThat(saida).doesNotContain("bazar.auditoria");
     }
 
     @Test

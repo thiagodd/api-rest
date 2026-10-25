@@ -83,4 +83,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'serializacao', termo: 'Serialização', ingles: 'serialization', definicao: 'Conversão de um objeto em memória num formato que pode ser transmitido ou guardado, como JSON. O caminho inverso é a desserialização.', pagina: '06.03' },
   { id: 'bean-validation', termo: 'Bean Validation', definicao: 'Especificação Jakarta que define anotações de validação (@NotNull, @Size...) e a API para executá-las. O Hibernate Validator é a implementação usada pelo Spring Boot.', pagina: '07.01' },
   { id: 'digito-verificador', termo: 'Dígito verificador', ingles: 'check digit', definicao: 'Dígito calculado a partir dos demais dígitos de um número (CPF, cartão, código de barras) para detectar erros de digitação.', pagina: '07.02' },
+  { id: 'aop', termo: 'Programação orientada a aspectos (AOP)', ingles: 'aspect-oriented programming', definicao: 'Técnica que aplica um comportamento transversal (log, auditoria, transação) a vários métodos sem alterar o código deles. No Spring, é feita com proxies que envolvem os beans.', pagina: '09.04' },
+  { id: 'proxy', termo: 'Proxy', definicao: 'Objeto que se coloca no lugar de outro e intercepta as chamadas a ele, podendo agir antes e depois de repassá-las. O Spring usa proxies para AOP, transações e cache.', pagina: '09.04' },
 ]

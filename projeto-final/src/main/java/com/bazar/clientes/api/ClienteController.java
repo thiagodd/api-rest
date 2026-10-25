@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.web.Auditavel;
 import com.bazar.compartilhado.web.ContextoRequisicao;
 import jakarta.validation.Valid;
 
@@ -26,6 +27,7 @@ public class ClienteController {
         this.repository = repository;
     }
 
+    @Auditavel("cliente.cadastrar")
     @PostMapping
     public ResponseEntity<ClienteResponse> cadastrar(@Valid @RequestBody CriarClienteRequest request,
             ContextoRequisicao contexto) {

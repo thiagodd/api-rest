@@ -27,4 +27,17 @@ class ErroForaDoMvcControllerTest {
         assertThat(problema.getInstance()).hasToString("/v1/pedidos");
         assertThat(problema.getProperties()).containsEntry("codigo", "UNAUTHORIZED").containsKey("traceId");
     }
+
+    @Test
+    void excecaoDeUmFiltroVira500SemVazarAMensagem() {
+        var request = new MockHttpServletRequest("GET", "/error");
+        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 500);
+        request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, new IllegalStateException("senha: s3cr3t"));
+
+        var problema = new ErroForaDoMvcController().erro(request).getBody();
+
+        assertThat(problema).isNotNull();
+        assertThat(problema.getDetail()).isNull();
+        assertThat(problema.getProperties()).containsEntry("codigo", "INTERNAL_SERVER_ERROR");
+    }
 }

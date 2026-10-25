@@ -4,6 +4,8 @@ import java.net.URI;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.boot.webmvc.error.ErrorController;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ErroForaDoMvcController implements ErrorController {
 
+    private static final Logger log = LoggerFactory.getLogger(ErroForaDoMvcController.class);
+
     @RequestMapping("${server.error.path:/error}")
     ResponseEntity<ProblemDetail> erro(HttpServletRequest request) {
         var codigo = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
@@ -33,7 +37,12 @@ public class ErroForaDoMvcController implements ErrorController {
         if (request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI) instanceof String caminho) {
             problema.setInstance(URI.create(caminho));
         }
-        problema.setProperty("traceId", TratadorGlobalDeErros.novoTraceId());
+        var traceId = TratadorGlobalDeErros.novoTraceId();
+        problema.setProperty("traceId", traceId);
+        // Uma exceção num filtro chega aqui sem passar pelo TratadorGlobalDeErros: o log com o traceId é feito aqui.
+        if (status.is5xxServerError() && request.getAttribute(RequestDispatcher.ERROR_EXCEPTION) instanceof Throwable ex) {
+            log.error("Erro fora do Spring MVC [traceId={}]", traceId, ex);
+        }
         return ResponseEntity.status(status).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problema);
     }
 }
