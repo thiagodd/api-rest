@@ -2,82 +2,539 @@
 id: "14.02"
 titulo: "PUT × PATCH: JSON Merge Patch e JSON Patch"
 descricao: "Atualização parcial mal feita apaga dados (o null acidental) ou não consegue limpar campos. É uma das partes mais sutis do design de APIs."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "RFC 7396"
-    url: "https://www.rfc-editor.org/rfc/rfc7396"
-  - titulo: "RFC 6902"
-    url: "https://www.rfc-editor.org/rfc/rfc6902"
-  - titulo: "RFC 5789"
-    url: "https://www.rfc-editor.org/rfc/rfc5789"
-  - titulo: "google.aip.dev: 134"
+  - titulo: "RFC 5789: PATCH Method for HTTP"
+    url: "https://www.rfc-editor.org/rfc/rfc5789.html"
+  - titulo: "RFC 7396: JSON Merge Patch"
+    url: "https://www.rfc-editor.org/rfc/rfc7396.html"
+  - titulo: "RFC 6902: JavaScript Object Notation (JSON) Patch"
+    url: "https://www.rfc-editor.org/rfc/rfc6902.html"
+  - titulo: "RFC 9110: PUT (§9.3.4)"
+    url: "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.4"
+  - titulo: "Google AIP-134: Standard methods: Update"
     url: "https://google.aip.dev/134"
+  - titulo: "Zalando RESTful API Guidelines: PATCH"
+    url: "https://opensource.zalando.com/restful-api-guidelines/#patch"
+  - titulo: "Jakarta JSON Processing 2.1 (JsonPatch, JsonMergePatch)"
+    url: "https://jakarta.ee/specifications/jsonp/2.1/"
+  - titulo: "OpenAPITools jackson-databind-nullable"
+    url: "https://github.com/OpenAPITools/jackson-databind-nullable"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-Atualização parcial mal feita apaga dados (o `null` acidental) ou não consegue limpar campos. É uma das partes mais sutis do design de APIs.
+Um lojista quer baixar o preço de um livro de R$ 129,90 para R$ 99,90. O app dele tem uma tela de "editar preço" com um único campo. Que requisição ele manda?
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+Com o que o Bazar oferecia até agora, só o `PUT`, ele precisa mandar o produto **inteiro**: nome, descrição, categoria, atributos e o preço novo. Se o app não tiver esses dados em mãos, precisa buscá-los antes. Se mandar só o preço, o `PUT` faz exatamente o que promete: substitui tudo, e o nome em branco é recusado. Pior: se o app mandar o objeto que tem em memória, com `"descricao": null` porque nunca carregou a descrição, a descrição some.
+
+A [02.06](/comecando-e-fundamentos-de-http/json-para-apis) contou essa história: o parceiro que serializava todos os campos, inclusive os nulos, e apagava a cada atualização o que não tinha preenchido. A causa está na fronteira entre JSON e Java. Para o JSON, `"descricao": null` e a ausência de `descricao` são coisas diferentes. Para um `record` Java, os dois viram `null`.
+
+Esta página mostra como fazer atualizações parciais que mudam só o que o cliente quis mudar, conseguem **limpar** um campo quando o cliente quer, e não apagam nada por acidente.
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Semântica do PUT (substituição completa) e do PATCH (RFC 5789)
-- **JSON Merge Patch (RFC 7396)**: `application/merge-patch+json`, `null` remove; limitações com arrays
-- **JSON Patch (RFC 6902)**: operações (`add`, `remove`, `replace`, `move`, `copy`, `test`) e atomicidade
-- Como diferenciar "ausente" de `null` em Java: `JsonNode`, `Optional` em campos, `JsonNullable` (`org.openapitools:jackson-databind-nullable` 0.2.12, que tem `JsonNullableJackson3Module`)
-- Validar depois de aplicar o *patch*
-- PATCH não é idempotente por definição (JSON Patch com `add` em array)
-- Bibliotecas: `json-patch` (java-json-tools, última versão 2020) e `zjsonpatch` só suportam Jackson 2. Para Jackson 3, o Bazar implementa o Merge Patch sobre `JsonNode` e usa a **Jakarta JSON Processing 2.1** (`jakarta.json-api` 2.1.3 + Eclipse Parsson 1.1.9), que traz `JsonPatch` e `JsonMergePatch` nativos
-</Draft>
+### PUT substitui; PATCH modifica
 
-## Diagrama
+A RFC 9110 define o `PUT` como pedido para que o estado do recurso *"be created or replaced with the state defined by the representation"*. O corpo **é** o novo estado: o que não veio, deixa de existir (ou volta ao padrão). Por isso o `PUT` é idempotente: mandar o mesmo estado duas vezes dá o mesmo resultado.
 
-<Draft title="Diagramas previstos">
-o mesmo documento após PUT, Merge Patch e JSON Patch (antes/depois).
-</Draft>
+O `PATCH` veio depois, na RFC 5789, para o caso parcial. A diferença está no que o corpo significa: no `PATCH`, *"the enclosed entity contains a set of instructions describing how a resource currently residing on the origin server should be modified"*. O corpo não é o recurso, é uma **instrução de mudança**. E quem diz como interpretar essa instrução é o `Content-Type`: a RFC 5789 não define nenhum formato de *patch*, só o método.
+
+Duas regras da RFC 5789 valem para qualquer formato:
+
+- **Atomicidade:** *"The server MUST apply the entire set of changes atomically"*. Ou o *patch* inteiro é aplicado, ou nada.
+- **Sem garantia de idempotência:** *"PATCH is neither safe nor idempotent"*. Alguns *patches* são idempotentes (trocar o preço para 9990 duas vezes dá o mesmo resultado), outros não (acrescentar um item a uma lista duas vezes dá dois itens).
+
+Os dois formatos padronizados para JSON são o JSON Merge Patch e o JSON Patch.
+
+### JSON Merge Patch (RFC 7396)
+
+O <Term id="json-merge-patch">JSON Merge Patch</Term> (`application/merge-patch+json`) é o formato mais intuitivo: o corpo **parece** o recurso, mas só com os campos que mudam.
+
+```json
+{ "precoEmCentavos": 9990 }
+```
+
+As regras cabem em três linhas (o algoritmo da RFC tem 13 linhas de pseudocódigo):
+
+1. Um campo presente com um valor substitui o valor atual.
+2. Um campo com **`null` remove** o campo: *"Null values in the merge patch are given special meaning to indicate the removal of existing values in the target"*.
+3. Um objeto é mesclado **recursivamente**: `{ "atributos": { "editora": "Alta Books" } }` acrescenta a editora e mantém os outros atributos.
+
+O que não aparece no *patch* não muda. É isso que resolve o problema do início: o app do lojista manda só o preço.
+
+O preço da simplicidade são duas limitações:
+
+- **Não dá para gravar `null` como valor.** `null` significa "remover". Para um campo opcional, como a descrição, remover e anular dão no mesmo, e não há problema. Num formato em que `null` e "ausente" significassem coisas diferentes, o Merge Patch não conseguiria expressar a diferença.
+- **Listas são substituídas inteiras.** A RFC diz que *"it is not possible to patch part of a target that is not an object, such as to replace just some of the values in an array"*. Para tirar um item de uma lista de 200, o cliente manda os 199 restantes.
+
+### JSON Patch (RFC 6902)
+
+O <Term id="json-patch">JSON Patch</Term> (`application/json-patch+json`) é o oposto: uma **lista de operações**, cada uma com um caminho no formato JSON Pointer (RFC 6901).
+
+```json
+[
+  { "op": "test",    "path": "/precoEmCentavos",   "value": 12990 },
+  { "op": "replace", "path": "/precoEmCentavos",   "value": 9990 },
+  { "op": "add",     "path": "/atributos/editora", "value": "Alta Books" },
+  { "op": "remove",  "path": "/atributos/paginas" }
+]
+```
+
+| Operação | O que faz |
+|---|---|
+| `add` | Acrescenta um campo, ou insere numa lista (`/tags/0`, `/tags/-` para o fim) |
+| `remove` | Remove; o caminho **precisa existir** |
+| `replace` | Troca o valor; o caminho precisa existir |
+| `move` | Move um valor de `from` para `path` |
+| `copy` | Copia um valor de `from` para `path` |
+| `test` | Confere se o valor em `path` é igual a `value`; se não for, o *patch* inteiro falha |
+
+O JSON Patch resolve as duas limitações do Merge Patch: `{ "op": "replace", "path": "/x", "value": null }` grava `null`, e `/tags/3` mexe num item da lista. E traz o `test`, que é a parte mais interessante.
+
+### O `test`: uma condição dentro do patch
+
+O `test` transforma o *patch* em "**se** o preço ainda for 129,90, troque para 99,90". Como o *patch* é atômico, um `test` que falha cancela **todas** as operações, inclusive as que vieram antes dele.
+
+Isso protege contra a **atualização perdida**: dois operadores abrem o mesmo produto; o primeiro muda o preço para 119,90; o segundo, que ainda vê 129,90, manda 99,90 achando que dá um desconto de 30 reais. Sem o `test`, a segunda escrita apaga a primeira em silêncio. Com o `test`, ela falha, e o segundo operador vê o preço novo antes de decidir.
+
+O `test` protege só os campos testados. A proteção completa, para o recurso inteiro e para qualquer formato, é o `If-Match` com `ETag` ([23.02](/padroes-avancados-de-http/concorrencia-otimista-com-if-match-412-e-428)): "aplique só se o recurso ainda estiver na versão que eu li".
+
+### O mesmo documento, três operações
+
+```mermaid title="O mesmo produto depois de um PUT, de um Merge Patch e de um JSON Patch"
+flowchart LR
+    A["<b>Antes</b><br/>nome: Clean Code<br/>descricao: O clássico<br/>preco: 12990<br/>atributos: autor, paginas"]
+    A -->|"PUT { nome, preco: 9990,<br/>categoriaId }"| P["<b>PUT</b><br/>nome: Clean Code<br/>descricao: null<br/>preco: 9990<br/>atributos: {}"]
+    A -->|"merge-patch { preco: 9990,<br/>atributos: { paginas: null } }"| M["<b>Merge Patch</b><br/>nome: Clean Code<br/>descricao: O clássico<br/>preco: 9990<br/>atributos: autor"]
+    A -->|"json-patch [ test preco = 12990,<br/>replace preco 9990,<br/>remove /atributos/paginas ]"| J["<b>JSON Patch</b><br/>nome: Clean Code<br/>descricao: O clássico<br/>preco: 9990<br/>atributos: autor"]
+```
+
+O `PUT` sem a descrição e os atributos apagou os dois: o corpo era o estado completo, e o que não veio deixou de existir. Os dois *patches* chegaram ao mesmo resultado; o JSON Patch, com a garantia extra de que o preço ainda era 129,90.
+
+### Qual formato usar?
+
+| | `PUT` | Merge Patch | JSON Patch |
+|---|---|---|---|
+| O corpo é | O estado completo | Os campos que mudam | Uma lista de operações |
+| Fácil de escrever à mão | Sim | Sim | Menos |
+| Gravar `null` | Sim | Não (`null` remove) | Sim |
+| Mexer num item de lista | Mandando a lista toda | Mandando a lista toda | Sim (`/tags/3`) |
+| Condição embutida | Não | Não | `test` |
+| Idempotente | Sim | Na prática, sim | Não necessariamente (`add` em `/tags/-`) |
+
+A recomendação para a maioria das APIs é **Merge Patch como padrão** e **JSON Patch quando houver listas grandes ou necessidade de `test`**. Os guias:
+
+- A **Zalando** diz que, como *"implementing PATCH correctly is a bit tricky"*, cada endpoint deve escolher **um só** formato, nesta ordem de preferência: Merge Patch; JSON Patch; ou um `POST` específico quando a mudança não couber em nenhum dos dois. E reconhece o limite do primeiro: *"In practice JSON Merge Patch quickly turns out to be too limited, especially when trying to update single objects in large collections"*. Ela já recomendou o contrário (evitar `PATCH` e usar `PUT` com o objeto completo) e mudou de ideia pela complexidade que isso impunha aos clientes.
+- O **Google** (AIP-134) usa `PATCH` com o recurso e um **`update_mask`**, a lista dos campos que devem mudar. Sem máscara, valem os campos preenchidos, que é a ideia do Merge Patch com outra sintaxe. Sobre o `PUT`, a AIP é direta: ele é *"strongly discouraged because it becomes a backwards-incompatible change to add fields to the resource"*. Um cliente antigo, que não conhece um campo novo, apagaria esse campo a cada `PUT`.
+
+**O Bazar aceita os dois formatos no mesmo endpoint**, diferenciados pelo `Content-Type`. Isso **diverge da Zalando**, e por um motivo didático: mostrar os dois lado a lado, com o mesmo documento e as mesmas validações. Numa API real, a regra da Zalando é a mais segura: um formato por endpoint é um formato a documentar, testar e explicar aos clientes.
+
+### "Ausente" × `null` em Java
+
+O problema técnico de qualquer `PATCH` em Java é que, depois que o Jackson transforma o JSON num `record`, a informação "o campo não veio" se perde. Há três saídas:
+
+| Abordagem | Como funciona | Limite |
+|---|---|---|
+| `JsonNode` | O controller recebe a árvore JSON, que sabe o que está presente e o que é `null` | Sem tipos: o *patch* é aplicado ao JSON, e os tipos voltam na hora de validar |
+| `Optional<T>` nos campos | `null` = ausente, `Optional.empty()` = `null` explícito | Uso não recomendado de `Optional` (ele foi feito para retornos) e confuso de ler |
+| `JsonNullable<T>` | Três estados: `undefined()` (ausente), `of(null)` e `of(valor)` | Uma dependência e um módulo do Jackson; cada campo vira um `JsonNullable` |
+
+O `JsonNullable` vem da biblioteca `org.openapitools:jackson-databind-nullable`, a mesma que o gerador de código do OpenAPI usa. A versão 0.2.13 traz o `JsonNullableJackson3Module` para o Jackson 3:
+
+```java
+public record CorrigirProdutoRequest(
+        JsonNullable<String> nome,
+        JsonNullable<String> descricao,
+        JsonNullable<Long> precoEmCentavos) {
+}
+
+// No serviço: só o que veio muda.
+if (request.descricao().isPresent()) {
+    produto.setDescricao(request.descricao().get());   // pode ser null: limpar a descrição
+}
+```
+
+```java
+// O Spring Boot registra no JsonMapper os beans do tipo JacksonModule.
+@Bean
+JacksonModule jsonNullable() {
+    return new JsonNullableJackson3Module();
+}
+```
+
+O Bazar usa o **`JsonNode`**, por três razões: o Merge Patch é definido sobre JSON, e aplicá-lo ao JSON é seguir a RFC ao pé da letra; o mesmo caminho serve ao JSON Patch, que precisa do documento inteiro; e o resultado vira um `AtualizarProdutoRequest`, o mesmo `record` do `PUT`, com as mesmas validações.
+
+### Validar depois de aplicar
+
+Um *patch* válido pode produzir um recurso inválido. `{ "nome": null }` é um Merge Patch perfeito, que remove o nome, e um produto sem nome não pode existir. Por isso a validação acontece **depois** de aplicar o *patch*, sobre o resultado:
+
+1. Ler o recurso atual e transformá-lo no documento editável.
+2. Aplicar o *patch* ao documento.
+3. Converter o resultado para o `record` e validar com Bean Validation.
+4. Só então salvar.
+
+Validar o *patch* em si (um `@NotBlank` num campo do *patch*) não funcionaria: o *patch* que não traz o nome seria recusado, quando ele só não quer mudar o nome.
+
+### Os erros de um PATCH
+
+A RFC 5789 lista os status para cada falha:
+
+| Situação | Status |
+|---|---|
+| *Patch* malformado (não é uma lista, operação desconhecida) | `400 Bad Request` |
+| Formato de *patch* não suportado (`Content-Type` errado) | `415 Unsupported Media Type`, com `Accept-Patch` |
+| *Patch* bem formado que não pode ser aplicado (remover um caminho que não existe) | `422 Unprocessable Content` |
+| Recurso inexistente | `404 Not Found` |
+| O estado atual não permite a mudança (um `test` que falhou) | `409 Conflict` |
+| Precondição (`If-Match`) falhou | `412 Precondition Failed` |
+
+O <Term id="accept-patch">`Accept-Patch`</Term> lista os formatos de *patch* que o recurso aceita. O Spring MVC o preenche sozinho num `415` de `PATCH`, a partir dos `consumes` dos métodos mapeados.
+
+### Bibliotecas, e o Jackson 3
+
+As duas bibliotecas de JSON Patch mais citadas em tutoriais, a `json-patch` (java-json-tools, última versão em 2020) e a `zjsonpatch` (Flipkart, 0.4.16), trabalham com o `JsonNode` do **Jackson 2** (`com.fasterxml.jackson`). Com o Jackson 3 do Spring Boot 4 (`tools.jackson`), elas exigiriam converter o documento entre as duas versões do Jackson.
+
+A alternativa padronizada é a **Jakarta JSON Processing 2.1** (JSON-P), que tem `JsonPatch` e `JsonMergePatch` na própria API:
+
+- `jakarta.json:jakarta.json-api` 2.1.3, cuja versão o Spring Boot gerencia;
+- `org.eclipse.parsson:parsson` 1.1.9, a implementação de referência, que o Spring Boot não gerencia.
+
+O Bazar usa o JSON-P para o JSON Patch e implementa o Merge Patch sobre o `JsonNode` do Jackson 3 (são 13 linhas, e evitam converter o documento duas vezes). O `Json.createMergePatch(...)` da JSON-P faria o mesmo trabalho.
 
 ## Na prática
 
-<Draft title="Código previsto">
-`PATCH /v1/produtos/{id}` com Merge Patch (`JsonNode` → aplicar → validar → salvar); exemplo de JSON Patch com `test` para concorrência.
-</Draft>
+### O documento editável
+
+O `PATCH` do Bazar não inventa um formato: o documento a que o *patch* se aplica é o próprio corpo do `PUT`, o `AtualizarProdutoRequest`. Assim, os campos que um *patch* pode mudar são exatamente os que um `PUT` pode mudar.
+
+```java title="src/main/java/com/bazar/catalogo/api/AtualizarProdutoRequest.java (trecho)"
+// A parte editável de um produto: o documento a que um PATCH se aplica (14.02).
+static AtualizarProdutoRequest de(Produto produto) {
+    return new AtualizarProdutoRequest(produto.getNome(), produto.getDescricao(), produto.getPreco().emCentavos(),
+            produto.getCategoriaId(), produto.getAtributos());
+}
+```
+
+### O aplicador
+
+```java title="src/main/java/com/bazar/compartilhado/web/AplicadorDePatch.java (trecho)"
+public <T> T mergePatch(T atual, JsonNode patch, Class<T> tipo) {
+    return validado(mesclar(json.valueToTree(atual), patch), tipo);
+}
+
+// O algoritmo da RFC 7396, §2: null remove o campo; um objeto é mesclado campo a campo; qualquer outro valor
+// (inclusive uma lista) substitui o que havia.
+static JsonNode mesclar(JsonNode alvo, JsonNode patch) {
+    if (!patch.isObject()) {
+        return patch;
+    }
+    var resultado = alvo.isObject() ? ((ObjectNode) alvo).deepCopy() : JsonMapper.shared().createObjectNode();
+    for (var campo : patch.properties()) {
+        if (campo.getValue().isNull()) {
+            resultado.remove(campo.getKey());
+        } else {
+            var atual = resultado.path(campo.getKey());
+            resultado.set(campo.getKey(), mesclar(atual, campo.getValue()));
+        }
+    }
+    return resultado;
+}
+```
+
+Compare com o pseudocódigo da RFC: *"if Patch is an Object: … for each Name/Value pair in Patch: if Value is null: remove … else: Target[Name] = MergePatch(Target[Name], Value) … else: return Patch"*. É a tradução literal.
+
+O JSON Patch aplica **uma operação por vez**. A JSON-P aplicaria a lista inteira de uma vez, mas aí um `test` que falhou e um `remove` de um caminho inexistente chegariam como a mesma `JsonException`, e o Bazar quer responder `409` a um e `422` ao outro. A atomicidade continua garantida: as operações são aplicadas a uma cópia em memória, e nada é salvo antes de todas passarem.
+
+```java title="src/main/java/com/bazar/compartilhado/web/AplicadorDePatch.java (trecho)"
+public <T> T jsonPatch(T atual, JsonNode operacoes, Class<T> tipo) {
+    if (!operacoes.isArray()) {
+        throw new PatchInvalidoException(0);
+    }
+    JsonStructure documento = paraJsonP(json.valueToTree(atual));
+    for (var i = 0; i < operacoes.size(); i++) {
+        var operacao = operacoes.get(i);
+        if (!operacao.isObject() || !OPERACOES.contains(operacao.path("op").asString(""))
+                || !operacao.path("path").isString()) {
+            throw new PatchInvalidoException(i);                                   // 400
+        }
+        try {
+            documento = Json.createPatch(Json.createArrayBuilder().add(paraJsonP(operacao)).build())
+                    .apply(documento);
+        } catch (JsonException ex) {
+            var caminho = operacao.path("path").asString();
+            if ("test".equals(operacao.path("op").asString())) {
+                throw new TesteDoPatchFalhouException(i, caminho);                 // 409
+            }
+            throw new CampoInvalidoException(caminho, "bazar.patch.operacao-impossivel");   // 422
+        }
+    }
+    return validado(json.readTree(documento.toString()), tipo);
+}
+```
+
+A validação no fim tem duas etapas:
+
+```java title="src/main/java/com/bazar/compartilhado/web/AplicadorDePatch.java (trecho)"
+// Um campo que o record não tem (sku, status, id) não é editável: 422, em vez de ser ignorado em silêncio.
+private <T> T validado(JsonNode documento, Class<T> tipo) {
+    T resultado;
+    try {
+        resultado = json.readerFor(tipo)
+                .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .readValue(documento);
+    } catch (DatabindException ex) {
+        var campo = ex.getPath().isEmpty() ? "" : ex.getPath().getLast().getPropertyName();
+        throw new CampoInvalidoException(campo, "bazar.patch.campo-invalido");
+    }
+    var violacoes = validador.validate(resultado);
+    if (!violacoes.isEmpty()) {
+        throw new ConstraintViolationException(violacoes);
+    }
+    return resultado;
+}
+```
+
+Note a escolha oposta à da [14.01](/design-de-apis-profissional/criacao-com-post-e-put-com-id-do-cliente). Lá, um `status` enviado na criação é ignorado. Aqui, `{ "sku": "LIV-9999" }` é recusado com `422`. A diferença é a regra da 14.01, *recuse quando ignorar muda o resultado*: o cliente que manda o `POST` com `status` recebe o produto que queria; o cliente que manda um *patch* só com o SKU receberia `200` e um produto **sem nenhuma mudança**, e acharia que o SKU mudou.
+
+### Os endpoints
+
+O mesmo caminho, dois métodos, escolhidos pelo `consumes`:
+
+```java title="src/main/java/com/bazar/catalogo/api/ProdutoController.java (trecho)"
+// JSON Merge Patch (RFC 7396): só os campos enviados mudam, e null remove (14.02). O resultado passa pelas
+// mesmas validações e pelo mesmo serviço que o PUT.
+@PatchMapping(path = "/{id}", consumes = MERGE_PATCH)
+public ProdutoResponse corrigir(@PathVariable UUID id, @RequestBody JsonNode patch) {
+    var corrigido = patches.mergePatch(AtualizarProdutoRequest.de(servico.detalhar(id)), patch,
+            AtualizarProdutoRequest.class);
+    return atualizar(id, corrigido);
+}
+
+// JSON Patch (RFC 6902): uma lista de operações, aplicadas todas ou nenhuma. Um test que falha é 409.
+@PatchMapping(path = "/{id}", consumes = JSON_PATCH)
+public ProdutoResponse aplicarOperacoes(@PathVariable UUID id, @RequestBody JsonNode operacoes) {
+    var corrigido = patches.jsonPatch(AtualizarProdutoRequest.de(servico.detalhar(id)), operacoes,
+            AtualizarProdutoRequest.class);
+    return atualizar(id, corrigido);
+}
+```
+
+`atualizar(id, corrigido)` é o próprio método do `PUT`: depois do *patch*, o caminho é o mesmo. O `servico.detalhar(id)` dá o `404` para um produto inexistente.
+
+O Spring MVC já sabe ler um `JsonNode` de `application/merge-patch+json` e `application/json-patch+json`: o conversor do Jackson aceita qualquer tipo `application/*+json`.
+
+### Na prática, pela API
+
+<HttpExchange
+  title="Merge Patch: só o preço"
+  request={{ method: 'PATCH', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', headers: { 'Content-Type': 'application/merge-patch+json' }, body: { precoEmCentavos: 9990 } }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json' }, body: { id: '0192f39f-2222-7000-8000-000000000042', sku: 'LIV-0042', nome: 'Clean Code', descricao: 'O clássico', precoEmCentavos: 9990, categoriaId: '0192f3a0-5555-7000-8000-000000000002', status: 'RASCUNHO', atributos: { paginas: '464', autor: 'Robert C. Martin' }, criadoEm: '2026-10-25T18:14:33.336815Z', atualizadoEm: '2026-10-25T18:14:33.450588Z' } }}
+>
+A descrição e os atributos continuam lá.
+</HttpExchange>
+
+<HttpExchange
+  title="Merge Patch: null remove, e o objeto é mesclado"
+  request={{ method: 'PATCH', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', headers: { 'Content-Type': 'application/merge-patch+json' }, body: { descricao: null, atributos: { paginas: null, editora: 'Alta Books' } } }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json' }, body: { id: '0192f39f-2222-7000-8000-000000000042', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 9990, categoriaId: '0192f3a0-5555-7000-8000-000000000002', status: 'RASCUNHO', atributos: { editora: 'Alta Books', autor: 'Robert C. Martin' }, criadoEm: '2026-10-25T18:14:33.336815Z', atualizadoEm: '2026-10-25T18:14:33.477502Z' } }}
+>
+A descrição foi limpa, `paginas` saiu, `editora` entrou, e `autor` ficou.
+</HttpExchange>
+
+<HttpExchange
+  title="O resultado do patch é validado"
+  request={{ method: 'PATCH', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', headers: { 'Content-Type': 'application/merge-patch+json', 'Accept-Language': 'pt-BR' }, body: { nome: null } }}
+  response={{ status: 422, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/validacao', title: 'Dados inválidos', status: 422, detail: 'A requisição tem 1 campo inválido.', instance: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', erros: [{ campo: 'nome', mensagem: 'não deve estar em branco' }], codigo: 'VALIDACAO', traceId: '337e2c67e19d1da174967cbc6a7e5b26' } }}
+/>
+
+<HttpExchange
+  title="JSON Patch com um test que não confere"
+  request={{ method: 'PATCH', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', headers: { 'Content-Type': 'application/json-patch+json', 'Accept-Language': 'pt-BR' }, body: [{ op: 'test', path: '/precoEmCentavos', value: 11990 }, { op: 'replace', path: '/precoEmCentavos', value: 8990 }] }}
+  response={{ status: 409, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/teste-do-patch-falhou', title: 'O teste do patch falhou', status: 409, detail: 'O valor em /precoEmCentavos não é o esperado pelo patch. Nada foi alterado; leia o recurso de novo.', instance: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', operacao: 0, path: '/precoEmCentavos', codigo: 'TESTE_DO_PATCH_FALHOU', traceId: '26d834ad84680293786e35335f14c2f7' } }}
+>
+O preço atual é 9990, e não 11990. Nenhuma operação foi aplicada.
+</HttpExchange>
+
+<HttpExchange
+  title="PATCH com application/json"
+  request={{ method: 'PATCH', url: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', headers: { 'Content-Type': 'application/json' }, body: { precoEmCentavos: 1 } }}
+  response={{ status: 415, headers: { 'Accept-Patch': 'application/json-patch+json, application/merge-patch+json', 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/formato-nao-suportado', title: 'Formato não suportado', status: 415, detail: "Content-Type 'application/json' is not supported.", instance: '/v1/produtos/0192f39f-2222-7000-8000-000000000042', codigo: 'FORMATO_NAO_SUPORTADO', traceId: '73e902adabbbd9cfdda0b79cbf4c6976' } }}
+>
+`application/json` não diz como interpretar o corpo. O `Accept-Patch` diz ao cliente quais formatos funcionam.
+</HttpExchange>
+
+Aceitar `application/json` como sinônimo de Merge Patch é uma conveniência que algumas APIs oferecem. O Bazar não oferece: o formato explícito deixa claro que `null` remove, e um cliente que ainda não sabe disso descobre pelo `415`, e não por um campo apagado.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="PATCH com um DTO comum" why="Num record comum, o campo que não veio e o campo null chegam iguais. Ou o código trata null como 'não mudar', e nunca consegue limpar um campo, ou trata como 'limpar', e apaga tudo o que o cliente não mandou.">
+<Bad title="null é ambíguo">
+
+```java
+@PatchMapping("/{id}")
+public ProdutoResponse corrigir(@PathVariable UUID id, @RequestBody AtualizarProdutoRequest request) {
+    var produto = servico.detalhar(id);
+    if (request.descricao() != null) {              // como o cliente limpa a descrição?
+        produto.setDescricao(request.descricao());
+    }
+    ...
+}
+```
+
+</Bad>
+<Good title="O patch sobre o documento">
+
+```java
+@PatchMapping(path = "/{id}", consumes = "application/merge-patch+json")
+public ProdutoResponse corrigir(@PathVariable UUID id, @RequestBody JsonNode patch) {
+    var corrigido = patches.mergePatch(AtualizarProdutoRequest.de(servico.detalhar(id)), patch,
+            AtualizarProdutoRequest.class);
+    return atualizar(id, corrigido);
+}
+```
+
+</Good>
+</BadVsGood>
+
+<BadVsGood title="Validar o patch em vez do resultado" why="O patch que não traz o nome é válido: ele só não quer mudar o nome. O que precisa ser válido é o produto depois do patch.">
+<Bad title="Validação no corpo do PATCH">
+
+```java
+public ProdutoResponse corrigir(@PathVariable UUID id, @Valid @RequestBody AtualizarProdutoRequest patch)
+// { "precoEmCentavos": 9990 } → 422: nome não deve estar em branco
+```
+
+</Bad>
+<Good title="Validação depois de aplicar">
+
+```java
+var resultado = json.readerFor(tipo).readValue(documentoComPatch);
+var violacoes = validador.validate(resultado);   // nome ainda é "Clean Code"
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **Aplicar o JSON Patch direto na entidade JPA**, operação por operação. Se a terceira falhar, as duas primeiras já mudaram a entidade gerenciada, e o *commit* pode gravá-las. Aplique a uma cópia, valide, e só então copie para a entidade.
+- **Deixar o *patch* alcançar campos que não são editáveis** (`/status`, `/id`, `/versao`) porque o documento é a entidade inteira. O documento deve conter só o que é editável.
+- **Ignorar em silêncio um campo que o *patch* não pode mudar**, respondendo `200` sem mudar nada.
+- **Aceitar `PATCH` com `application/json`** e interpretar como Merge Patch, sem documentar.
+- **Achar que o `test` substitui o `If-Match`.** Ele protege só os campos testados.
+- **Esquecer que listas são substituídas inteiras** no Merge Patch. Um cliente que manda `{ "tags": ["novo"] }` querendo acrescentar uma *tag* apaga as outras.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Ofereça `PATCH`** para atualizações parciais. O `PUT` exige o estado inteiro, e campos novos no recurso viram armadilhas para clientes antigos.
+- **Use um formato padronizado**, de preferência **um por endpoint**, e exija o `Content-Type` dele: `application/merge-patch+json` como padrão, `application/json-patch+json` quando houver listas ou necessidade de `test`.
+- **Aplique o *patch* a um documento com só a parte editável** do recurso, e recuse campos que não estão nele.
+- **Valide o resultado**, nunca o *patch*.
+- **Aplique tudo ou nada.** Trabalhe numa cópia e salve só no fim.
+- **Responda com o recurso atualizado**, como no `PUT`.
+- **Combine com `If-Match`** ([23.02](/padroes-avancados-de-http/concorrencia-otimista-com-if-match-412-e-428)) para evitar atualizações perdidas.
+- **Documente no OpenAPI** os dois tipos de mídia aceitos no `requestBody` do `PATCH`.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="PATCH em produtos: Merge Patch e JSON Patch" module="catalogo" tag="pagina-14.02" files={[
+  { path: 'pom.xml', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/compartilhado/web/AplicadorDePatch.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/PatchInvalidoException.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/TesteDoPatchFalhouException.java', change: 'novo' },
+  { path: 'src/main/java/com/bazar/compartilhado/erros/TratadorGlobalDeErros.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/catalogo/api/AtualizarProdutoRequest.java', change: 'alterado' },
+  { path: 'src/main/java/com/bazar/catalogo/api/ProdutoController.java', change: 'alterado' },
+  { path: 'src/main/resources/messages.properties', change: 'alterado' },
+  { path: 'src/main/resources/messages_pt.properties', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/PatchDeProdutoTest.java', change: 'novo' },
+  { path: 'src/test/java/com/bazar/catalogo/api/ProdutoControllerTest.java', change: 'alterado' },
+]}>
+`PATCH /v1/produtos/{id}` aceita `application/merge-patch+json` (RFC 7396, implementado sobre o `JsonNode` do Jackson 3) e `application/json-patch+json` (RFC 6902, pela Jakarta JSON Processing com o Eclipse Parsson). O *patch* é aplicado ao `AtualizarProdutoRequest`, validado e salvo pelo mesmo caminho do `PUT`. Erros: `400 patch-invalido`, `409 teste-do-patch-falhou`, `415` com `Accept-Patch` e `422` para campos não editáveis, operações impossíveis e resultados inválidos. O teste de `405`, que usava `PATCH`, passou a usar `DELETE` na coleção. O `PatchDeProdutoTest` tem 8 testes de integração, e a suíte, 219.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- `PUT` substitui o recurso inteiro e é idempotente. `PATCH` (RFC 5789) manda **instruções de mudança**, cujo formato é dado pelo `Content-Type`, aplicadas atomicamente.
+- **JSON Merge Patch** (RFC 7396): o corpo tem só os campos que mudam, `null` remove, objetos são mesclados e listas são substituídas inteiras.
+- **JSON Patch** (RFC 6902): uma lista de operações (`add`, `remove`, `replace`, `move`, `copy`, `test`) com caminhos JSON Pointer. Grava `null`, mexe em itens de lista, e o `test` cancela o *patch* inteiro se o valor não conferir.
+- Em Java, "ausente" e `null` se confundem num `record`. As saídas são `JsonNode` (a do Bazar), `JsonNullable` ou `Optional`.
+- **Valide o resultado** do *patch*, e não o *patch*.
+- Erros: `400` para um *patch* malformado, `415` com `Accept-Patch` para um formato desconhecido, `422` para um *patch* que não pode ser aplicado, `409` para um `test` que falhou.
+- As bibliotecas de JSON Patch para Jackson só suportam o Jackson 2. Com o Jackson 3, use a Jakarta JSON Processing.
+
+<Exercise title="PATCH em clientes" difficulty="medio">
+O cliente do Bazar tem `nome`, `email`, `telefone` (opcional) e uma lista `enderecos`, que costuma ter de um a cinco itens, cada um com `apelido` ("Casa", "Trabalho"), `cep`, `logradouro` e `numero`.
+
+1. Com Merge Patch, como o cliente remove o telefone? E como muda só o número do endereço "Trabalho"?
+2. Escreva um JSON Patch que muda o número do segundo endereço **apenas se** ele ainda for o endereço "Trabalho".
+3. O e-mail só pode mudar com uma confirmação enviada ao novo endereço. O que o `PATCH` deve fazer com `{ "email": "novo@exemplo.com" }`?
+
+<Hint>No item 1, lembre o que o Merge Patch faz com listas. No item 3, pense na regra "recuse quando ignorar muda o resultado" e em qual status descreve um campo que existe mas não pode ser alterado assim.</Hint>
+
+<Solution>
+
+1. O telefone sai com `{ "telefone": null }`. O endereço é o problema: listas são substituídas inteiras, então o cliente precisa mandar **todos** os endereços, com o número do "Trabalho" alterado. Um app que esquece um dos endereços apaga esse endereço. Por isso a lista de endereços é um bom candidato a JSON Patch, ou a um sub-recurso próprio (`PATCH /v1/clientes/{id}/enderecos/{apelido}`), o que costuma ser a melhor solução.
+
+2. ```json
+   [
+     { "op": "test",    "path": "/enderecos/1/apelido", "value": "Trabalho" },
+     { "op": "replace", "path": "/enderecos/1/numero",  "value": "1200" }
+   ]
+   ```
+   O `test` protege contra a lista ter mudado de ordem desde que o cliente a leu (outro dispositivo pode ter removido o primeiro endereço). Se o segundo item não for mais o "Trabalho", a resposta é `409` e nada muda.
+
+3. Recusar com `422` e um erro no campo `email` explicando que a troca de e-mail tem um fluxo próprio (por exemplo, `POST /v1/clientes/{id}/trocas-de-email`, que envia a confirmação). Ignorar daria `200` com o e-mail antigo, e o usuário acharia que mudou. Aceitar pularia a confirmação. O `email` fica **fora** do documento editável do `PATCH`, como o `sku` do produto, e o `FAIL_ON_UNKNOWN_PROPERTIES` produz o `422`.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Um produto tem descricao "O clássico". O cliente manda PATCH com Content-Type application/merge-patch+json e corpo { "precoEmCentavos": 9990 }. O que acontece com a descrição?',
+    options: [
+      'Fica null, porque não veio no corpo',
+      'Continua "O clássico": o que não aparece no merge patch não muda',
+      'A requisição é recusada com 422',
+      'Depende da versão do Jackson',
+    ],
+    answer: 1,
+    explanation: 'No Merge Patch, só os campos presentes mudam, e só null remove. Num PUT com o mesmo corpo, a descrição deixaria de existir, porque o PUT manda o estado completo.',
+  },
+  {
+    question: 'Por que um JSON Patch com uma operação test que falha não aplica as operações anteriores a ela?',
+    options: [
+      'Porque o test sempre deve ser a primeira operação',
+      'Porque a RFC 5789 exige que o servidor aplique o conjunto inteiro de mudanças atomicamente: tudo ou nada',
+      'Porque o servidor aplica as operações de trás para frente',
+      'Porque o test desfaz automaticamente a operação anterior',
+    ],
+    answer: 1,
+    explanation: 'O PATCH é atômico ("MUST apply the entire set of changes atomically"), e a RFC 6902 diz que um patch com uma operação malsucedida não é aplicado. O Bazar aplica as operações a uma cópia e só salva no fim.',
+  },
+  {
+    question: 'Qual destas mudanças o JSON Merge Patch NÃO consegue expressar?',
+    options: [
+      'Remover um atributo de um objeto',
+      'Mudar um campo de um objeto aninhado sem tocar nos outros',
+      'Trocar um único item de uma lista sem mandar a lista inteira',
+      'Mudar o preço',
+    ],
+    answer: 2,
+    explanation: 'Listas são substituídas inteiras no Merge Patch: a RFC 7396 diz que não é possível modificar parte de algo que não seja um objeto. O JSON Patch resolve com caminhos como /enderecos/1/numero.',
+  },
+  {
+    question: 'Onde a validação com Bean Validation deve acontecer num PATCH?',
+    options: [
+      'No corpo do PATCH, com @Valid',
+      'No resultado, depois de aplicar o patch ao estado atual',
+      'Só no banco, pelas constraints',
+      'Em nenhum lugar: o PATCH muda pouca coisa',
+    ],
+    answer: 1,
+    explanation: 'Um patch sem o nome é válido (ele só não muda o nome), e um patch válido pode produzir um recurso inválido ({ "nome": null }). Por isso o que se valida é o resultado.',
+  },
+]} />
 
 ## Referências
 

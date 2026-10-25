@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,26 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     @ExceptionHandler(CursorInvalidoException.class)
     ResponseEntity<Object> cursorInvalido(CursorInvalidoException ex, WebRequest request) {
         return deDominio(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(PatchInvalidoException.class)
+    ResponseEntity<Object> patchInvalido(PatchInvalidoException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(TesteDoPatchFalhouException.class)
+    ResponseEntity<Object> testeDoPatchFalhou(TesteDoPatchFalhouException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.CONFLICT, request);
+    }
+
+    // Um record validado à mão, como o resultado de um PATCH (14.02): o mesmo 422 de um corpo inválido.
+    @ExceptionHandler(ConstraintViolationException.class)
+    ResponseEntity<Object> violacoes(ConstraintViolationException ex, WebRequest request) {
+        var erros = ex.getConstraintViolations().stream()
+                .map(violacao -> new ErroDeCampo(violacao.getPropertyPath().toString(), mensagem(violacao.getMessage())))
+                .sorted(Comparator.comparing(ErroDeCampo::campo))
+                .toList();
+        return validacao(ex, erros, new HttpHeaders(), request);
     }
 
     @ExceptionHandler(CampoInvalidoException.class)

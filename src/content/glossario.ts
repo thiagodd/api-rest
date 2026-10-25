@@ -121,4 +121,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'mascara-de-campos', termo: 'Máscara de campos', ingles: 'field mask', definicao: 'Lista de caminhos de campos (como title,author.given_name) que diz quais campos ler ou atualizar. No Google, é o padrão das atualizações parciais (update_mask).', pagina: '13.05' },
   { id: 'expansao-de-recursos', termo: 'Expansão de recursos', ingles: 'resource expansion / embedding', definicao: 'Incluir na resposta um recurso relacionado (como a categoria de um produto) quando o cliente pede, em geral com um parâmetro embed ou expand, para evitar uma segunda chamada.', pagina: '13.05' },
   { id: 'upsert', termo: 'Upsert', ingles: 'upsert', definicao: 'Escrita que cria o recurso se ele não existe e o substitui se existe. Em HTTP, é o PUT com o id escolhido pelo cliente, que é idempotente.', pagina: '14.01' },
+  { id: 'accept-patch', termo: 'Accept-Patch', definicao: 'Header de resposta (RFC 5789) que lista os formatos de patch que um recurso aceita, como application/merge-patch+json.', pagina: '14.02' },
 ]

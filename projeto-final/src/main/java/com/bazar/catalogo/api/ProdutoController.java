@@ -10,6 +10,7 @@ import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
+import com.bazar.compartilhado.web.AplicadorDePatch;
 import com.bazar.compartilhado.web.CamposDaResposta;
 import com.bazar.compartilhado.web.CamposOrdenaveis;
 import com.bazar.compartilhado.web.JanelaPedida;
@@ -18,11 +19,13 @@ import com.bazar.compartilhado.web.PreferenciaDeRetorno;
 import com.bazar.compartilhado.web.ValoresDeParametro;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.JsonNode;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,15 +47,21 @@ public class ProdutoController {
             "sku", "sku",
             "criadoEm", "criadoEm"), Sort.by("nome"));
 
+    static final String MERGE_PATCH = "application/merge-patch+json";
+    static final String JSON_PATCH = "application/json-patch+json";
+
     private static final SortedSet<String> INCORPORAVEIS = new TreeSet<>(Set.of("categoria"));
 
-    // O controller só conhece o serviço e o mapper: no @WebMvcTest, basta substituir o serviço (11.03).
+    // O controller só conhece o serviço, o mapper e o aplicador de patches: no @WebMvcTest, basta substituir o
+    // serviço (11.03).
     private final ProdutoService servico;
     private final ProdutoMapper mapper;
+    private final AplicadorDePatch patches;
 
-    public ProdutoController(ProdutoService servico, ProdutoMapper mapper) {
+    public ProdutoController(ProdutoService servico, ProdutoMapper mapper, AplicadorDePatch patches) {
         this.servico = servico;
         this.mapper = mapper;
+        this.patches = patches;
     }
 
     // Uma projeção, e não entidades: só as colunas da listagem (10.05).
@@ -113,10 +122,28 @@ public class ProdutoController {
                 : resposta;
     }
 
+    // PUT substitui a parte editável inteira: um campo ausente vira null ou vazio (14.02).
     @PutMapping("/{id}")
     public ProdutoResponse atualizar(@PathVariable UUID id, @Valid @RequestBody AtualizarProdutoRequest request) {
         var produto = servico.atualizar(id, request.nome(), request.descricao(),
                 Dinheiro.deCentavos(request.precoEmCentavos(), "BRL"), request.categoriaId(), request.atributos());
         return mapper.paraResponse(produto);
+    }
+
+    // JSON Merge Patch (RFC 7396): só os campos enviados mudam, e null remove (14.02). O resultado passa pelas
+    // mesmas validações e pelo mesmo serviço que o PUT.
+    @PatchMapping(path = "/{id}", consumes = MERGE_PATCH)
+    public ProdutoResponse corrigir(@PathVariable UUID id, @RequestBody JsonNode patch) {
+        var corrigido = patches.mergePatch(AtualizarProdutoRequest.de(servico.detalhar(id)), patch,
+                AtualizarProdutoRequest.class);
+        return atualizar(id, corrigido);
+    }
+
+    // JSON Patch (RFC 6902): uma lista de operações, aplicadas todas ou nenhuma. Um test que falha é 409.
+    @PatchMapping(path = "/{id}", consumes = JSON_PATCH)
+    public ProdutoResponse aplicarOperacoes(@PathVariable UUID id, @RequestBody JsonNode operacoes) {
+        var corrigido = patches.jsonPatch(AtualizarProdutoRequest.de(servico.detalhar(id)), operacoes,
+                AtualizarProdutoRequest.class);
+        return atualizar(id, corrigido);
     }
 }

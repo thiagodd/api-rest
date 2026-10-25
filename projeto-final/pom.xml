@@ -31,6 +31,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- JSON Patch (RFC 6902) da Jakarta JSON Processing, com a implementação Eclipse Parsson: as bibliotecas de
+             patch para Jackson (json-patch, zjsonpatch) só suportam o Jackson 2 (14.02). -->
+        <dependency>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <version>1.1.9</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <!-- Os _links do pedido (12.04) -->
             <groupId>org.springframework.boot</groupId>

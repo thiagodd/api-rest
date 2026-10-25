@@ -17,6 +17,7 @@ import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.DinheiroMapperImpl;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.web.AplicadorDePatch;
 import com.bazar.compartilhado.web.ListaCsvHttpMessageConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -55,7 +56,7 @@ import static org.mockito.Mockito.when;
 // O serviço é um dublê; nada aqui toca no banco. O que depende do PostgreSQL está em ProdutoIntegracaoTest (11.04).
 @WebMvcTest(ProdutoController.class)
 @AutoConfigureRestTestClient
-@Import({ ProdutoMapperImpl.class, DinheiroMapperImpl.class })
+@Import({ ProdutoMapperImpl.class, DinheiroMapperImpl.class, AplicadorDePatch.class })
 class ProdutoControllerTest {
 
     @Autowired
@@ -247,9 +248,10 @@ class ProdutoControllerTest {
                 .hasPathSatisfying("$.detail", v -> assertThat(v).isEqualTo("O valor do parâmetro 'id' é inválido."));
     }
 
+    // A coleção não aceita DELETE (só cada produto, a partir da 14.03).
     @Test
     void responde405NoMesmoFormato() {
-        assertThat(mvc.patch().uri("/v1/produtos/0192f39f-2222-7000-8000-000000000999"))
+        assertThat(mvc.delete().uri("/v1/produtos"))
                 .hasStatus(HttpStatus.METHOD_NOT_ALLOWED)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .bodyJson()

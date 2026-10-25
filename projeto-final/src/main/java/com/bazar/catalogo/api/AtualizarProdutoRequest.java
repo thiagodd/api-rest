@@ -1,5 +1,6 @@
 package com.bazar.catalogo.api;
 
+import com.bazar.catalogo.dominio.Produto;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,5 +22,11 @@ public record AtualizarProdutoRequest(
 
     public AtualizarProdutoRequest {
         atributos = atributos == null ? Map.of() : Map.copyOf(atributos); // ausente no JSON → vazio
+    }
+
+    // A parte editável de um produto: o documento a que um PATCH se aplica (14.02).
+    static AtualizarProdutoRequest de(Produto produto) {
+        return new AtualizarProdutoRequest(produto.getNome(), produto.getDescricao(), produto.getPreco().emCentavos(),
+                produto.getCategoriaId(), produto.getAtributos());
     }
 }

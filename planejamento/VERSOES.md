@@ -55,7 +55,7 @@ Legenda da coluna "Fonte":
 | springdoc-openapi | **3.2.0** | Linha 3.x para Boot 4. Gera **OpenAPI 3.1 por padrão** (`springdoc.api-docs.version=openapi_3_1`). A 3.2 não é citada na documentação. | Maven Central / springdoc.org |
 | therapi-runtime-javadoc | 0.15.0 | Javadoc no springdoc (sem *release* desde 2022) | Maven Central |
 | openapi-generator (plugin Maven) | **7.26.0** | Opções `useSpringBoot4` e `useJackson3` | Maven Central / doc oficial |
-| jackson-databind-nullable | 0.2.12 | Suporta Jackson 3 (`JsonNullableJackson3Module`) | Maven Central |
+| jackson-databind-nullable | 0.2.13 | Suporta Jackson 3 (`JsonNullableJackson3Module`) | Maven Central |
 | Jakarta JSON Processing (JSON Patch / Merge Patch) | `jakarta.json-api` 2.1.3 + Eclipse Parsson 1.1.9 | `json-patch` e `zjsonpatch` só suportam Jackson 2 | Maven Central |
 | MapStruct | 1.6.3 (estável) | A 1.7.0.Beta2 existe, mas a doc não usa beta | Maven Central |
 | Resilience4j | 2.4.0 (14/03/2026) | Módulo `resilience4j-spring-boot4` | Maven Central / GitHub |
