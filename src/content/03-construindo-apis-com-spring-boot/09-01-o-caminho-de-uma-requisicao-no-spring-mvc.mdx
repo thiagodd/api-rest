@@ -2,7 +2,7 @@
 id: "09.01"
 titulo: "O caminho de uma requisição no Spring MVC"
 descricao: "Sem esse modelo mental, depurar 404, 406 ou um JSON estranho vira tentativa e erro. Ele também é a base para estender o framework."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Framework: DispatcherServlet"
     url: "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet.html"
@@ -166,6 +166,18 @@ Linha a linha:
 4. O `HttpEntityMethodProcessor` (o *handler* de retorno para `ResponseEntity`) negociou o formato: o cliente aceita qualquer coisa (`*/*`), o conversor oferece JSON, então sai JSON.
 5. O mesmo *handler* escreveu a resposta.
 6. Status final.
+
+<HttpExchange
+  title="A requisição do log, vista pelo cliente"
+  request={{ method: 'POST', url: 'http://localhost:8080/v1/categorias', headers: { 'Content-Type': 'application/json' }, body: { nome: 'Games', slug: 'games', categoriaPaiId: null } }}
+  response={{
+    status: 201,
+    headers: { Location: 'http://localhost:8080/v1/categorias/35909ef2-386e-4dca-a76e-edb9fa09b67a', 'Content-Type': 'application/json' },
+    body: { id: '35909ef2-386e-4dca-a76e-edb9fa09b67a', nome: 'Games', slug: 'games', categoriaPaiId: null },
+  }}
+>
+  Do lado de fora, só se veem a requisição e a resposta. As seis linhas do log acima são o caminho entre as duas, dentro do `DispatcherServlet`. Os ids diferem dos do log porque cada execução gera um novo.
+</HttpExchange>
 
 Na primeira requisição, o log mostra também a inicialização preguiçosa do `DispatcherServlet` (`Initializing Servlet 'dispatcherServlet'`) e os componentes que ele encontrou (`Detected AcceptHeaderLocaleResolver`...). Na inicialização da aplicação, o `ExceptionHandlerExceptionResolver` registra o tratador do Bazar: `ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice`.
 

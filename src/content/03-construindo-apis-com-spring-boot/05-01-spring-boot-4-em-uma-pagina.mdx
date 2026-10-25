@@ -2,7 +2,7 @@
 id: "05.01"
 titulo: "Spring Boot 4 em uma página"
 descricao: "O leitor sabe o básico de Spring Boot, mas a versão 4 mudou coisas importantes (Jackson 3, modularização, null safety). Esta página nivela o conhecimento."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Boot: documentação de referência"
     url: "https://docs.spring.io/spring-boot/"
@@ -319,6 +319,15 @@ Outros erros frequentes na migração ou ao seguir tutoriais antigos:
 - **Anote** cada pacote com `@NullMarked` e marque as exceções com `@Nullable`.
 - **Leia** as *release notes* e o *migration guide* antes de atualizar uma versão *minor*.
 - **Confira** se um tutorial é do Boot 4 antes de copiar configuração de Jackson, de testes ou de *starters*.
+
+## No projeto Bazar
+
+Esta página não muda código: o Bazar nasce na próxima página ([05.02](/construindo-apis-com-spring-boot/criando-o-projeto-bazar)), já com as escolhas daqui:
+
+- Spring Boot 4.1.2 sobre Java 25;
+- os *starters* modulares (`spring-boot-starter-webmvc` e `spring-boot-starter-webmvc-test`);
+- o Jackson 3;
+- `@NullMarked` em todos os pacotes.
 
 ## Resumo
 

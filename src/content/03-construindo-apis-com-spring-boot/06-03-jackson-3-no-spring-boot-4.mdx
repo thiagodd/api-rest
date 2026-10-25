@@ -2,7 +2,7 @@
 id: "06.03"
 titulo: "Jackson 3 no Spring Boot 4"
 descricao: "A serialização define o contrato real da API. No Boot 4 o Jackson mudou de pacote e de padrões, e muitos tutoriais antigos deixaram de funcionar."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Jackson Release 3.0"
     url: "https://github.com/FasterXML/jackson/wiki/Jackson-Release-3.0"
@@ -221,6 +221,18 @@ server:
 ```
 
 Uma única linha, e de propósito: o Bazar aceita os outros padrões do Jackson 3 (datas ISO 8601, `null` explícito, campos desconhecidos ignorados, primitivos estritos), e cada um deles está justificado nesta página. A configuração mínima é mais fácil de manter do que uma lista de opções que ninguém lembra por que foram mudadas.
+
+<HttpExchange
+  title="Um produto serializado pelo Jackson 3"
+  request={{ method: 'GET', url: 'http://localhost:8080/v1/produtos/ab3d7938-9cc5-4499-84a8-d3608da180ae', headers: { Accept: 'application/json' } }}
+  response={{
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+    body: {"id": "ab3d7938-9cc5-4499-84a8-d3608da180ae", "sku": "LIV-0042", "nome": "Clean Code", "descricao": "Habilidades práticas do Agile Software", "precoEmCentavos": 12990, "categoriaId": "0192f3a0-5555-7000-8000-000000000003", "status": "RASCUNHO", "atributos": {"idioma": "pt-BR"}, "criadoEm": "2026-10-25T03:43:40.393963476Z", "atualizadoEm": "2026-10-25T03:43:40.393963476Z"},
+  }}
+>
+  Os campos saem na ordem de declaração do record `ProdutoResponse` (`id`, `sku`, `nome`...), e não em ordem alfabética. O enum `status` sai pelo `toString()`, igual ao `name()`. Os instantes saem em ISO 8601, em UTC, com a precisão do relógio (nanossegundos).
+</HttpExchange>
 
 ### O serializador de `Dinheiro`
 

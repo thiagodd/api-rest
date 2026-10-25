@@ -2,7 +2,7 @@
 id: "09.05"
 titulo: "Functional endpoints (RouterFunction)"
 descricao: "Uma alternativa às anotações, útil para roteamento dinâmico e para quem vem do WebFlux, com diferenças que não aparecem à primeira vista."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Framework: Functional Endpoints (WebMvc.fn)"
     url: "https://docs.spring.io/spring-framework/reference/web/webmvc-functional.html"
@@ -130,7 +130,7 @@ Como o `RouterFunctionMapping` escolhe a rota, e onde ele fica em relação às 
 
 ```mermaid title="Escolha de uma rota funcional"
 flowchart TD
-    R["GET /v1/categorias<br/>Accept: text/csv"] --> M1{"RouterFunctionMapping<br/>(ordem -1)"}
+    R["GET /v1/categorias<br/>Accept: text/csv"] --> M1["RouterFunctionMapping<br/>(ordem -1)"]
     M1 --> P1{"rota 1:<br/>GET + accept(application/json)?"}
     P1 -- não --> P2{"rota 2:<br/>GET + accept(text/csv)?"}
     P1 -- sim --> H1["handler::listar<br/>contentType JSON"]

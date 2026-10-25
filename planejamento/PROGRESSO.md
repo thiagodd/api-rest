@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 112 · **rascunho:** 0 · **revisão:** 16 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 112 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 31
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -51,42 +51,42 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 05.01 | Spring Boot 4 em uma página | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-01-spring-boot-4-em-uma-pagina.mdx` | revisao |
-| 05.02 | Criando o projeto Bazar | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-02-criando-o-projeto-bazar.mdx` | revisao |
-| 05.03 | Primeiro endpoint | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-03-primeiro-endpoint.mdx` | revisao |
-| 05.04 | Um CRUD com status corretos | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-04-um-crud-com-status-corretos.mdx` | revisao |
+| 05.01 | Spring Boot 4 em uma página | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-01-spring-boot-4-em-uma-pagina.mdx` | pronta |
+| 05.02 | Criando o projeto Bazar | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-02-criando-o-projeto-bazar.mdx` | pronta |
+| 05.03 | Primeiro endpoint | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-03-primeiro-endpoint.mdx` | pronta |
+| 05.04 | Um CRUD com status corretos | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/05-04-um-crud-com-status-corretos.mdx` | pronta |
 
 ### M06: Modelando entrada e saída
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 06.01 | DTOs com records e por que não expor entidades | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/06-01-dtos-com-records-e-por-que-nao-expor-entidades.mdx` | revisao |
-| 06.02 | Mapeamento: manual ou MapStruct | basico | importante | `src/content/03-construindo-apis-com-spring-boot/06-02-mapeamento-manual-ou-mapstruct.mdx` | revisao |
-| 06.03 | Jackson 3 no Spring Boot 4 | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/06-03-jackson-3-no-spring-boot-4.mdx` | revisao |
+| 06.01 | DTOs com records e por que não expor entidades | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/06-01-dtos-com-records-e-por-que-nao-expor-entidades.mdx` | pronta |
+| 06.02 | Mapeamento: manual ou MapStruct | basico | importante | `src/content/03-construindo-apis-com-spring-boot/06-02-mapeamento-manual-ou-mapstruct.mdx` | pronta |
+| 06.03 | Jackson 3 no Spring Boot 4 | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/06-03-jackson-3-no-spring-boot-4.mdx` | pronta |
 
 ### M07: Validação
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 07.01 | Bean Validation essencial | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/07-01-bean-validation-essencial.mdx` | revisao |
-| 07.02 | Validação avançada | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/07-02-validacao-avancada.mdx` | revisao |
+| 07.01 | Bean Validation essencial | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/07-01-bean-validation-essencial.mdx` | pronta |
+| 07.02 | Validação avançada | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/07-02-validacao-avancada.mdx` | pronta |
 
 ### M08: Tratamento de erros
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 08.01 | Problem Details (RFC 9457) | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/08-01-problem-details-rfc-9457.mdx` | revisao |
-| 08.02 | ProblemDetail no Spring: tratamento global de erros | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/08-02-problemdetail-no-spring-tratamento-global-de-erros.mdx` | revisao |
+| 08.01 | Problem Details (RFC 9457) | basico | essencial | `src/content/03-construindo-apis-com-spring-boot/08-01-problem-details-rfc-9457.mdx` | pronta |
+| 08.02 | ProblemDetail no Spring: tratamento global de erros | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/08-02-problemdetail-no-spring-tratamento-global-de-erros.mdx` | pronta |
 
 ### M09: Spring MVC por dentro
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 09.01 | O caminho de uma requisição no Spring MVC | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/09-01-o-caminho-de-uma-requisicao-no-spring-mvc.mdx` | revisao |
-| 09.02 | Argument resolvers e return value handlers customizados | avancado | complementar | `src/content/03-construindo-apis-com-spring-boot/09-02-argument-resolvers-e-return-value-handlers-customizados.mdx` | revisao |
-| 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | revisao |
-| 09.04 | Filtros, interceptors e AOP: quando usar cada um | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-04-filtros-interceptors-e-aop-quando-usar-cada-um.mdx` | revisao |
-| 09.05 | Functional endpoints (RouterFunction) | intermediario | complementar | `src/content/03-construindo-apis-com-spring-boot/09-05-functional-endpoints-routerfunction.mdx` | revisao |
+| 09.01 | O caminho de uma requisição no Spring MVC | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/09-01-o-caminho-de-uma-requisicao-no-spring-mvc.mdx` | pronta |
+| 09.02 | Argument resolvers e return value handlers customizados | avancado | complementar | `src/content/03-construindo-apis-com-spring-boot/09-02-argument-resolvers-e-return-value-handlers-customizados.mdx` | pronta |
+| 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | pronta |
+| 09.04 | Filtros, interceptors e AOP: quando usar cada um | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-04-filtros-interceptors-e-aop-quando-usar-cada-um.mdx` | pronta |
+| 09.05 | Functional endpoints (RouterFunction) | intermediario | complementar | `src/content/03-construindo-apis-com-spring-boot/09-05-functional-endpoints-routerfunction.mdx` | pronta |
 
 ## Parte 4: Persistência para APIs
 
