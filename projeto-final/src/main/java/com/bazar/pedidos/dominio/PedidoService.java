@@ -10,6 +10,7 @@ import com.bazar.compartilhado.erros.CampoInvalidoException;
 import com.bazar.estoque.dominio.EstoqueRepository;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,12 @@ public class PedidoService {
         // Publicado agora, entregue aos ouvintes @TransactionalEventListener só depois do commit.
         eventos.publishEvent(new PedidoCriado(pedido.getId(), clienteId, pedido.getValorTotal()));
         return pedido;
+    }
+
+    // Os mais recentes primeiro. A paginação de verdade, com cursor, chega em 13.04.
+    @Transactional(readOnly = true)
+    public List<Pedido> listarDoCliente(UUID clienteId, int limite) {
+        return pedidos.findComItensByClienteIdOrderByCriadoEmDesc(clienteId, Limit.of(limite));
     }
 
     @Transactional(readOnly = true)

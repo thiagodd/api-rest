@@ -3,6 +3,7 @@ package com.bazar.pedidos.api;
 import java.util.Map;
 import java.util.UUID;
 
+import com.bazar.ContadorDeConsultas;
 import com.bazar.LimpezaDoBanco;
 import com.bazar.TestcontainersConfiguration;
 import com.bazar.catalogo.dominio.Produto;
@@ -12,6 +13,7 @@ import com.bazar.clientes.dominio.ClienteRepository;
 import com.bazar.compartilhado.Canal;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.estoque.dominio.EstoqueRepository;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,8 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+// As estatísticas do Hibernate permitem contar as consultas de cada requisição (10.04).
+@SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @ExtendWith(OutputCaptureExtension.class)
@@ -53,6 +56,9 @@ class PedidoControllerTest {
 
     @Autowired
     JdbcClient jdbc;
+
+    @Autowired
+    EntityManagerFactory emf;
 
     UUID clienteId;
     UUID cleanCode;
@@ -155,6 +161,24 @@ class PedidoControllerTest {
                         """.formatted(clienteId, cleanCode)))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
                 .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("itens[0].quantidade");
+    }
+
+    @Test
+    void listaOsPedidosDoClienteComUmaConsultaSo() {
+        for (int i = 0; i < 5; i++) {
+            mvc.post().uri("/v1/pedidos").contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "clienteId": "%s", "itens": [ { "produtoId": "%s", "quantidade": 1 } ] }
+                            """.formatted(clienteId, cleanCode))
+                    .exchange();
+        }
+
+        var consultas = new ContadorDeConsultas(emf).contar(() ->
+                assertThat(mvc.get().uri("/v1/pedidos?clienteId={id}", clienteId)).hasStatusOk()
+                        .bodyJson().extractingPath("$.itens[*].itens[0].sku").asArray().hasSize(5).containsOnly("LIV-0042"));
+
+        // Pedidos e itens no mesmo SELECT. Sem o @EntityGraph, seriam 6: 1 + 1 por pedido.
+        assertThat(consultas).isEqualTo(1);
     }
 
     @Test
