@@ -45,7 +45,7 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 | BZR-REC-02 | Sub-recursos **DEVEM** ser usados só para composição (o filho não existe sem o pai), com no máximo um nível (`/clientes/{id}/enderecos`). | lint | 12.03 |
 | BZR-REC-03 | Todo acesso a um sub-recurso **DEVE** verificar o pertencimento ao pai, e responder `404` quando ele não pertence. | teste | 12.03 |
 | BZR-REC-04 | Ações com regras de negócio **DEVEM** ser `POST` num sub-recurso com nome de substantivo (`/pedidos/{id}/cancelamento`), e não `PATCH` de um campo de status. | revisão | 12.04 |
-| BZR-REC-05 | A versão maior **DEVE** estar no início do caminho (`/v1`). A estratégia completa está na Parte 7. | lint | 18.02 |
+| BZR-REC-05 | A versão maior **DEVE** estar no início do caminho (`/v1`), conforme o ADR-0003. | lint | 18.02 |
 
 ## 3. Identificadores
 
@@ -112,6 +112,8 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 | BZR-EVO-01 | O servidor **DEVE** ignorar campos desconhecidos no corpo das escritas, e **DEVE** recusar campos desconhecidos no corpo das buscas. | teste | 06.03, 13.01 |
 | BZR-EVO-02 | A documentação **DEVE** pedir aos clientes que ignorem campos novos e tratem valores de enum e `codigo` desconhecidos (*tolerant reader*). | revisão | 15.04, 16.01 |
 | BZR-EVO-03 | Mudanças incompatíveis **NÃO DEVEM** entrar numa versão publicada. O que é incompatível está na 18.01. | lint | 18.01 |
+| BZR-EVO-04 | Uma versão maior nova **DEVE** existir só para os recursos com mudanças incompatíveis, e só a versão maior vai no caminho (ADR-0003). | revisão | 18.02 |
+| BZR-EVO-05 | No máximo duas versões maiores de um recurso **PODEM** estar em produção. A anterior **DEVE** ser depreciada no lançamento da nova e desligada com pelo menos seis meses de aviso. | revisão | 18.02, 18.04 |
 
 ---
 
@@ -130,3 +132,4 @@ do projeto) ou **revisão** (por uma pessoa, na revisão de API).
 |---|---|
 | [ADR-0001](adr/0001-portugues-nos-nomes.md) | Recursos, campos e valores em português |
 | [ADR-0002](adr/0002-criterio-400-422-409.md) | Critério 400 × 422 × 409, e o 422 apesar do Zalando |
+| [ADR-0003](adr/0003-versao-maior-no-caminho.md) | Versão maior no caminho, por recurso, no máximo duas em produção |
