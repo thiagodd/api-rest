@@ -131,4 +131,5 @@ export const glossario: TermoGlossario[] = [
   { id: 'bcp-47', termo: 'BCP 47 (tag de idioma)', definicao: 'Formato padrão de identificação de idiomas (RFC 5646): idioma e, opcionalmente, região ou escrita, separados por hífen, como pt-BR, en e es-419.', pagina: '15.05' },
   { id: 'locale-resolver', termo: 'LocaleResolver', definicao: 'Componente do Spring MVC que decide o idioma de cada requisição (por exemplo, pelo Accept-Language), usado pelas mensagens e pelos erros.', pagina: '15.05' },
   { id: 'catalogo-de-problemas', termo: 'Catálogo de problemas', definicao: 'Lista de todos os tipos de erro de uma API, cada um com URI do type, código, status HTTP e o que o cliente deve fazer ao recebê-lo.', pagina: '16.01' },
+  { id: 'adr', termo: 'ADR (Architecture Decision Record)', definicao: 'Documento curto e numerado que registra uma decisão de arquitetura ou de design: o contexto, a decisão e as consequências, inclusive as ruins.', pagina: '16.02' },
 ]

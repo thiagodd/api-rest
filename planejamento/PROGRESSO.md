@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 82 · **rascunho:** 0 · **revisão:** 19 · **pronta:** 42
+**Total:** 143 páginas · **esqueleto:** 81 · **rascunho:** 0 · **revisão:** 20 · **pronta:** 42
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -158,7 +158,7 @@
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
 | 16.01 | Projetando erros: catálogo, códigos e decisões difíceis | intermediario | essencial | `src/content/06-design-de-apis-profissional/16-01-projetando-erros-catalogo-codigos-e-decisoes-dificeis.mdx` | revisao |
-| 16.02 | Escrevendo o guia de estilo da sua API | avancado | importante | `src/content/06-design-de-apis-profissional/16-02-escrevendo-o-guia-de-estilo-da-sua-api.mdx` | esqueleto |
+| 16.02 | Escrevendo o guia de estilo da sua API | avancado | importante | `src/content/06-design-de-apis-profissional/16-02-escrevendo-o-guia-de-estilo-da-sua-api.mdx` | revisao |
 
 ## Parte 7: Contratos, documentação e ciclo de vida
 
