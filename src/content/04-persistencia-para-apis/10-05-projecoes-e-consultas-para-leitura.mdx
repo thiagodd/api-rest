@@ -160,7 +160,7 @@ O serviço monta a consulta com as `Specification` do filtro e a projeção:
     }
 ```
 
-O controller ainda não recebe filtros. Os parâmetros HTTP (`categoria`, `status`, `precoMin`, `precoMax`, `q`), a validação deles e a ordenação escolhida pelo cliente são o assunto de [13.01](/design-de-apis-profissional/filtros-e-busca):
+O controller ainda não recebe filtros. Os parâmetros HTTP (`categoriaId`, `status`, `precoMin`, `precoMax`, `q`), a validação deles e a ordenação escolhida pelo cliente são o assunto de [13.01](/design-de-apis-profissional/filtros-e-busca):
 
 ```java title="src/main/java/com/bazar/catalogo/api/ProdutoController.java"
     // Uma projeção, e não entidades: só as colunas da listagem (10.05).

@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.hibernate.validator.HibernateValidator;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,10 @@ class ConstraintsDoCatalogoTest {
             .getValidator();
 
     record ComSku(@Sku String sku) {
+    }
+
+    @IntervaloPrecoValido
+    record Intervalo(@Nullable Long precoMin, @Nullable Long precoMax) implements IntervaloDePreco {
     }
 
     @Test
@@ -37,7 +42,7 @@ class ConstraintsDoCatalogoTest {
 
     @Test
     void intervaloInvertidoAcusaOCampoPrecoMax() {
-        var violacoes = validator.validate(new IntervaloPreco(5000L, 1000L));
+        var violacoes = validator.validate(new Intervalo(5000L, 1000L));
 
         assertThat(violacoes).singleElement().satisfies(v -> {
             assertThat(v.getPropertyPath()).hasToString("precoMax");
@@ -47,8 +52,8 @@ class ConstraintsDoCatalogoTest {
 
     @Test
     void intervaloComUmLimiteSoOuEmOrdemEValido() {
-        assertThat(validator.validate(new IntervaloPreco(1000L, 5000L))).isEmpty();
-        assertThat(validator.validate(new IntervaloPreco(null, 5000L))).isEmpty();
-        assertThat(validator.validate(new IntervaloPreco(1000L, null))).isEmpty();
+        assertThat(validator.validate(new Intervalo(1000L, 5000L))).isEmpty();
+        assertThat(validator.validate(new Intervalo(null, 5000L))).isEmpty();
+        assertThat(validator.validate(new Intervalo(1000L, null))).isEmpty();
     }
 }

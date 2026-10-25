@@ -2,7 +2,6 @@ package com.bazar.catalogo.api;
 
 import java.util.UUID;
 
-import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
@@ -10,6 +9,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -32,12 +32,17 @@ public class ProdutoController {
     }
 
     // Uma projeção, e não entidades: só as colunas da listagem (10.05).
-    // Os filtros já existem no serviço; os parâmetros HTTP, a ordenação e a paginação chegam em 13.01–13.04.
+    // Os filtros chegam como parâmetros de query (13.01); a ordenação e a paginação, em 13.02–13.04.
     @GetMapping
-    public Lista<ProdutoResumoResponse> listar() {
-        return new Lista<>(servico.listar(FiltroDeProdutos.nenhum()).stream().map(mapper::paraResumo).toList());
+    public Lista<ProdutoResumoResponse> listar(@Valid @ModelAttribute FiltroProduto filtro) {
+        return new Lista<>(servico.listar(filtro.paraDominio()).stream().map(mapper::paraResumo).toList());
     }
 
+    // Uma consulta com corpo: não altera nada, mas usa POST porque os critérios não cabem bem numa URL (13.01).
+    @PostMapping("/buscas")
+    public Lista<ProdutoResumoResponse> buscar(@Valid @RequestBody BuscaDeProdutos busca) {
+        return new Lista<>(servico.listar(busca.paraDominio()).stream().map(mapper::paraResumo).toList());
+    }
     @PostMapping
     public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
         var produto = servico.criar(mapper.paraProduto(request));

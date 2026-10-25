@@ -1,9 +1,13 @@
 package com.bazar.catalogo.dominio;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.UUID;
+
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.springframework.data.jpa.domain.PredicateSpecification;
 
@@ -15,12 +19,30 @@ public final class ProdutoSpecifications {
     private ProdutoSpecifications() {
     }
 
-    public static PredicateSpecification<Produto> daCategoria(UUID categoriaId) {
-        return (produto, cb) -> cb.equal(produto.get("categoriaId"), categoriaId);
+    public static PredicateSpecification<Produto> daCategoriaEm(Collection<UUID> categoriaIds) {
+        return (produto, cb) -> produto.get("categoriaId").in(categoriaIds);
     }
 
-    public static PredicateSpecification<Produto> comStatus(StatusProduto status) {
-        return (produto, cb) -> cb.equal(produto.get("status"), status);
+    public static PredicateSpecification<Produto> comStatusEm(Collection<StatusProduto> status) {
+        return (produto, cb) -> produto.get("status").in(status);
+    }
+
+    public static PredicateSpecification<Produto> comSku(String sku) {
+        return (produto, cb) -> cb.equal(produto.get("sku"), sku);
+    }
+
+    public static PredicateSpecification<Produto> criadoApos(Instant instante) {
+        return (produto, cb) -> cb.greaterThan(produto.get("criadoEm"), instante);
+    }
+
+    // atributos é uma coluna jsonb: jsonb_extract_path_text(atributos, 'autor') devolve o valor como texto.
+    // A chave e o valor vão como parâmetros da consulta (?). cb.literal(chave) escreveria a chave dentro do SQL;
+    // o value do Hibernate a transforma em parâmetro, como o valor do equal e o padrão do LIKE abaixo.
+    public static PredicateSpecification<Produto> comAtributo(String chave, String valor) {
+        return (produto, cb) -> cb.equal(
+                cb.function("jsonb_extract_path_text", String.class, produto.get("atributos"),
+                        ((HibernateCriteriaBuilder) cb).value(chave)),
+                valor);
     }
 
     public static PredicateSpecification<Produto> custandoAPartirDe(BigDecimal minimo) {
@@ -40,11 +62,17 @@ public final class ProdutoSpecifications {
 
     public static PredicateSpecification<Produto> filtradoPor(FiltroDeProdutos filtro) {
         var condicoes = new ArrayList<PredicateSpecification<Produto>>();
-        if (filtro.categoriaId() != null) {
-            condicoes.add(daCategoria(filtro.categoriaId()));
+        if (filtro.texto() != null) {
+            condicoes.add(comNomeContendo(filtro.texto()));
         }
-        if (filtro.status() != null) {
-            condicoes.add(comStatus(filtro.status()));
+        if (filtro.sku() != null) {
+            condicoes.add(comSku(filtro.sku()));
+        }
+        if (!filtro.categoriaIds().isEmpty()) {
+            condicoes.add(daCategoriaEm(filtro.categoriaIds()));
+        }
+        if (!filtro.status().isEmpty()) {
+            condicoes.add(comStatusEm(filtro.status()));
         }
         if (filtro.precoMinimo() != null) {
             condicoes.add(custandoAPartirDe(filtro.precoMinimo()));
@@ -52,9 +80,10 @@ public final class ProdutoSpecifications {
         if (filtro.precoMaximo() != null) {
             condicoes.add(custandoAte(filtro.precoMaximo()));
         }
-        if (filtro.texto() != null) {
-            condicoes.add(comNomeContendo(filtro.texto()));
+        if (filtro.criadoApos() != null) {
+            condicoes.add(criadoApos(filtro.criadoApos()));
         }
+        filtro.atributos().forEach((chave, valor) -> condicoes.add(comAtributo(chave, valor)));
         // Sem condições, allOf não restringe nada: todos os produtos.
         return PredicateSpecification.allOf(condicoes);
     }

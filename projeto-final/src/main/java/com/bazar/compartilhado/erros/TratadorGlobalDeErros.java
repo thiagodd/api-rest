@@ -94,9 +94,31 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problema, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
+    // Um campo desconhecido no corpo de uma busca chega embrulhado pelo Jackson (BuscaDeProdutos, 13.01).
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        if (ex.getMostSpecificCause() instanceof ParametroDesconhecidoException desconhecido) {
+            return parametroDesconhecido(desconhecido, request);
+        }
+        return super.handleHttpMessageNotReadable(ex, headers, status, request);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        // Num @ModelAttribute, um valor que nem converte (status=ESGOTADO, precoMin=abc) vira erro de binding.
+        // É o mesmo caso de um @PathVariable malformado: 400, sem a mensagem do conversor, que cita tipos Java e
+        // ecoa o valor.
+        var naoConvertidos = ex.getBindingResult().getFieldErrors().stream()
+                .filter(FieldError::isBindingFailure)
+                .map(FieldError::getField)
+                .distinct()
+                .sorted()
+                .toList();
+        if (!naoConvertidos.isEmpty()) {
+            return valorNaoConvertido(ex, naoConvertidos, request);
+        }
         var erros = ex.getBindingResult().getAllErrors().stream()
                 .map(erro -> new ErroDeCampo(
                         erro instanceof FieldError campo ? campo.getField() : erro.getObjectName(),
@@ -142,6 +164,18 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
                 .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
         ex.getExtensoes().forEach(problema::setProperty);
         return handleExceptionInternal(ex, problema, new HttpHeaders(), status, request);
+    }
+
+    private ResponseEntity<Object> valorNaoConvertido(Exception ex, List<String> campos, WebRequest request) {
+        var problema = ErrorResponse.builder(ex, HttpStatus.BAD_REQUEST, "Invalid request.")
+                .type(URI.create(BASE_DOS_TIPOS + "requisicao-invalida"))
+                .titleMessageCode("problemDetail.title.org.springframework.web.method.annotation.MethodArgumentTypeMismatchException")
+                .detailMessageCode("problemDetail.org.springframework.beans.TypeMismatchException")
+                .detailMessageArguments(String.join(", ", campos))
+                .build()
+                .updateAndGetBody(getMessageSource(), LocaleContextHolder.getLocale());
+        problema.setProperty("parametros", campos);
+        return handleExceptionInternal(ex, problema, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 
     private ResponseEntity<Object> validacao(Exception ex, List<ErroDeCampo> erros, HttpHeaders headers, WebRequest request) {

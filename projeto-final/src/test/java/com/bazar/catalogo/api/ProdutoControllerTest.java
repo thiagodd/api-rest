@@ -1,9 +1,13 @@
 package com.bazar.catalogo.api;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import com.bazar.catalogo.dominio.FiltroDeProdutos;
 import com.bazar.catalogo.dominio.Produto;
 import com.bazar.catalogo.dominio.ProdutoResumo;
 import com.bazar.catalogo.dominio.ProdutoService;
@@ -30,6 +34,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import static com.bazar.catalogo.dominio.ProdutoDeTeste.ELETRONICOS;
 import static com.bazar.catalogo.dominio.ProdutoDeTeste.PROGRAMACAO;
 import static com.bazar.catalogo.dominio.ProdutoDeTeste.umProduto;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -257,6 +262,135 @@ class ProdutoControllerTest {
 
     // Os mesmos contratos, escritos com o RestTestClient. Aqui ele usa o MockMvc por baixo; em 11.04 o mesmo
     // código fala com um servidor de verdade.
+    @Nested
+    class Filtros {
+
+        final ArgumentCaptor<FiltroDeProdutos> filtro = ArgumentCaptor.forClass(FiltroDeProdutos.class);
+
+        @Test
+        void convertemOsParametrosNoFiltroDoDominio() {
+            when(produtos.listar(any())).thenReturn(List.of());
+
+            var resposta = mvc.get().uri("/v1/produtos?q=code&categoriaId={a},{b}&status=ATIVO&status=RASCUNHO"
+                    + "&precoMin=1000&precoMax=20050&criadoApos=2026-01-01T00:00:00Z", PROGRAMACAO, ELETRONICOS).exchange();
+
+            assertThat(resposta).hasStatusOk();
+            verify(produtos).listar(filtro.capture());
+            assertThat(filtro.getValue()).isEqualTo(new FiltroDeProdutos("code", null, Set.of(PROGRAMACAO, ELETRONICOS),
+                    Set.of(StatusProduto.ATIVO, StatusProduto.RASCUNHO), new BigDecimal("10.00"), new BigDecimal("200.50"),
+                    Instant.parse("2026-01-01T00:00:00Z"), Map.of()));
+        }
+
+        @Test
+        void semParametrosNaoFiltraNada() {
+            when(produtos.listar(any())).thenReturn(List.of());
+
+            assertThat(mvc.get().uri("/v1/produtos").exchange()).hasStatusOk();
+
+            verify(produtos).listar(FiltroDeProdutos.nenhum());
+        }
+
+        @Test
+        void parametroVazioEhOMesmoQueAusente() {
+            when(produtos.listar(any())).thenReturn(List.of());
+
+            assertThat(mvc.get().uri("/v1/produtos?q=&sku=&categoriaId=&status=&precoMin=&criadoApos=").exchange())
+                    .hasStatusOk();
+
+            verify(produtos).listar(FiltroDeProdutos.nenhum());
+        }
+
+        @Test
+        void misturarVirgulaERepeticaoNoMesmoParametroNaoConverte() {
+            // Cada forma funciona sozinha; juntas, o Spring recebe ["RASCUNHO,ATIVO", "DESCONTINUADO"] e não divide.
+            assertThat(mvc.get().uri("/v1/produtos?status=RASCUNHO,ATIVO&status=DESCONTINUADO").exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST);
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void recusaUmParametroQueNaoEhFiltro() {
+            assertThat(mvc.get().uri("/v1/produtos?categoria={id}", PROGRAMACAO).exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "type": "https://api.bazar.example/problemas/parametro-desconhecido",
+                              "parametros": ["categoria"] }
+                            """);
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void recusaUmaFaixaDePrecoInvertida() {
+            var resposta = mvc.get().uri("/v1/produtos?precoMin=5000&precoMax=1000").exchange();
+
+            assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                    .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("precoMax");
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void recusaUmValorQueNaoConverteSemEcoarOValor() {
+            var resposta = mvc.get().uri("/v1/produtos?status=ESGOTADO&precoMin=abc").exchange();
+
+            assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+            assertThat(resposta).bodyJson().isLenientlyEqualTo("""
+                    { "type": "https://api.bazar.example/problemas/requisicao-invalida",
+                      "parametros": ["precoMin", "status"] }
+                    """);
+            assertThat(resposta).bodyText().doesNotContain("ESGOTADO", "abc", "java.");
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void aBuscaRecebeOsCriteriosNoCorpo() {
+            when(produtos.listar(any())).thenReturn(List.of());
+
+            var resposta = mvc.post().uri("/v1/produtos/buscas")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "categoriaIds": ["%s"], "precoMax": 15000,
+                              "atributos": { "autor": "Robert C. Martin" } }
+                            """.formatted(PROGRAMACAO))
+                    .exchange();
+
+            assertThat(resposta).hasStatusOk();
+            verify(produtos).listar(filtro.capture());
+            assertThat(filtro.getValue()).isEqualTo(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO)
+                    .custando(null, new BigDecimal("150.00")).comAtributo("autor", "Robert C. Martin"));
+        }
+
+        @Test
+        void aBuscaRecusaUmCriterioDesconhecido() {
+            // "categoriaId" no singular é o nome do parâmetro de GET; no corpo, o critério é "categoriaIds".
+            var resposta = mvc.post().uri("/v1/produtos/buscas")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "categoriaId": "%s" }
+                            """.formatted(PROGRAMACAO))
+                    .exchange();
+
+            assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "type": "https://api.bazar.example/problemas/parametro-desconhecido",
+                              "parametros": ["categoriaId"] }
+                            """);
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void aBuscaValidaOsNomesDosAtributos() {
+            var resposta = mvc.post().uri("/v1/produtos/buscas")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            { "atributos": { "autor'; drop table produto; --": "x" } }
+                            """)
+                    .exchange();
+
+            assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+            verifyNoInteractions(produtos);
+        }
+    }
+
     @Nested
     class ComRestTestClient {
 

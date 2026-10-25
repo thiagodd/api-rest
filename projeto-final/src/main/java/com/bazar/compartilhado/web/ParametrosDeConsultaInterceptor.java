@@ -1,6 +1,9 @@
 package com.bazar.compartilhado.web;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -14,13 +17,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
  * Recusa parâmetros de query que o endpoint não declara (12.02). Os nomes aceitos vêm da assinatura do método:
- * cada @RequestParam, explícito ou implícito (um tipo simples sem anotação). Um @RequestParam Map aceita tudo.
+ * cada @RequestParam, explícito ou implícito (um tipo simples sem anotação), e os componentes de um record
+ * recebido com @ModelAttribute (13.01). Um @RequestParam Map aceita tudo.
  */
 public class ParametrosDeConsultaInterceptor implements HandlerInterceptor {
 
@@ -58,12 +63,23 @@ public class ParametrosDeConsultaInterceptor implements HandlerInterceptor {
             if (anotacao != null) {
                 nomes.add(StringUtils.hasText(anotacao.name()) ? anotacao.name() : nomeNoCodigo(parametro));
             }
+            else if (parametro.hasParameterAnnotation(ModelAttribute.class)) {
+                nomes.addAll(componentes(parametro.getParameterType()));
+            }
             else if (parametro.getParameterAnnotations().length == 0
                     && BeanUtils.isSimpleProperty(parametro.getParameterType())) {
                 nomes.add(nomeNoCodigo(parametro));
             }
         }
         return Set.copyOf(nomes);
+    }
+
+    // Só records: os componentes são exatamente os parâmetros que o Spring consegue preencher.
+    private static List<String> componentes(Class<?> tipo) {
+        if (!tipo.isRecord()) {
+            throw new IllegalStateException("@ModelAttribute sem record não é suportado: " + tipo.getName());
+        }
+        return Arrays.stream(tipo.getRecordComponents()).map(RecordComponent::getName).toList();
     }
 
     // Depende de -parameters na compilação, que o plugin do Spring Boot configura.

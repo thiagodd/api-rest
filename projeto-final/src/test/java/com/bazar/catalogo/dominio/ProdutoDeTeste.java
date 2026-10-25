@@ -15,6 +15,7 @@ public final class ProdutoDeTeste {
 
     /** Categoria "Programação", inserida pela migration V3. */
     public static final UUID PROGRAMACAO = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
+    public static final UUID ELETRONICOS = UUID.fromString("0192f3a0-5555-7000-8000-000000000002");
 
     private String sku = "LIV-0042";
     private String nome = "Clean Code";

@@ -26,10 +26,10 @@ public @interface IntervaloPrecoValido {
 
     Class<? extends Payload>[] payload() default {};
 
-    class Validador implements ConstraintValidator<IntervaloPrecoValido, IntervaloPreco> {
+    class Validador implements ConstraintValidator<IntervaloPrecoValido, IntervaloDePreco> {
 
         @Override
-        public boolean isValid(IntervaloPreco intervalo, ConstraintValidatorContext contexto) {
+        public boolean isValid(IntervaloDePreco intervalo, ConstraintValidatorContext contexto) {
             if (intervalo.precoMin() == null || intervalo.precoMax() == null
                     || intervalo.precoMin() <= intervalo.precoMax()) {
                 return true;

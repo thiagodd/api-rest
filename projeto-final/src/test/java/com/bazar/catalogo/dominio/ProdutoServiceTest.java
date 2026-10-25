@@ -1,7 +1,9 @@
 package com.bazar.catalogo.dominio;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.bazar.LimpezaDoBanco;
@@ -66,21 +68,50 @@ class ProdutoServiceTest {
 
     @Test
     void combinaSoOsFiltrosInformados() {
-        assertThat(servico.listar(new FiltroDeProdutos(PROGRAMACAO, null, null, null, null)))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO)))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0042", "LIV-0043");
-        assertThat(servico.listar(new FiltroDeProdutos(PROGRAMACAO, StatusProduto.RASCUNHO, new BigDecimal("130.00"), null, null)))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO).comStatus(StatusProduto.RASCUNHO)
+                .custando(new BigDecimal("130.00"), null)))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0043");
-        assertThat(servico.listar(new FiltroDeProdutos(null, null, null, new BigDecimal("129.90"), "c")))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().custando(null, new BigDecimal("129.90")).comTexto("c")))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001", "LIV-0042");
-        assertThat(servico.listar(new FiltroDeProdutos(null, StatusProduto.ATIVO, null, null, null))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comStatus(StatusProduto.ATIVO))).isEmpty();
     }
 
     @Test
     void trataOsCuringasDoTextoComoTextoComum() {
         // Sem o escape, "%" casaria com qualquer nome.
-        assertThat(servico.listar(new FiltroDeProdutos(null, null, null, null, "100%")))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("100%")))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001");
-        assertThat(servico.listar(new FiltroDeProdutos(null, null, null, null, "%"))).hasSize(1);
-        assertThat(servico.listar(new FiltroDeProdutos(null, null, null, null, "_"))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("%"))).hasSize(1);
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("_"))).isEmpty();
+    }
+
+    @Test
+    void filtraPorAtributoNoJsonbComChaveEValorComoParametros(CapturedOutput saida) {
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Robert C. Martin")))
+                .extracting(ProdutoResumo::sku).containsExactly("LIV-0042");
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Martin Fowler"))).isEmpty();
+        // Os valores vão como parâmetros: uma aspa no valor não quebra a consulta, só não casa com nada.
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor'", "x' or '1'='1"))).isEmpty();
+        assertThat(saida).contains("jsonb_extract_path_text(p1_0.atributos,?)=?").doesNotContain("'1'='1");
+    }
+
+    @Test
+    void umaListaDeCategoriasEhUmOu() {
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO, ELETRONICOS))).hasSize(3);
+    }
+
+    @Test
+    void filtraPorSkuEPorDataDeCriacao() {
+        var antes = Instant.now().minusSeconds(3600);
+        var depois = Instant.now().plusSeconds(3600);
+        var porSku = new FiltroDeProdutos(null, "LIV-0043", Set.of(), Set.of(), null, null, null, Map.of());
+        var criadosAposAntes = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, antes, Map.of());
+        var criadosAposDepois = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, depois, Map.of());
+
+        assertThat(servico.listar(porSku)).extracting(ProdutoResumo::nome).containsExactly("Refactoring");
+        assertThat(servico.listar(criadosAposAntes)).hasSize(3);
+        assertThat(servico.listar(criadosAposDepois)).isEmpty();
     }
 }
