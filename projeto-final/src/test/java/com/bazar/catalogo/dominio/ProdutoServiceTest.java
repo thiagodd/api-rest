@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.logging.LogLevel;
+import org.springframework.data.domain.Sort;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
@@ -31,6 +32,9 @@ class ProdutoServiceTest {
 
     static final UUID PROGRAMACAO = UUID.fromString("0192f3a0-5555-7000-8000-000000000003");
     static final UUID ELETRONICOS = UUID.fromString("0192f3a0-5555-7000-8000-000000000002");
+
+    // A ordenação já traduzida pela API: propriedades da entidade e o desempate pelo id (13.02).
+    static final Sort POR_NOME = Sort.by("nome", "id");
 
     @Autowired
     ProdutoService servico;
@@ -59,7 +63,7 @@ class ProdutoServiceTest {
 
     @Test
     void listaResumosOrdenadosPorNomeSemCarregarAsEntidades(CapturedOutput saida) {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum()))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum(), POR_NOME))
                 .extracting(ProdutoResumo::sku)
                 .containsExactly("ELE-0001", "LIV-0042", "LIV-0043");
         assertThat(saida).contains(
@@ -68,38 +72,38 @@ class ProdutoServiceTest {
 
     @Test
     void combinaSoOsFiltrosInformados() {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO)))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0042", "LIV-0043");
         assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO).comStatus(StatusProduto.RASCUNHO)
-                .custando(new BigDecimal("130.00"), null)))
+                .custando(new BigDecimal("130.00"), null), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0043");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().custando(null, new BigDecimal("129.90")).comTexto("c")))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().custando(null, new BigDecimal("129.90")).comTexto("c"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001", "LIV-0042");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comStatus(StatusProduto.ATIVO))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comStatus(StatusProduto.ATIVO), POR_NOME)).isEmpty();
     }
 
     @Test
     void trataOsCuringasDoTextoComoTextoComum() {
         // Sem o escape, "%" casaria com qualquer nome.
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("100%")))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("100%"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("ELE-0001");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("%"))).hasSize(1);
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("_"))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("%"), POR_NOME)).hasSize(1);
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comTexto("_"), POR_NOME)).isEmpty();
     }
 
     @Test
     void filtraPorAtributoNoJsonbComChaveEValorComoParametros(CapturedOutput saida) {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Robert C. Martin")))
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Robert C. Martin"), POR_NOME))
                 .extracting(ProdutoResumo::sku).containsExactly("LIV-0042");
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Martin Fowler"))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor", "Martin Fowler"), POR_NOME)).isEmpty();
         // Os valores vão como parâmetros: uma aspa no valor não quebra a consulta, só não casa com nada.
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor'", "x' or '1'='1"))).isEmpty();
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().comAtributo("autor'", "x' or '1'='1"), POR_NOME)).isEmpty();
         assertThat(saida).contains("jsonb_extract_path_text(p1_0.atributos,?)=?").doesNotContain("'1'='1");
     }
 
     @Test
     void umaListaDeCategoriasEhUmOu() {
-        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO, ELETRONICOS))).hasSize(3);
+        assertThat(servico.listar(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO, ELETRONICOS), POR_NOME)).hasSize(3);
     }
 
     @Test
@@ -110,8 +114,28 @@ class ProdutoServiceTest {
         var criadosAposAntes = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, antes, Map.of());
         var criadosAposDepois = new FiltroDeProdutos(null, null, Set.of(), Set.of(), null, null, depois, Map.of());
 
-        assertThat(servico.listar(porSku)).extracting(ProdutoResumo::nome).containsExactly("Refactoring");
-        assertThat(servico.listar(criadosAposAntes)).hasSize(3);
-        assertThat(servico.listar(criadosAposDepois)).isEmpty();
+        assertThat(servico.listar(porSku, POR_NOME)).extracting(ProdutoResumo::nome).containsExactly("Refactoring");
+        assertThat(servico.listar(criadosAposAntes, POR_NOME)).hasSize(3);
+        assertThat(servico.listar(criadosAposDepois, POR_NOME)).isEmpty();
+    }
+
+    @Test
+    void ordenaPelosCamposPedidosEDesempataPeloId(CapturedOutput saida) {
+        servico.criar(new Produto("LIV-0044", "Domain-Driven Design", null, Dinheiro.deCentavos(15900, "BRL"), PROGRAMACAO,
+                Map.of()));
+        servico.criar(new Produto("LIV-0045", "Effective Java", null, Dinheiro.deCentavos(15900, "BRL"), PROGRAMACAO,
+                Map.of()));
+
+        var porPreco = servico.listar(FiltroDeProdutos.nenhum(), Sort.by(Sort.Order.desc("preco.valor"), Sort.Order.asc("id")));
+
+        assertThat(porPreco).extracting(ProdutoResumo::sku).endsWith("LIV-0042", "ELE-0001");
+        // Três produtos custam R$ 159,00: entre eles, quem decide é o id. Os ids ainda são aleatórios (v4; o v7 chega
+        // em 15.03), então a ordem não é a de criação, mas é sempre a mesma. O PostgreSQL compara uuid byte a byte,
+        // como o texto em hexadecimal; UUID.compareTo, do Java, compara com sinal e discordaria dele.
+        var empatados = porPreco.subList(0, 3);
+        assertThat(empatados).extracting(ProdutoResumo::sku).containsExactlyInAnyOrder("LIV-0043", "LIV-0044", "LIV-0045");
+        assertThat(empatados).extracting(produto -> produto.id().toString()).isSorted();
+        // O Hibernate cita o id pela posição na lista do select (1), como o nome em "order by 3" (10.05).
+        assertThat(saida).contains("order by p1_0.preco_valor desc,1");
     }
 }

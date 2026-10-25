@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -151,7 +152,7 @@ class ProdutoControllerTest {
     @Test
     void listaEmJsonPorPadraoEEmCsvQuandoPedido() {
         var id = UUID.fromString("0192f39f-2222-7000-8000-000000000042");
-        when(produtos.listar(any())).thenReturn(List.of(new ProdutoResumo(id, "LIV-0042", "Clean Code, 2ª edição",
+        when(produtos.listar(any(), any())).thenReturn(List.of(new ProdutoResumo(id, "LIV-0042", "Clean Code, 2ª edição",
                 Dinheiro.deCentavos(12990, "BRL"), StatusProduto.RASCUNHO, PROGRAMACAO)));
 
         assertThat(mvc.get().uri("/v1/produtos"))
@@ -269,13 +270,13 @@ class ProdutoControllerTest {
 
         @Test
         void convertemOsParametrosNoFiltroDoDominio() {
-            when(produtos.listar(any())).thenReturn(List.of());
+            when(produtos.listar(any(), any())).thenReturn(List.of());
 
             var resposta = mvc.get().uri("/v1/produtos?q=code&categoriaId={a},{b}&status=ATIVO&status=RASCUNHO"
                     + "&precoMin=1000&precoMax=20050&criadoApos=2026-01-01T00:00:00Z", PROGRAMACAO, ELETRONICOS).exchange();
 
             assertThat(resposta).hasStatusOk();
-            verify(produtos).listar(filtro.capture());
+            verify(produtos).listar(filtro.capture(), any());
             assertThat(filtro.getValue()).isEqualTo(new FiltroDeProdutos("code", null, Set.of(PROGRAMACAO, ELETRONICOS),
                     Set.of(StatusProduto.ATIVO, StatusProduto.RASCUNHO), new BigDecimal("10.00"), new BigDecimal("200.50"),
                     Instant.parse("2026-01-01T00:00:00Z"), Map.of()));
@@ -283,21 +284,21 @@ class ProdutoControllerTest {
 
         @Test
         void semParametrosNaoFiltraNada() {
-            when(produtos.listar(any())).thenReturn(List.of());
+            when(produtos.listar(any(), any())).thenReturn(List.of());
 
             assertThat(mvc.get().uri("/v1/produtos").exchange()).hasStatusOk();
 
-            verify(produtos).listar(FiltroDeProdutos.nenhum());
+            verify(produtos).listar(eq(FiltroDeProdutos.nenhum()), any());
         }
 
         @Test
         void parametroVazioEhOMesmoQueAusente() {
-            when(produtos.listar(any())).thenReturn(List.of());
+            when(produtos.listar(any(), any())).thenReturn(List.of());
 
             assertThat(mvc.get().uri("/v1/produtos?q=&sku=&categoriaId=&status=&precoMin=&criadoApos=").exchange())
                     .hasStatusOk();
 
-            verify(produtos).listar(FiltroDeProdutos.nenhum());
+            verify(produtos).listar(eq(FiltroDeProdutos.nenhum()), any());
         }
 
         @Test
@@ -343,7 +344,7 @@ class ProdutoControllerTest {
 
         @Test
         void aBuscaRecebeOsCriteriosNoCorpo() {
-            when(produtos.listar(any())).thenReturn(List.of());
+            when(produtos.listar(any(), any())).thenReturn(List.of());
 
             var resposta = mvc.post().uri("/v1/produtos/buscas")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -354,7 +355,7 @@ class ProdutoControllerTest {
                     .exchange();
 
             assertThat(resposta).hasStatusOk();
-            verify(produtos).listar(filtro.capture());
+            verify(produtos).listar(filtro.capture(), any());
             assertThat(filtro.getValue()).isEqualTo(FiltroDeProdutos.nenhum().daCategoria(PROGRAMACAO)
                     .custando(null, new BigDecimal("150.00")).comAtributo("autor", "Robert C. Martin"));
         }
@@ -388,6 +389,83 @@ class ProdutoControllerTest {
 
             assertThat(resposta).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
             verifyNoInteractions(produtos);
+        }
+    }
+
+    @Nested
+    class Ordenacao {
+
+        final ArgumentCaptor<Sort> ordenacao = ArgumentCaptor.forClass(Sort.class);
+
+        Sort ordenacaoRecebida(String uri) {
+            when(produtos.listar(any(), any())).thenReturn(List.of());
+            assertThat(mvc.get().uri(uri).exchange()).hasStatusOk();
+            verify(produtos).listar(any(), ordenacao.capture());
+            return ordenacao.getValue();
+        }
+
+        @Test
+        void semSortOrdenaPeloNomeEDesempataPeloId() {
+            assertThat(ordenacaoRecebida("/v1/produtos")).isEqualTo(Sort.by("nome", "id"));
+        }
+
+        @Test
+        void traduzOsNomesDoContratoParaAsPropriedadesDaEntidade() {
+            assertThat(ordenacaoRecebida("/v1/produtos?sort=precoEmCentavos,desc&sort=nome"))
+                    .isEqualTo(Sort.by(Sort.Order.desc("preco.valor"), Sort.Order.asc("nome"), Sort.Order.asc("id")));
+        }
+
+        @Test
+        void variosCamposNaMesmaDirecaoNumParametroSo() {
+            assertThat(ordenacaoRecebida("/v1/produtos?sort=criadoEm,sku,desc"))
+                    .isEqualTo(Sort.by(Sort.Order.desc("criadoEm"), Sort.Order.desc("sku"), Sort.Order.asc("id")));
+        }
+
+        @Test
+        void recusaUmCampoForaDaLista() {
+            // preco é o nome da propriedade na entidade, não no contrato; id também não é um campo ordenável.
+            assertThat(mvc.get().uri("/v1/produtos?sort=preco,desc&sort=id").header("Accept-Language", "pt-BR").exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().isLenientlyEqualTo("""
+                            { "type": "https://api.bazar.example/problemas/ordenacao-invalida",
+                              "detail": "Ordenação não aceita: preco; id. Ordene por até 3 campos diferentes entre: criadoEm, nome, precoEmCentavos, sku.",
+                              "ordenacao": ["preco", "id"],
+                              "camposAceitos": ["criadoEm", "nome", "precoEmCentavos", "sku"],
+                              "maximoDeCampos": 3 }
+                            """);
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void umaDirecaoInvalidaViraUmCampoDesconhecido() {
+            // O Spring só reconhece asc e desc no fim; "decrescente" é lido como mais uma propriedade.
+            assertThat(mvc.get().uri("/v1/produtos?sort=nome,decrescente").exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.ordenacao").asArray().containsExactly("decrescente");
+        }
+
+        @Test
+        void recusaIgnoreCaseCampoRepetidoECamposDemais() {
+            assertThat(mvc.get().uri("/v1/produtos?sort=nome,ignorecase").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
+            assertThat(mvc.get().uri("/v1/produtos?sort=nome&sort=nome,desc").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
+            assertThat(mvc.get().uri("/v1/produtos?sort=nome&sort=sku&sort=criadoEm&sort=precoEmCentavos").exchange())
+                    .hasStatus(HttpStatus.BAD_REQUEST)
+                    .bodyJson().extractingPath("$.ordenacao").asArray().containsExactly("precoEmCentavos");
+            verifyNoInteractions(produtos);
+        }
+
+        @Test
+        void aBuscaAceitaOSortNaQuery() {
+            when(produtos.listar(any(), any())).thenReturn(List.of());
+
+            var resposta = mvc.post().uri("/v1/produtos/buscas?sort=precoEmCentavos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}")
+                    .exchange();
+
+            assertThat(resposta).hasStatusOk();
+            verify(produtos).listar(any(), ordenacao.capture());
+            assertThat(ordenacao.getValue()).isEqualTo(Sort.by("preco.valor", "id"));
         }
     }
 

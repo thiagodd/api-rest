@@ -30,9 +30,10 @@ public class ProdutoService {
 
     // Sem entidades gerenciadas: a projeção seleciona só as colunas de ProdutoResumo.
     @Transactional(readOnly = true)
-    public List<ProdutoResumo> listar(FiltroDeProdutos filtro) {
+    // A ordenação já chega com os nomes das propriedades da entidade e com o desempate pelo id (13.02).
+    public List<ProdutoResumo> listar(FiltroDeProdutos filtro, Sort ordenacao) {
         return produtos.findBy(ProdutoSpecifications.filtradoPor(filtro),
-                consulta -> consulta.as(ProdutoResumo.class).sortBy(Sort.by("nome")).all());
+                consulta -> consulta.as(ProdutoResumo.class).sortBy(ordenacao).all());
     }
 
     @Transactional(readOnly = true)

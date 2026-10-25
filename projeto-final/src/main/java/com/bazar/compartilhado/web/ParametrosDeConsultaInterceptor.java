@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,7 +26,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 /**
  * Recusa parâmetros de query que o endpoint não declara (12.02). Os nomes aceitos vêm da assinatura do método:
  * cada @RequestParam, explícito ou implícito (um tipo simples sem anotação), e os componentes de um record
- * recebido com @ModelAttribute (13.01). Um @RequestParam Map aceita tudo.
+ * recebido com @ModelAttribute (13.01) e o sort de um parâmetro Sort (13.02). Um @RequestParam Map aceita tudo.
  */
 public class ParametrosDeConsultaInterceptor implements HandlerInterceptor {
 
@@ -62,6 +63,10 @@ public class ParametrosDeConsultaInterceptor implements HandlerInterceptor {
             }
             if (anotacao != null) {
                 nomes.add(StringUtils.hasText(anotacao.name()) ? anotacao.name() : nomeNoCodigo(parametro));
+            }
+            // O nome padrão do SortHandlerMethodArgumentResolver; o Bazar não o troca.
+            else if (parametro.getParameterType() == Sort.class) {
+                nomes.add("sort");
             }
             else if (parametro.hasParameterAnnotation(ModelAttribute.class)) {
                 nomes.addAll(componentes(parametro.getParameterType()));

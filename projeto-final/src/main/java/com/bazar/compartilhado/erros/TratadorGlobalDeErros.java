@@ -75,6 +75,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return deDominio(ex, HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(OrdenacaoInvalidaException.class)
+    ResponseEntity<Object> ordenacaoInvalida(OrdenacaoInvalidaException ex, WebRequest request) {
+        return deDominio(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
     @ExceptionHandler(CampoInvalidoException.class)
     ResponseEntity<Object> campoInvalido(CampoInvalidoException ex, WebRequest request) {
         var fonte = getMessageSource();

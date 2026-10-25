@@ -1,12 +1,15 @@
 package com.bazar.catalogo.api;
 
+import java.util.Map;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoService;
 import com.bazar.compartilhado.Dinheiro;
 import com.bazar.compartilhado.Lista;
+import com.bazar.compartilhado.web.CamposOrdenaveis;
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +25,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/v1/produtos")
 public class ProdutoController {
 
+    // Os campos de ?sort=: o nome no contrato e a propriedade da entidade (13.02). Sem sort, ordena pelo nome.
+    static final CamposOrdenaveis ORDENACAO = new CamposOrdenaveis(Map.of(
+            "nome", "nome",
+            "precoEmCentavos", "preco.valor",
+            "sku", "sku",
+            "criadoEm", "criadoEm"), Sort.by("nome"));
+
     // O controller só conhece o serviço e o mapper: no @WebMvcTest, basta substituir o serviço (11.03).
     private final ProdutoService servico;
     private final ProdutoMapper mapper;
@@ -34,14 +44,16 @@ public class ProdutoController {
     // Uma projeção, e não entidades: só as colunas da listagem (10.05).
     // Os filtros chegam como parâmetros de query (13.01); a ordenação e a paginação, em 13.02–13.04.
     @GetMapping
-    public Lista<ProdutoResumoResponse> listar(@Valid @ModelAttribute FiltroProduto filtro) {
-        return new Lista<>(servico.listar(filtro.paraDominio()).stream().map(mapper::paraResumo).toList());
+    public Lista<ProdutoResumoResponse> listar(@Valid @ModelAttribute FiltroProduto filtro, Sort sort) {
+        return new Lista<>(servico.listar(filtro.paraDominio(), ORDENACAO.traduzir(sort)).stream()
+                .map(mapper::paraResumo).toList());
     }
 
     // Uma consulta com corpo: não altera nada, mas usa POST porque os critérios não cabem bem numa URL (13.01).
     @PostMapping("/buscas")
-    public Lista<ProdutoResumoResponse> buscar(@Valid @RequestBody BuscaDeProdutos busca) {
-        return new Lista<>(servico.listar(busca.paraDominio()).stream().map(mapper::paraResumo).toList());
+    public Lista<ProdutoResumoResponse> buscar(@Valid @RequestBody BuscaDeProdutos busca, Sort sort) {
+        return new Lista<>(servico.listar(busca.paraDominio(), ORDENACAO.traduzir(sort)).stream()
+                .map(mapper::paraResumo).toList());
     }
     @PostMapping
     public ResponseEntity<ProdutoResponse> criar(@Valid @RequestBody CriarProdutoRequest request) {
