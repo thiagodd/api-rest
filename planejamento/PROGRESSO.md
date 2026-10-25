@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 117 · **rascunho:** 0 · **revisão:** 11 · **pronta:** 15
+**Total:** 143 páginas · **esqueleto:** 116 · **rascunho:** 0 · **revisão:** 12 · **pronta:** 15
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -82,7 +82,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 09.01 | O caminho de uma requisição no Spring MVC | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/09-01-o-caminho-de-uma-requisicao-no-spring-mvc.mdx` | esqueleto |
+| 09.01 | O caminho de uma requisição no Spring MVC | intermediario | essencial | `src/content/03-construindo-apis-com-spring-boot/09-01-o-caminho-de-uma-requisicao-no-spring-mvc.mdx` | revisao |
 | 09.02 | Argument resolvers e return value handlers customizados | avancado | complementar | `src/content/03-construindo-apis-com-spring-boot/09-02-argument-resolvers-e-return-value-handlers-customizados.mdx` | esqueleto |
 | 09.03 | HttpMessageConverter e a serialização por dentro | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-03-httpmessageconverter-e-a-serializacao-por-dentro.mdx` | esqueleto |
 | 09.04 | Filtros, interceptors e AOP: quando usar cada um | intermediario | importante | `src/content/03-construindo-apis-com-spring-boot/09-04-filtros-interceptors-e-aop-quando-usar-cada-um.mdx` | esqueleto |
