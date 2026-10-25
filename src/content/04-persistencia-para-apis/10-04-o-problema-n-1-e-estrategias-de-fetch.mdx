@@ -18,7 +18,7 @@ referencias:
 
 O Bazar ganha `GET /v1/pedidos?clienteId=...`: os pedidos mais recentes de um cliente, cada um com os seus itens. Em desenvolvimento, o cliente de teste tem dois pedidos e a resposta sai em 15 ms. Em produção, um cliente fiel tem 20 pedidos na primeira página, e a resposta leva 400 ms. Com 50 requisições por segundo, o banco começa a sofrer.
 
-O código não tem nada de errado à primeira vista: uma consulta busca os pedidos e o código percorre os itens de cada um. O problema só aparece no log de SQL: **uma** consulta para os pedidos e **mais uma para os itens de cada pedido**. Com 20 pedidos, 21 idas ao banco, quando 1 bastaria. É o problema **N+1**, e ele cresce com os dados. Por isso passa por todos os testes com bancos pequenos e explode em produção.
+O código não tem nada de errado à primeira vista: uma consulta busca os pedidos e o código percorre os itens de cada um. O problema só aparece no log de SQL: **uma** consulta para os pedidos e **mais uma para os itens de cada pedido**. Com 20 pedidos, 21 idas ao banco, quando 1 bastaria. É o problema **<Term id="n-mais-1">N+1</Term>**, e ele cresce com os dados. Por isso passa por todos os testes com bancos pequenos e explode em produção.
 
 Pense num garçom que anota o pedido de uma mesa de dez pessoas indo à cozinha uma vez por prato: dez viagens, quando uma comanda com tudo resolveria. Cada viagem é rápida, mas o tempo que importa é o da soma, e enquanto ele anda, as outras mesas esperam.
 

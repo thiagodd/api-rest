@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 106 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 31
+**Total:** 143 páginas · **esqueleto:** 106 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 37
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -94,12 +94,12 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 10.01 | Spring Data JPA essencial para APIs | basico | essencial | `src/content/04-persistencia-para-apis/10-01-spring-data-jpa-essencial-para-apis.mdx` | revisao |
-| 10.02 | Migrations com Flyway | basico | essencial | `src/content/04-persistencia-para-apis/10-02-migrations-com-flyway.mdx` | revisao |
-| 10.03 | Transações na camada de serviço | intermediario | essencial | `src/content/04-persistencia-para-apis/10-03-transacoes-na-camada-de-servico.mdx` | revisao |
-| 10.04 | O problema N+1 e estratégias de fetch | intermediario | essencial | `src/content/04-persistencia-para-apis/10-04-o-problema-n-1-e-estrategias-de-fetch.mdx` | revisao |
-| 10.05 | Projeções e consultas para leitura | intermediario | importante | `src/content/04-persistencia-para-apis/10-05-projecoes-e-consultas-para-leitura.mdx` | revisao |
-| 10.06 | Concorrência no banco: locking otimista e pessimista | intermediario | essencial | `src/content/04-persistencia-para-apis/10-06-concorrencia-no-banco-locking-otimista-e-pessimista.mdx` | revisao |
+| 10.01 | Spring Data JPA essencial para APIs | basico | essencial | `src/content/04-persistencia-para-apis/10-01-spring-data-jpa-essencial-para-apis.mdx` | pronta |
+| 10.02 | Migrations com Flyway | basico | essencial | `src/content/04-persistencia-para-apis/10-02-migrations-com-flyway.mdx` | pronta |
+| 10.03 | Transações na camada de serviço | intermediario | essencial | `src/content/04-persistencia-para-apis/10-03-transacoes-na-camada-de-servico.mdx` | pronta |
+| 10.04 | O problema N+1 e estratégias de fetch | intermediario | essencial | `src/content/04-persistencia-para-apis/10-04-o-problema-n-1-e-estrategias-de-fetch.mdx` | pronta |
+| 10.05 | Projeções e consultas para leitura | intermediario | importante | `src/content/04-persistencia-para-apis/10-05-projecoes-e-consultas-para-leitura.mdx` | pronta |
+| 10.06 | Concorrência no banco: locking otimista e pessimista | intermediario | essencial | `src/content/04-persistencia-para-apis/10-06-concorrencia-no-banco-locking-otimista-e-pessimista.mdx` | pronta |
 
 ## Parte 5: Testes de API
 

@@ -95,4 +95,8 @@ export const glossario: TermoGlossario[] = [
   { id: 'locking-otimista', termo: 'Locking otimista', definicao: 'Controle de concorrência sem travas: cada registro tem uma versão, e a gravação só acontece se a versão ainda for a lida. Se não for, a operação falha e pode ser repetida.', pagina: '10.06' },
   { id: 'locking-pessimista', termo: 'Locking pessimista', definicao: 'Controle de concorrência com travas: a linha é bloqueada na leitura (SELECT ... FOR UPDATE), e as outras transações esperam até o commit.', pagina: '10.06' },
   { id: 'deadlock', termo: 'Deadlock', definicao: 'Duas ou mais transações esperando, em círculo, travas que as outras seguram. O banco detecta e desfaz uma delas.', pagina: '10.06' },
+  { id: 'migration', termo: 'Migration', definicao: 'Script versionado que altera o esquema do banco. As migrations são aplicadas em ordem e registradas, para que todo ambiente chegue ao mesmo esquema.', pagina: '10.02' },
+  { id: 'expand-contract', termo: 'Expand-contract', definicao: 'Técnica para mudar um esquema ou contrato sem quebrar a versão anterior: primeiro acrescentar (expandir), depois migrar os usos e só no fim remover (contrair).', pagina: '10.02' },
+  { id: 'projecao', termo: 'Projeção', definicao: 'Consulta que devolve só os campos necessários, num objeto simples (record ou interface), em vez da entidade completa e gerenciada.', pagina: '10.05' },
+  { id: 'cqrs', termo: 'CQRS', definicao: 'Command Query Responsibility Segregation: separar o modelo usado para alterar dados do modelo usado para lê-los.', pagina: '10.05' },
 ]

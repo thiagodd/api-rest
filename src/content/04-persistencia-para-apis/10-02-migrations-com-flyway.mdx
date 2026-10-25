@@ -31,7 +31,7 @@ Pense no livro de registro de um prédio em reforma. Cada obra é anotada com n�
 
 ### Como o Flyway funciona
 
-Uma *migration* é um arquivo SQL com uma versão no nome. Na inicialização da aplicação, o Flyway:
+Uma <Term id="migration">*migration*</Term> é um arquivo SQL com uma versão no nome. Na inicialização da aplicação, o Flyway:
 
 1. Lê a tabela `flyway_schema_history` do banco (e a cria, se não existir).
 2. Procura os arquivos em `src/main/resources/db/migration` (a pasta padrão do Spring Boot).
@@ -119,7 +119,7 @@ Com o Flyway, o Hibernate deixa de criar tabelas e passa a **conferir** que cada
 
 Num *deploy* sem parada (*rolling update*, [29.04](/producao-e-deploy/kubernetes-para-apis-probes-graceful-shutdown-e-rollouts)), as instâncias são trocadas aos poucos. Durante alguns minutos, **a versão nova e a anterior rodam juntas, sobre o mesmo banco**. Como o Flyway roda na inicialização, a primeira instância nova muda o esquema enquanto as antigas ainda estão atendendo.
 
-Renomear uma coluna num único *deploy* (`alter table categoria rename column categoria_pai_id to pai_id`) quebra as instâncias antigas na hora: o SQL delas cita uma coluna que não existe mais. A solução é o **expand-contract** (*parallel change*, nas palavras de Martin Fowler): primeiro **expandir** o esquema para que as duas versões funcionem, depois migrar, e só no fim **contrair**.
+Renomear uma coluna num único *deploy* (`alter table categoria rename column categoria_pai_id to pai_id`) quebra as instâncias antigas na hora: o SQL delas cita uma coluna que não existe mais. A solução é o **<Term id="expand-contract">expand-contract</Term>** (*parallel change*, nas palavras de Martin Fowler): primeiro **expandir** o esquema para que as duas versões funcionem, depois migrar, e só no fim **contrair**.
 
 Para uma renomeação, com o Flyway rodando na inicialização, são quatro passos:
 

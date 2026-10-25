@@ -30,7 +30,7 @@ Pense numa biblioteca. Para saber quais livros existem numa estante, você consu
 
 ### Entidades são para escrever
 
-Uma entidade gerenciada é ótima para **alterar** dados: o Hibernate rastreia as mudanças, aplica o *locking* otimista e grava no *commit*. Para **ler** e devolver ao cliente, esse trabalho todo é desperdício. A alternativa é a **projeção**: a consulta devolve só as colunas pedidas, num objeto que não é gerenciado.
+Uma entidade gerenciada é ótima para **alterar** dados: o Hibernate rastreia as mudanças, aplica o *locking* otimista e grava no *commit*. Para **ler** e devolver ao cliente, esse trabalho todo é desperdício. A alternativa é a **<Term id="projecao">projeção</Term>**: a consulta devolve só as colunas pedidas, num objeto que não é gerenciado.
 
 O Spring Data JPA tem três formas de projeção.
 
@@ -114,7 +114,7 @@ O Spring Boot registra um *bean* `JdbcClient` sobre o mesmo `DataSource` e parti
 
 ### CQRS leve
 
-**CQRS** (*Command Query Responsibility Segregation*) separa o modelo de escrita do modelo de leitura. Na forma completa, são bancos ou tabelas diferentes, atualizados por eventos ([30.03](/arquitetura/eventos-e-mensageria-introducao)). O Bazar faz a versão **leve**, no mesmo banco:
+**<Term id="cqrs">CQRS</Term>** (*Command Query Responsibility Segregation*) separa o modelo de escrita do modelo de leitura. Na forma completa, são bancos ou tabelas diferentes, atualizados por eventos ([30.03](/arquitetura/eventos-e-mensageria-introducao)). O Bazar faz a versão **leve**, no mesmo banco:
 
 - **Escrita**: entidades, serviços transacionais, regras no domínio (`Produto.atualizar`, `Estoque.reservar`).
 - **Leitura**: projeções, `Specification` com `as(...)` e `JdbcClient`, devolvendo *records* moldados para cada resposta.
