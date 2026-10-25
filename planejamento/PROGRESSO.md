@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 77 · **rascunho:** 0 · **revisão:** 4 · **pronta:** 62
+**Total:** 143 páginas · **esqueleto:** 76 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 62
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -170,7 +170,7 @@
 | 17.02 | springdoc-openapi: documentação a partir do código | basico | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-02-springdoc-openapi-documentacao-a-partir-do-codigo.mdx` | revisao |
 | 17.03 | API-first: o contrato como fonte da verdade | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-03-api-first-o-contrato-como-fonte-da-verdade.mdx` | revisao |
 | 17.04 | Governança: linting e detecção de breaking changes | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-04-governanca-linting-e-deteccao-de-breaking-changes.mdx` | revisao |
-| 17.05 | Documentação além da referência | intermediario | complementar | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-05-documentacao-alem-da-referencia.mdx` | esqueleto |
+| 17.05 | Documentação além da referência | intermediario | complementar | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-05-documentacao-alem-da-referencia.mdx` | revisao |
 
 ### M18: Evolução e versionamento
 

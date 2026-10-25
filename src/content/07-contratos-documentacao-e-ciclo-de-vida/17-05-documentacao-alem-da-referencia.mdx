@@ -2,76 +2,402 @@
 id: "17.05"
 titulo: "Documentação além da referência"
 descricao: "A referência OpenAPI diz o que existe; guias dizem como usar. A falta de guias é a principal queixa de quem integra APIs."
-status: esqueleto
+status: revisao
 referencias:
-  - titulo: "diataxis.fr"
+  - titulo: "Diátaxis: um framework para documentação técnica"
     url: "https://diataxis.fr/"
-  - titulo: "docs.spring.io: reference / htmlsingle"
+  - titulo: "Spring REST Docs: documentação de referência"
     url: "https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/"
+  - titulo: "Spring Boot: testes com Spring REST Docs"
+    url: "https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html"
+  - titulo: "openapi-generator: geradores de clientes"
+    url: "https://openapi-generator.tech/docs/generators/"
+  - titulo: "Bruno: cliente de API com coleções em arquivos"
+    url: "https://www.usebruno.com/"
+  - titulo: "Postman: o relatório State of the API"
+    url: "https://www.postman.com/state-of-api/"
 ---
-
-{/* Página esqueleto gerada a partir do CURRICULO.md. Siga planejamento/GUIA-DE-ESCRITA.md
-    e remova cada <Draft> à medida que a seção for escrita. */}
 
 ## O problema
 
-<Draft title="Por que importa (do currículo)">
-A referência OpenAPI diz *o que* existe; guias dizem *como* usar. A falta de guias é a principal queixa de quem integra APIs.
+O Bazar tem um contrato OpenAPI completo, publicado com a Swagger UI ([17.02](/contratos-documentacao-e-ciclo-de-vida/springdoc-openapi-documentacao-a-partir-do-codigo)) e conferido por máquina ([17.04](/contratos-documentacao-e-ciclo-de-vida/governanca-linting-e-deteccao-de-breaking-changes)). Um lojista novo abre a Swagger UI para integrar o catálogo dele e encontra 26 operações em ordem alfabética. Ele não sabe por onde começar. Precisa criar a categoria antes do produto? Por que o produto criado não aparece na vitrine? Como pegar a segunda página? O que fazer com um `409`? A referência responde a tudo isso de forma espalhada: o `status` do produto é `RASCUNHO` (está no esquema), a paginação usa o header `Link` (está numa descrição de parâmetro), o `409` tem um `codigo` (está no catálogo de erros). Nenhuma página diz "para vender seu primeiro produto, faça isto, nesta ordem".
 
-Comece com o problema que o conceito resolve e uma analogia do mundo real.
-</Draft>
+Nas pesquisas anuais do Postman sobre APIs, a falta de documentação aparece ano após ano entre os principais obstáculos para consumir uma API. Quase sempre o que falta não é a referência, porque essa as ferramentas geram. Falta o texto que ensina a usar a API.
+
+É a diferença entre um dicionário e um curso de idiomas. O dicionário tem todas as palavras, com a grafia e o significado exatos, e ninguém aprende uma língua lendo um dicionário. O curso começa com "como se apresentar", usa só as palavras de que você precisa naquele momento e mostra como elas se combinam. Quem já fala a língua usa o dicionário; quem está começando precisa do curso.
+
+> **A pergunta desta página:** que tipos de documentação uma API precisa além da referência, quais guias não podem faltar, e como manter os exemplos desses guias corretos à medida que a API muda, com o Spring REST Docs?
 
 ## O conceito
 
-<Draft title="Tópicos previstos">
-- Tipos de documentação (Diátaxis: tutorial, guia, referência, explicação)
-- *Getting started*, autenticação, erros, paginação, *rate limits*, *changelog*
-- Spring REST Docs 4 (documentação gerada de testes) × springdoc
-- Coleções Bruno/Postman; SDKs gerados
-- Portal do desenvolvedor
-</Draft>
+### Os quatro tipos de documentação
 
-## Diagrama
+O [Diátaxis](https://diataxis.fr/), de Daniele Procida, organiza a documentação técnica em quatro tipos. Cada um responde a uma necessidade diferente de quem lê, e misturá-los é a causa mais comum de documentação que existe e não ajuda:
 
-<Draft title="Diagramas previstos">
-Nenhum diagrama previsto no currículo. Avalie se um fluxo ajuda; se não, remova esta seção.
-</Draft>
+| Tipo | Serve para | Pergunta de quem lê | No Bazar |
+|---|---|---|---|
+| **Tutorial** | Aprender, fazendo | "Por onde eu começo?" | Vender o primeiro produto: autenticar, criar a categoria, criar o produto, ativá-lo, ver o pedido |
+| **Guia prático** (*how-to*) | Resolver uma tarefa | "Como eu faço X?" | Como paginar a listagem; como cancelar um pedido; como receber o webhook de pagamento |
+| **Referência** | Consultar | "O que é exatamente X?" | O contrato OpenAPI na Swagger UI; o catálogo de erros em `/problemas` |
+| **Explicação** | Entender | "Por que é assim?" | Por que os ids são UUID; por que o preço é um objeto `Dinheiro`; por que um enum pode ganhar valores |
+
+A referência é o único tipo que uma ferramenta gera sozinha, e é por isso que muitas APIs só têm referência. Os outros três exigem alguém que conheça os usuários e escreva para eles.
+
+### Os guias que não podem faltar
+
+Para uma API, alguns guias são quase obrigatórios, porque respondem às perguntas que todo integrador faz na primeira semana:
+
+- **Primeiros passos** (*getting started*): do zero à primeira chamada que funciona, em minutos. Ambiente de testes, credenciais, um `curl` que dá certo. É o tutorial.
+- **Autenticação**: como obter o token, quanto tempo ele dura, como renovar, o que é um `401` e o que é um `403` ([26.04](/seguranca-essencial-para-apis/resource-server-com-jwt-o-essencial)).
+- **Erros**: o formato Problem Details, o catálogo de tipos e, para cada tipo, o que o cliente deve fazer: corrigir a requisição, tentar de novo, avisar o usuário ([16.01](/design-de-apis-profissional/projetando-erros-catalogo-codigos-e-decisoes-dificeis)).
+- **Paginação**: o header `Link`, o cursor opaco, o `limit`, e o que não fazer (montar o cursor à mão) ([13.04](/design-de-apis-profissional/paginacao-por-cursor-keyset)).
+- **Limites de uso**: quantas requisições, os headers que informam o consumo e o que fazer com um `429` ([23.01](/padroes-avancados-de-http/rate-limiting-e-quotas)).
+- **Changelog**: o que mudou em cada versão, com as mudanças incompatíveis destacadas. O `oasdiff changelog` da 17.04 dá o rascunho; uma pessoa escreve o texto.
+- **Política de versões e depreciação**: quanto tempo uma versão dura e como o fim dela é anunciado ([18.04](/contratos-documentacao-e-ciclo-de-vida/depreciacao-e-desligamento-de-apis)).
+
+### O problema dos exemplos
+
+Um guia vive de exemplos: a requisição, a resposta, o erro. E exemplos escritos à mão envelhecem. O campo renomeado na versão 1.3 continua com o nome velho no guia de primeiros passos, que ninguém relê, e o integrador copia um exemplo que não funciona. O guia passa a ensinar uma API que não existe mais.
+
+O [Spring REST Docs](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/) resolve isso invertendo a origem dos exemplos: eles saem dos testes. Cada teste faz uma requisição real (com `MockMvc`, `WebTestClient` ou RestAssured) e grava trechos de documentação, os *snippets*: a requisição em HTTP, o mesmo em `curl` e em HTTPie, a resposta, e tabelas com os parâmetros e os campos. Os guias, escritos à mão em Asciidoctor (ou Markdown), incluem esses trechos.
+
+Há um segundo efeito, mais importante. O REST Docs exige que **todo** campo da resposta esteja descrito no teste. Um campo novo sem descrição, ou uma descrição de um campo que sumiu, faz o teste falhar. A documentação deixa de poder ficar para trás do código.
+
+### REST Docs × springdoc
+
+As duas ferramentas parecem concorrentes e fazem coisas diferentes:
+
+<Comparison
+  title="Spring REST Docs × springdoc"
+  columns={['Spring REST Docs', 'springdoc']}
+  rows={[
+    { label: 'Produz', values: ['Trechos (snippets) para guias escritos à mão', 'O contrato OpenAPI e uma UI de referência'] },
+    { label: 'Origem', values: ['Requisições reais feitas nos testes', 'As classes e anotações do código'] },
+    { label: 'Tipo (Diátaxis)', values: ['Exemplos para tutoriais e guias práticos', 'Referência'] },
+    { label: 'Se um campo não for descrito', values: ['O teste falha', 'O campo aparece sem descrição'] },
+    { label: 'Mostra o JSON real', values: ['Sim: é a resposta do teste', 'Não: é o esquema deduzido da classe'] },
+    { label: 'Contrato para ferramentas', values: ['Não (há projetos da comunidade que geram OpenAPI dos testes)', 'Sim: clientes gerados, mock, lint, diff'] },
+  ]}
+/>
+
+O Bazar usa as duas: o springdoc para o contrato e a referência, o REST Docs para os exemplos dos guias. Não há conflito, porque uma descreve o que existe e a outra mostra como usar.
+
+### Coleções, SDKs e portal
+
+Três outras formas de documentação completam o que um integrador usa no dia a dia:
+
+- **Coleções** do [Bruno](https://www.usebruno.com/) ou do Postman: as requisições prontas, com variáveis de ambiente, para o integrador explorar a API sem escrever código. As duas ferramentas importam um contrato OpenAPI. O Bruno guarda cada requisição como um arquivo de texto, que pode morar no repositório da API e passar por revisão junto com ela.
+- **SDKs gerados**: o openapi-generator da [17.03](/contratos-documentacao-e-ciclo-de-vida/api-first-o-contrato-como-fonte-da-verdade) também gera clientes. Para Java, o gerador `java` tem bibliotecas como `restclient` (o `RestClient` do Spring), `webclient` e `native` (o `HttpClient` do JDK); há geradores para TypeScript, Kotlin, Python, Go e dezenas de outras linguagens. Um SDK é documentação executável, e a qualidade dele depende da qualidade do contrato: `operationId` estáveis, esquemas com nome, enums extensíveis.
+- **Portal do desenvolvedor**: o lugar que junta tudo, com referência, guias, changelog, status da API e o cadastro para obter credenciais. Pode ser um site estático gerado de Markdown, um produto pronto ou um catálogo interno como o Backstage (17.04).
 
 ## Na prática
 
-<Draft title="Código previsto">
-teste com Spring REST Docs gerando um *snippet*.
-</Draft>
+### O REST Docs no Bazar
+
+O Spring Boot 4.1.2 gerencia a versão do REST Docs (4.0.2). O starter traz o núcleo e a autoconfiguração; a integração com o `MockMvc` vem num módulo à parte:
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-restdocs</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.restdocs</groupId>
+    <artifactId>spring-restdocs-mockmvc</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+O teste é um *slice test* da camada web, como o `ProdutoControllerTest` da [11.03](/testes-de-api/testando-a-camada-web-webmvctest-mockmvctester): o serviço é um dublê, e só o controller, o Jackson e o tratamento de erros sobem. O `@AutoConfigureRestDocs` configura o `MockMvc` para gravar os trechos em `target/generated-snippets`:
+
+```java title="DocumentacaoDeProdutosTest.java"
+/**
+ * Gera os trechos (snippets) do guia de produtos em target/generated-snippets (17.05). Um campo da resposta que não
+ * esteja descrito aqui, ou um campo descrito que não exista, faz o teste falhar: o guia não fica para trás do código.
+ */
+@WebMvcTest(ProdutoController.class)
+@AutoConfigureRestDocs
+@Import({ ProdutoMapperImpl.class, DinheiroMapperImpl.class, AplicadorDePatch.class })
+class DocumentacaoDeProdutosTest {
+
+    @Autowired
+    MockMvc mvc;
+
+    @MockitoBean
+    ProdutoService produtos;
+
+    @Test
+    void detalharUmProduto() throws Exception {
+        var produto = umProduto().comAtributo("autor", "Robert C. Martin").build();
+        when(produtos.detalhar(produto.getId())).thenReturn(produto);
+
+        mvc.perform(get("/v1/produtos/{id}", produto.getId()))
+                .andExpect(status().isOk())
+                .andDo(document("detalhar-produto",
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(parameterWithName("id").description("O id do produto (UUID).")),
+                        queryParameters(parameterWithName("embed").optional()
+                                .description("`categoria` traz a categoria dentro do produto.")),
+                        responseFields(
+                                fieldWithPath("id").description("O id do produto."),
+                                fieldWithPath("sku").description("O código do lojista, único no catálogo."),
+                                fieldWithPath("nome").description("O nome exibido na vitrine."),
+                                // Sem o tipo, o REST Docs o deduz do exemplo, e o null daria "Null". O optional aceita o null.
+                                fieldWithPath("descricao").type(JsonFieldType.STRING).optional()
+                                        .description("A descrição longa. `null` quando não há."),
+                                fieldWithPath("precoEmCentavos").description("O preço em centavos de real."),
+                                fieldWithPath("categoriaId").description("A categoria do produto."),
+                                fieldWithPath("status")
+                                        .description("`RASCUNHO`, `ATIVO` ou `DESCONTINUADO`. Lista extensível."),
+                                subsectionWithPath("atributos")
+                                        .description("Pares nome e valor livres, como o autor de um livro."),
+                                fieldWithPath("criadoEm").description("Quando o produto foi cadastrado (UTC)."),
+                                fieldWithPath("atualizadoEm").description("A última alteração (UTC)."))));
+    }
+}
+```
+
+Os pontos que importam:
+
+- **`RestDocumentationRequestBuilders.get`**, e não o `get` do `MockMvcRequestBuilders`. Com ele, o REST Docs sabe que `{id}` é um parâmetro de caminho e consegue documentá-lo com `pathParameters`.
+- **`document("detalhar-produto", ...)`** dá nome à pasta dos trechos.
+- **`preprocessResponse(prettyPrint())`** formata o JSON nos trechos. Os pré-processadores também removem ou mascaram headers e campos antes da gravação.
+- **`subsectionWithPath("atributos")`** descreve o objeto inteiro sem descrever cada chave, que é livre.
+- **`.optional()`** marca um parâmetro ou campo que pode faltar. O `embed` é opcional; um parâmetro descrito e não marcado como opcional precisa estar na requisição.
+
+### Os trechos gerados
+
+O teste grava nove arquivos em `target/generated-snippets/detalhar-produto/`: `curl-request.adoc`, `httpie-request.adoc`, `http-request.adoc`, `http-response.adoc`, `request-body.adoc`, `response-body.adoc`, `path-parameters.adoc`, `query-parameters.adoc` e `response-fields.adoc`. O `curl-request.adoc`:
+
+```text title="curl-request.adoc"
+[source,bash]
+----
+$ curl 'http://localhost:8080/v1/produtos/01a17549-bce3-748d-92bd-d35f24eccd76' -i -X GET
+----
+```
+
+O `http-response.adoc` é a resposta que o controller de verdade produziu, serializada pelo Jackson da aplicação:
+
+<HttpExchange
+  title="A resposta gravada no trecho http-response.adoc"
+  request={{ method: 'GET', url: '/v1/produtos/01a17549-bce3-748d-92bd-d35f24eccd76' }}
+  response={{ status: 200, headers: { 'Content-Type': 'application/json', 'Content-Length': '384' }, body: { id: '01a17549-bce3-748d-92bd-d35f24eccd76', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 12990, categoriaId: '0192f3a0-5555-7000-8000-000000000003', status: 'RASCUNHO', atributos: { autor: 'Robert C. Martin' }, criadoEm: '2026-10-25T22:58:49.187677Z', atualizadoEm: '2026-10-25T22:58:49.187677Z' } }}
+>
+É o JSON real, e não um esquema: o `descricao` sai como `null`, o `status` é o de um produto recém-criado e os instantes estão em UTC. O host `localhost:8080` é o padrão do REST Docs; o `@AutoConfigureRestDocs(uriScheme = "https", uriHost = "api.bazar.example", uriPort = 443)` troca pelo endereço que o guia deve mostrar.
+</HttpExchange>
+
+E o `response-fields.adoc` é uma tabela de Asciidoctor com o caminho, o tipo e a descrição de cada campo:
+
+```text title="response-fields.adoc (trecho)"
+|===
+|Path|Type|Description
+
+|`+id+`
+|`+String+`
+|O id do produto.
+
+|`+descricao+`
+|`+String+`
+|A descrição longa. `null` quando não há.
+...
+|===
+```
+
+### O teste que impede o guia de envelhecer
+
+Se um campo da resposta não estiver descrito no teste, o REST Docs falha. Com a linha do `criadoEm` removida:
+
+```text
+org.springframework.restdocs.snippet.SnippetException:
+The following parts of the payload were not documented:
+{
+  "criadoEm" : "2026-10-25T22:59:42.889008Z"
+}
+```
+
+O mesmo vale ao contrário: um campo descrito que não existe na resposta também falha. Quando a v2 do produto trocar `precoEmCentavos` por `preco` ([18.03](/contratos-documentacao-e-ciclo-de-vida/versionamento-nativo-no-spring-framework-7)), o teste da documentação quebra até alguém descrever o campo novo.
+
+O tipo de cada campo é deduzido do valor no exemplo, e isso tem uma armadilha: o `descricao` do exemplo é `null`, e sem configuração a tabela diria que o tipo é `Null`. Declarar `.type(JsonFieldType.STRING)` sozinho não basta:
+
+```text
+org.springframework.restdocs.payload.FieldTypesDoNotMatchException:
+The documented type of the field 'descricao' is String but the actual type is Null
+```
+
+Com `.type(JsonFieldType.STRING).optional()`, o REST Docs aceita o `null` do exemplo e a tabela mostra `String`.
+
+### Montando o guia
+
+Os trechos são peças. O guia é um arquivo Asciidoctor escrito à mão, por exemplo `src/docs/asciidoc/primeiros-passos.adoc`, que conta a história e inclui os trechos com a macro `operation`:
+
+```text title="src/docs/asciidoc/primeiros-passos.adoc (trecho)"
+== Consultar um produto
+
+Cada produto tem um id (UUID) que nunca muda. Com ele, o detalhe do produto:
+
+operation::detalhar-produto[snippets='curl-request,http-response,response-fields']
+
+O produto recém-criado está em `RASCUNHO` e não aparece na vitrine.
+Para publicá-lo, veja <<ativar-um-produto>>.
+```
+
+O `asciidoctor-maven-plugin`, com a dependência `spring-restdocs-asciidoctor`, transforma o guia em HTML na fase `prepare-package`, depois dos testes. O Bazar ainda não publica os guias: por enquanto, os trechos são gerados e conferidos a cada build, e a montagem do portal fica para quando houver integradores externos. Quem prefere Markdown configura os trechos com `TemplateFormats.markdown()`.
 
 ## Erros comuns
 
-<Draft>
-Design ruim vs bom com `<BadVsGood>` e os erros mais frequentes.
-</Draft>
+<BadVsGood title="Exemplos escritos à mão no guia" why="O exemplo à mão não é conferido por nada. O campo renomeado, o status que mudou e o header novo continuam errados no guia até alguém notar, e quem nota é o integrador, quando o código copiado não funciona. O trecho gerado pelo teste é a resposta real, e o teste falha quando a descrição e a resposta divergem.">
+<Bad title="O exemplo vive no texto">
+
+```text
+== Consultar um produto
+
+  GET /v1/produtos/{id}
+
+  {
+    "id": 42,
+    "nome": "Clean Code",
+    "preco": 129.90,
+    "status": "ativo"
+  }
+```
+
+</Bad>
+<Good title="O exemplo vem do teste">
+
+```text
+== Consultar um produto
+
+operation::detalhar-produto[snippets='curl-request,http-response,response-fields']
+```
+
+</Good>
+</BadVsGood>
+
+Outros erros frequentes:
+
+- **Só referência.** A Swagger UI publicada e nenhum guia. O integrador aprende a API por tentativa e erro, e o suporte responde as mesmas perguntas toda semana.
+- **Tipos misturados.** Um tutorial que para no meio para explicar a história dos UUIDs, ou uma referência cheia de "primeiro faça isto". Cada página tem um tipo e um leitor.
+- **Guia de erros sem ação.** Listar os códigos não basta. Para cada um, o que o cliente faz: corrigir, repetir, esperar, avisar o usuário.
+- **Changelog que é o log do git.** "Refatora ProdutoMapper" não interessa ao integrador. O changelog lista mudanças na API, com as incompatíveis destacadas.
+- **`subsectionWithPath` em tudo.** Ele dispensa a descrição dos campos internos, e com ela a garantia de que estão documentados. Use só para estruturas livres, como os `atributos`.
+- **Exemplos com dados de produção** nos trechos ou nas coleções: CPFs, e-mails e tokens reais. Use dados de teste e os pré-processadores para mascarar headers como `Authorization`.
 
 ## Boas práticas
 
-<Draft>
-Lista curta e acionável de boas práticas.
-</Draft>
-
-## Por baixo dos panos
-
-<Draft>
-Opcional: use `<DeepDive>` para o funcionamento interno. Remova a seção se não fizer sentido.
-</Draft>
+- **Os quatro tipos**: tutorial, guias práticos, referência e explicação, cada um no seu lugar.
+- **Primeiros passos que funcionam em minutos**, com um ambiente de testes e um `curl` que dá certo.
+- **Um guia para erros, autenticação, paginação e limites**, as perguntas da primeira semana.
+- **Exemplos gerados por testes** com o REST Docs, e os testes falhando quando a documentação fica para trás.
+- **Referência gerada do contrato**, com descrições e exemplos no próprio contrato.
+- **Changelog escrito para o integrador**, a partir do `oasdiff changelog`.
+- **Uma coleção do Bruno no repositório**, revisada com a API.
 
 ## No projeto Bazar
 
-<Draft>
-Opcional: use `<ProjectStep>` quando esta página construir uma parte do projeto final.
-</Draft>
+<ProjectStep title="Os exemplos do guia gerados pelos testes" module="catalogo" tag="pagina-17.05" files={[
+  { path: 'pom.xml', change: 'alterado' },
+  { path: 'src/test/java/com/bazar/catalogo/api/DocumentacaoDeProdutosTest.java', change: 'novo' },
+]}>
+O Bazar ganha o Spring REST Docs 4.0.2, pelo `spring-boot-starter-restdocs` e pelo `spring-restdocs-mockmvc`, ambos só nos testes. O `DocumentacaoDeProdutosTest` documenta o `GET /v1/produtos/{id}`: parâmetros, campos da resposta e os exemplos em HTTP, `curl` e HTTPie, gravados em `target/generated-snippets/detalhar-produto` a cada build. Um campo novo no `ProdutoResponse` sem descrição faz o teste falhar. Os guias em Asciidoctor e o portal ficam para quando o Bazar tiver integradores externos.
+</ProjectStep>
 
 ## Resumo
 
-<Draft>
-Resumo em poucos itens, um `<Exercise>` e um `<Quiz>`.
-</Draft>
+- A referência diz o que existe; guias dizem como usar. Uma API só com referência obriga o integrador a aprender por tentativa e erro.
+- O Diátaxis separa quatro tipos: tutorial (aprender), guia prático (fazer), referência (consultar) e explicação (entender). Só a referência sai de uma ferramenta.
+- Os guias da primeira semana: primeiros passos, autenticação, erros, paginação, limites de uso, changelog e política de versões.
+- O Spring REST Docs gera os exemplos dos guias a partir de requisições reais nos testes, e falha quando um campo da resposta não está descrito ou não existe mais.
+- REST Docs e springdoc se completam: exemplos para os guias e contrato para a referência e as ferramentas.
+- Coleções do Bruno ou do Postman, SDKs gerados pelo openapi-generator e um portal do desenvolvedor completam a documentação.
+
+<Exercise title="Documentando o erro" difficulty="facil">
+O guia de primeiros passos precisa mostrar o que acontece quando o produto não existe. Acrescente ao `DocumentacaoDeProdutosTest` um teste que documente o `404` do `GET /v1/produtos/{id}`, com o nome `produto-inexistente` e a descrição de cada campo do Problem Details.
+
+1. Como fazer o serviço dublê produzir o `404`?
+2. Quais campos precisam ser descritos para o teste passar?
+3. Que headers aparecem no `http-response.adoc` quando a requisição manda `Accept-Language: pt-BR`?
+
+<Hint>O `TratadorGlobalDeErros` faz parte do *slice* do `@WebMvcTest`, e ele transforma a `RecursoNaoEncontradoException` no Problem Details. Olhe o esquema `Problema` do contrato para a lista de campos.</Hint>
+
+<Solution>
+
+1. O dublê lança a exceção que o serviço real lançaria:
+
+```java
+@Test
+void produtoInexistente() throws Exception {
+    var id = UUID.fromString("0192f3a0-1111-7000-8000-000000000999");
+    when(produtos.detalhar(id))
+            .thenThrow(new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, id));
+
+    mvc.perform(get("/v1/produtos/{id}", id).header("Accept-Language", "pt-BR"))
+            .andExpect(status().isNotFound())
+            .andDo(document("produto-inexistente",
+                    preprocessResponse(prettyPrint()),
+                    responseFields(
+                            fieldWithPath("type").description("A URI do tipo de erro, que abre a documentação dele."),
+                            fieldWithPath("title").description("O resumo do tipo, no idioma pedido."),
+                            fieldWithPath("status").description("O status HTTP, repetido no corpo."),
+                            fieldWithPath("detail").description("O que aconteceu nesta requisição."),
+                            fieldWithPath("instance").description("O caminho da requisição."),
+                            fieldWithPath("codigo").description("O tipo em MAIÚSCULAS, para o código do cliente."),
+                            fieldWithPath("traceId").description("Liga o erro ao log, para o suporte."))));
+}
+```
+
+2. Os sete campos que o Bazar devolve num `404`: `type`, `title`, `status`, `detail`, `instance`, `codigo` e `traceId`. O `erros` não aparece, porque só existe nos `422`; descrevê-lo sem `.optional()` faria o teste falhar.
+
+3. `Content-Language: pt-BR`, `Vary: Accept-Language` e `Content-Type: application/problem+json`, além do `Content-Length`. Os dois primeiros vêm da localização das mensagens (15.05), e o trecho os mostra sem que ninguém precise lembrar de escrevê-los no guia.
+</Solution>
+</Exercise>
+
+<Quiz questions={[
+  {
+    question: 'Pelo Diátaxis, que tipo de documentação é a Swagger UI do Bazar?',
+    options: [
+      'Tutorial',
+      'Referência: serve para consultar o que existe, e não para aprender por onde começar',
+      'Guia prático',
+      'Explicação',
+    ],
+    answer: 1,
+    explanation: 'A referência é o único tipo que uma ferramenta gera sozinha. Tutorial, guias e explicações precisam ser escritos para quem vai ler.',
+  },
+  {
+    question: 'Um campo novo, urlImagem, entrou no ProdutoResponse, e ninguém mexeu no DocumentacaoDeProdutosTest. O que acontece?',
+    options: [
+      'Nada: o campo aparece no trecho sem descrição',
+      'O teste falha com "The following parts of the payload were not documented", até alguém descrever o campo',
+      'O REST Docs ignora campos novos',
+      'O springdoc atualiza o teste',
+    ],
+    answer: 1,
+    explanation: 'É a garantia que exemplos escritos à mão não têm: a documentação não consegue ficar para trás do código.',
+  },
+  {
+    question: 'Qual é a diferença principal entre o que o REST Docs e o springdoc mostram?',
+    options: [
+      'Nenhuma: os dois geram OpenAPI',
+      'O REST Docs mostra respostas reais de requisições feitas nos testes; o springdoc mostra esquemas deduzidos das classes',
+      'O springdoc só funciona com MockMvc',
+      'O REST Docs não aceita JSON',
+    ],
+    answer: 1,
+    explanation: 'Por isso eles se completam: o springdoc dá o contrato e a referência, o REST Docs dá os exemplos dos guias.',
+  },
+  {
+    question: 'O campo descricao vale null no exemplo do teste. O que o REST Docs faz com o tipo dele?',
+    options: [
+      'Usa String, pelo nome do campo',
+      'Deduz Null do valor; declarar .type(JsonFieldType.STRING) sozinho falha, e é preciso também .optional()',
+      'Lança erro sempre',
+      'Omite o campo da tabela',
+    ],
+    answer: 1,
+    explanation: 'O tipo vem do exemplo. Um exemplo com null precisa do tipo declarado e de optional(), ou a tabela fica errada.',
+  },
+]} />
 
 ## Referências
 
