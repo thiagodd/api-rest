@@ -52,6 +52,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.exc.StreamConstraintsException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 /**
@@ -193,6 +194,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         if (ex.getMostSpecificCause() instanceof InvalidFormatException invalido && invalido.getTargetType() != null
                 && invalido.getTargetType().isEnum()) {
             return valorForaDoEnum(invalido, request);
+        }
+        // Um JSON bem formado, mas fundo, longo ou grande demais para as restrições do parser (23.02). A mensagem do
+        // Jackson cita classes internas; o detail diz quais são os limites, e o contrato também.
+        if (ex.getMostSpecificCause() instanceof StreamConstraintsException) {
+            return deDominio(new RegraDeNegocioException(TipoProblema.JSON_FORA_DOS_LIMITES, Map.of()), request);
         }
         return super.handleHttpMessageNotReadable(ex, headers, status, request);
     }

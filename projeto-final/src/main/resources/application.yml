@@ -35,6 +35,15 @@ spring:
     mapper:
       # A ordem dos campos no JSON segue a declaração (records e classes), não o alfabeto.
       sort-properties-alphabetically: false
+    factory:
+      constraints:
+        read:
+          # Limites do parser (23.02), bem abaixo dos padrões do Jackson 3 (profundidade 500, strings de 100 milhões
+          # de caracteres, documentos e tokens sem limite). O JSON mais fundo do Bazar tem 3 níveis.
+          max-nesting-depth: 16
+          max-string-length: 100000
+          max-number-length: 30
+          max-token-count: 100000
   messages:
     # Idioma sem tradução usa o arquivo base (inglês), e não o idioma do servidor.
     fallback-to-system-locale: false
@@ -53,6 +62,10 @@ spring:
 
 server:
   port: 8080
+  tomcat:
+    # Quanto o Tomcat espera pelos headers e por cada pedaço do corpo antes de desistir (23.02). O padrão é 60 s: um
+    # cliente lento, de propósito ou não, segura a conexão e a thread por um minuto.
+    connection-timeout: 10s
   compression:
     # Respostas em gzip para quem manda Accept-Encoding: gzip (22.03). O Tomcat só comprime as maiores que
     # min-response-size (2 KB) e dos tipos listados; os da lista padrão não incluem os formatos abaixo.
@@ -94,6 +107,9 @@ bazar:
   requisicoes:
     # O maior corpo aceito depois de descomprimir uma requisição com Content-Encoding: gzip (22.03).
     limite-descomprimido: 10MB
+    # O maior corpo JSON aceito, contado depois da descompressão (23.02). O maior pedido legítimo, um lote de 500
+    # ajustes de estoque, tem uns 40 KB.
+    limite-json: 1MB
   operacoes:
     # A cada quanto tempo o ProcessadorDeOperacoes procura operações pendentes ou abandonadas (19.03).
     intervalo: 10s

@@ -338,6 +338,8 @@ Com `curl --data-binary @novo.json.gz -H "Content-Encoding: gzip"`. Para o contr
 Respondido em 47 ms: a leitura para nos 10 MB descomprimidos, sem chegar perto do gigabyte.
 </HttpExchange>
 
+A partir da [23.02](/padroes-avancados-de-http/limites-de-payload-e-protecao-contra-abuso), essa mesma bomba para ainda antes: o Jackson recusa a string depois de 100 mil caracteres (`400 JSON_FORA_DOS_LIMITES`, em 10 ms). Uma bomba com os espaços **entre** os campos, que o *parser* pula sem contar, para no limite de 1 MB do JSON (`413`, em 17 ms). O limite da descompressão continua valendo para os corpos que não são JSON.
+
 <HttpExchange
   title="Uma codificação que o Bazar não descomprime"
   request={{ method: 'POST', url: '/v1/produtos', headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'br', 'Accept-Language': 'pt-BR' }, body: '(o JSON)' }}

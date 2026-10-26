@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 55 · **rascunho:** 0 · **revisão:** 10 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 54 · **rascunho:** 0 · **revisão:** 11 · **pronta:** 78
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -226,7 +226,7 @@
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
 | 23.01 | Rate limiting e quotas | avancado | essencial | `src/content/09-padroes-avancados-de-http/23-01-rate-limiting-e-quotas.mdx` | revisao |
-| 23.02 | Limites de payload e proteção contra abuso | intermediario | importante | `src/content/09-padroes-avancados-de-http/23-02-limites-de-payload-e-protecao-contra-abuso.mdx` | esqueleto |
+| 23.02 | Limites de payload e proteção contra abuso | intermediario | importante | `src/content/09-padroes-avancados-de-http/23-02-limites-de-payload-e-protecao-contra-abuso.mdx` | revisao |
 
 ## Parte 10: Consumindo outras APIs
 

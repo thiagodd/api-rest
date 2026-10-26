@@ -116,6 +116,16 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
         return registro;
     }
 
+    // Logo depois da descompressão, para contar os bytes já descomprimidos, e antes de tudo que lê o corpo (23.02).
+    @Bean
+    FilterRegistrationBean<LimiteDoCorpoJson> limiteDoCorpoJson(
+            @Value("${bazar.requisicoes.limite-json}") DataSize limite,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver erros) {
+        var registro = new FilterRegistrationBean<>(new LimiteDoCorpoJson(limite, erros));
+        registro.setOrder(-99);
+        return registro;
+    }
+
     // O nome localeResolver substitui o LocaleResolver do Spring Boot (15.05).
     @Bean
     LocaleResolver localeResolver() {

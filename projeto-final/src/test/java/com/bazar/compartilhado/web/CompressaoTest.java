@@ -102,23 +102,26 @@ class CompressaoTest {
 
     @Test
     void umaBombaDeDescompressaoEh413() throws Exception {
-        // 11 MB de espaços dentro de uma string JSON, comprimidos para uns 11 KB.
+        // 11 MB de espaços entre os campos de um JSON, comprimidos para uns 11 KB. Fora de uma string: dentro, o
+        // limite de tamanho de string do Jackson (23.02) chegaria antes.
         var bomba = new ByteArrayOutputStream();
         try (var gzip = new GZIPOutputStream(bomba)) {
-            gzip.write("{ \"sku\": \"LIV-0102\", \"nome\": \"".getBytes(StandardCharsets.UTF_8));
+            gzip.write("{ \"sku\": \"LIV-0102\", ".getBytes(StandardCharsets.UTF_8));
             var espacos = " ".repeat(1024 * 1024).getBytes(StandardCharsets.UTF_8);
             for (int i = 0; i < 11; i++) {
                 gzip.write(espacos);
             }
-            gzip.write("\" }".getBytes(StandardCharsets.UTF_8));
+            gzip.write("\"nome\": \"x\" }".getBytes(StandardCharsets.UTF_8));
         }
 
         var resposta = post("/v1/produtos", bomba.toByteArray(), "gzip");
 
+        // Desde a 23.02, o limite do JSON (1 MB, contado depois da descompressão) chega antes do limite da
+        // descompressão (10 MB). As duas defesas continuam: a segunda vale para corpos que não são JSON.
         assertThat(resposta.statusCode()).isEqualTo(413);
         assertThat(new String(resposta.body(), StandardCharsets.UTF_8))
                 .contains("\"codigo\":\"CORPO_GRANDE_DEMAIS\"")
-                .contains("passa do limite de 10 MB");
+                .contains("passa do limite de 1 MB");
     }
 
     @Test

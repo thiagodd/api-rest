@@ -24,6 +24,8 @@ public enum TipoProblema {
 
     // 400: a requisição não segue a forma do contrato (sintaxe, tipo, parâmetro desconhecido).
     REQUISICAO_INVALIDA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
+    // JSON bem formado que passa das restrições do parser: profundidade, strings, números, tokens (23.02).
+    JSON_FORA_DOS_LIMITES(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     PARAMETRO_DESCONHECIDO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     VALOR_NAO_ACEITO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     ORDENACAO_INVALIDA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
@@ -59,7 +61,7 @@ public enum TipoProblema {
 
     // 413: o arquivo ou a requisição passou do limite de tamanho (22.01).
     ARQUIVO_GRANDE_DEMAIS(HttpStatus.CONTENT_TOO_LARGE, MOSTRAR_AO_USUARIO),
-    // O corpo, depois de descomprimido, passou do limite (22.03).
+    // O corpo passou do limite: o JSON (23.02) ou qualquer corpo depois de descomprimido (22.03).
     CORPO_GRANDE_DEMAIS(HttpStatus.CONTENT_TOO_LARGE, CORRIGIR_A_REQUISICAO),
 
     // 409: a requisição é válida, mas conflita com o estado atual do recurso.
