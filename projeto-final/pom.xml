@@ -54,6 +54,12 @@
             <version>1.1.9</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Leva o MDC da thread que chama um método @Async para a thread que o executa (19.03), com a propriedade
+             spring.task.execution.propagate-context. A versão vem do BOM do Micrometer. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>context-propagation</artifactId>
+        </dependency>
         <dependency>
             <!-- Os _links do pedido (12.04) -->
             <groupId>org.springframework.boot</groupId>

@@ -61,6 +61,8 @@ Legenda da coluna "Fonte":
 | Resilience4j | 2.4.0 (14/03/2026) | Módulo `resilience4j-spring-boot4` | Maven Central / GitHub |
 | Bucket4j | 8.21.0 (`bucket4j_jdk17-core`) | | Maven Central |
 | uuid-creator | 6.1.1 | Alternativa ao gerador do Hibernate | Maven Central |
+| ShedLock (`shedlock-spring`) | 7.10.1 | A linha 7.x suporta Spring 7 e Boot 4. Citado na 19.03; o Bazar usa `SKIP LOCKED` | Maven Central / README |
+| Micrometer Context Propagation (`io.micrometer:context-propagation`) | 1.2.1 | Gerenciada pelo BOM do Micrometer; exigida por `spring.task.execution.propagate-context` (19.03) | BOM |
 | Caffeine | Gerenciada pelo BOM | | BOM |
 
 ## Testes

@@ -12,6 +12,7 @@ public final class LimpezaDoBanco {
     }
 
     public static void limpar(JdbcClient jdbc) {
+        jdbc.sql("delete from operacao").update();
         jdbc.sql("delete from item_pedido").update();
         jdbc.sql("delete from pedido").update();
         jdbc.sql("delete from estoque").update();

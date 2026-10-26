@@ -25,6 +25,8 @@ tags:
   name: categorias
 - description: Os pedidos
   name: pedidos
+- description: Relatórios gerados fora da requisição
+  name: relatorios
 - description: Os clientes
   name: clientes
 paths:
@@ -1019,6 +1021,31 @@ paths:
           $ref: "#/components/responses/RequisicaoInvalida"
       tags:
       - estoque
+  /v1/relatorios/vendas:
+    post:
+      description: O relatório é gerado fora da requisição. A resposta só confirma
+        o registro do pedido.
+      operationId: solicitarRelatorioDeVendas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolicitarRelatorioVendasRequest"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperacaoAceitaResponse"
+          description: O pedido foi registrado e o relatório será gerado
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Solicita o relatório de vendas por produto
+      tags:
+      - relatorios
   /v2/produtos/{id}:
     get:
       operationId: detalharProdutoV2
@@ -1655,6 +1682,24 @@ components:
       - tamanho
       - totalDeItens
       - totalDePaginas
+    OperacaoAceitaResponse:
+      type: object
+      properties:
+        operacaoId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - PENDENTE
+          - EM_EXECUCAO
+          - CONCLUIDA
+          - FALHOU
+      required:
+      - operacaoId
+      - status
     PaginaCategoriaResponse:
       type: object
       properties:
@@ -1944,3 +1989,19 @@ components:
       - falhas
       - itens
       - sucessos
+    SolicitarRelatorioVendasRequest:
+      type: object
+      properties:
+        criadoAntes:
+          type:
+          - string
+          - "null"
+          format: date-time
+        criadoApos:
+          type:
+          - string
+          - "null"
+          format: date-time
+      required:
+      - criadoAntes
+      - criadoApos

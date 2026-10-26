@@ -159,4 +159,6 @@ export const glossario: TermoGlossario[] = [
   { id: 'virtual-thread', termo: 'Virtual thread', definicao: 'Thread do Java (JEP 444, JDK 21) gerenciada pela JVM, e não pelo sistema operacional. Custa poucos KB, e ao bloquear em I/O libera a thread do sistema que a executava. Permite uma thread por requisição sem limite de pool.', pagina: '19.02' },
   { id: 'carrier-thread', termo: 'Carrier thread', definicao: 'Thread de plataforma que executa uma virtual thread montada sobre ela. Por padrão, há uma por núcleo, num ForkJoinPool da JVM.', pagina: '19.02' },
   { id: 'pinning', termo: 'Pinning', definicao: 'Situação em que uma virtual thread bloqueada não consegue se desmontar e prende a sua carrier thread. Desde o JDK 24 (JEP 491), o synchronized não causa mais pinning; código nativo e inicialização de classes ainda causam.', pagina: '19.02' },
+  { id: 'skip-locked', termo: 'SKIP LOCKED', definicao: 'Opção do SELECT ... FOR UPDATE (PostgreSQL, MySQL 8, Oracle) que pula as linhas travadas por outra transação em vez de esperar por elas. Permite usar uma tabela como fila com vários consumidores.', pagina: '19.03' },
+  { id: 'expressao-cron', termo: 'Expressão cron', definicao: 'Agenda escrita em campos de tempo. No Spring, são seis: segundo, minuto, hora, dia do mês, mês e dia da semana ("0 0 6 * * MON-FRI" é às 6h dos dias úteis).', pagina: '19.03' },
 ]
