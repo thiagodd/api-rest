@@ -19,6 +19,8 @@ servers:
 tags:
 - description: O catálogo de produtos
   name: produtos
+- description: "Operações longas, executadas fora da requisição"
+  name: operacoes
 - description: O estoque dos produtos
   name: estoque
 - description: As categorias do catálogo
@@ -370,6 +372,48 @@ paths:
           $ref: "#/components/responses/RequisicaoInvalida"
       tags:
       - clientes
+  /v1/operacoes/{id}:
+    get:
+      operationId: detalharOperacao
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperacaoResponse"
+          description: A operação está em andamento (com Retry-After) ou falhou (com
+            erro)
+          headers:
+            Retry-After:
+              description: Segundos até a próxima consulta
+              schema:
+                type: integer
+              style: simple
+        "303":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperacaoResponse"
+          description: A operação terminou; o Location aponta o resultado
+          headers:
+            Location:
+              description: O recurso com o resultado
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      tags:
+      - operacoes
   /v1/pedidos:
     get:
       operationId: listarPedido
@@ -1106,8 +1150,8 @@ paths:
       - estoque
   /v1/relatorios/vendas:
     post:
-      description: O relatório é gerado fora da requisição. A resposta só confirma
-        o registro do pedido.
+      description: O relatório é gerado fora da requisição. Acompanhe a operação no
+        `Location`.
       operationId: solicitarRelatorioDeVendas
       requestBody:
         content:
@@ -1122,11 +1166,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/OperacaoAceitaResponse"
           description: O pedido foi registrado e o relatório será gerado
+          headers:
+            Location:
+              description: "A operação, para acompanhar"
+              schema:
+                type: string
+              style: simple
+            Retry-After:
+              description: Segundos até a primeira consulta
+              schema:
+                type: integer
+              style: simple
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
         "422":
           $ref: "#/components/responses/Validacao"
       summary: Solicita o relatório de vendas por produto
+      tags:
+      - relatorios
+  /v1/relatorios/{id}:
+    get:
+      operationId: detalharRelatorio
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelatorioResponse"
+          description: Os dados de um relatório pronto
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
       tags:
       - relatorios
   /v2/produtos/{id}:
@@ -1798,6 +1876,44 @@ components:
       required:
       - operacaoId
       - status
+    OperacaoResponse:
+      type: object
+      properties:
+        atualizadaEm:
+          type: string
+          format: date-time
+        criadaEm:
+          type: string
+          format: date-time
+        erro:
+          oneOf:
+          - $ref: "#/components/schemas/Problema"
+          - type: "null"
+        id:
+          type: string
+          format: uuid
+        resultado:
+          type:
+          - string
+          - "null"
+          format: uri
+        status:
+          type: string
+          description: "Lista extensível: valores novos podem ser acrescentados, e\
+            \ o cliente deve tolerar um valor que não conhece (15.04)."
+          examples:
+          - PENDENTE
+          - EM_EXECUCAO
+          - CONCLUIDA
+          - FALHOU
+        tipo:
+          type: string
+      required:
+      - atualizadaEm
+      - criadaEm
+      - id
+      - status
+      - tipo
     PaginaCategoriaResponse:
       type: object
       properties:
@@ -1861,6 +1977,18 @@ components:
       - valorFrete
       - valorItens
       - valorTotal
+    PeriodoDeVendas:
+      type: object
+      properties:
+        ate:
+          type: string
+          format: date-time
+        de:
+          type: string
+          format: date-time
+      required:
+      - ate
+      - de
     Problema:
       type: object
       additionalProperties: true
@@ -2046,6 +2174,28 @@ components:
       - preco
       - sku
       - status
+    RelatorioResponse:
+      type: object
+      properties:
+        formato:
+          type: string
+        geradoEm:
+          type: string
+          format: date-time
+        id:
+          type: string
+          format: uuid
+        periodo:
+          $ref: "#/components/schemas/PeriodoDeVendas"
+        tamanhoEmBytes:
+          type: integer
+          format: int64
+      required:
+      - formato
+      - geradoEm
+      - id
+      - periodo
+      - tamanhoEmBytes
     ResultadoDoItem:
       type: object
       properties:

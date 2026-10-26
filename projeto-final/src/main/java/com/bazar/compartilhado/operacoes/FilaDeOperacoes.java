@@ -71,7 +71,7 @@ public class FilaDeOperacoes {
                                order by criada_em
                                limit :limite
                                  for update skip locked)
-                returning id, tipo, status, parametros, tentativas, resultado, erro, criada_em
+                returning id, tipo, status, parametros, tentativas, resultado, erro, criada_em, atualizada_em
                 """.formatted(filtro))
                 .param("agora", agora)
                 .param("reservadaAte", agora.plus(prazo))
@@ -93,7 +93,7 @@ public class FilaDeOperacoes {
 
     public Optional<Operacao> buscar(UUID id) {
         return jdbc.sql("""
-                select id, tipo, status, parametros, tentativas, resultado, erro, criada_em
+                select id, tipo, status, parametros, tentativas, resultado, erro, criada_em, atualizada_em
                   from operacao where id = :id
                 """).param("id", id).query(Operacao.class).optional();
     }

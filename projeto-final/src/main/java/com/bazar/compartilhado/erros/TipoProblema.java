@@ -38,6 +38,8 @@ public enum TipoProblema {
     CLIENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
     ENDERECO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
     PEDIDO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
+    OPERACAO_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
+    RELATORIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
 
     // 410: a versão do recurso existiu, mas foi desligada depois do sunset (18.04).
     VERSAO_DESLIGADA(HttpStatus.GONE, CORRIGIR_A_REQUISICAO),
@@ -58,6 +60,10 @@ public enum TipoProblema {
     // A primeira requisição com esta Idempotency-Key ainda está em andamento (21.01).
     REQUISICAO_EM_ANDAMENTO(HttpStatus.CONFLICT, AGUARDAR_E_REPETIR),
     CONFLITO_DE_VERSAO(HttpStatus.CONFLICT, RELER_E_REPETIR),
+
+    // 500: não é a resposta de uma requisição, e sim o erro de uma operação assíncrona que falhou, no campo erro do
+    // recurso da operação (21.02). O GET da operação em si responde 200.
+    OPERACAO_FALHOU(HttpStatus.INTERNAL_SERVER_ERROR, AGUARDAR_E_REPETIR),
 
     // 412 e 428: requisições condicionais (20.03). O If-Match não bate com a versão atual, ou a escrita veio sem
     // nenhuma precondição.

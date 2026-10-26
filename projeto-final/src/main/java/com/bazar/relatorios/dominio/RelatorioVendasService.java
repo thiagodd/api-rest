@@ -5,12 +5,16 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
+import com.bazar.compartilhado.erros.TipoProblema;
 import com.bazar.compartilhado.operacoes.FilaDeOperacoes;
 import com.bazar.compartilhado.operacoes.Operacao;
+import com.bazar.compartilhado.operacoes.StatusOperacao;
 import com.bazar.relatorios.infraestrutura.ConsultaDeVendas;
 import com.bazar.relatorios.infraestrutura.VendasDoProduto;
 import org.slf4j.Logger;
@@ -51,6 +55,21 @@ public class RelatorioVendasService {
     /** Registra o pedido do relatório. Depois deste insert, o trabalho não se perde, nem com um restart. */
     public UUID solicitar(PeriodoDeVendas periodo) {
         return fila.enfileirar(TIPO, json.writeValueAsString(periodo));
+    }
+
+    /** Um relatório pronto (21.02). Enquanto a operação não terminar, o relatório não existe. */
+    public RelatorioVendas buscar(UUID id) {
+        var operacao = fila.buscar(id)
+                .filter(encontrada -> encontrada.tipo().equals(TIPO) && encontrada.status() == StatusOperacao.CONCLUIDA)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.RELATORIO_NAO_ENCONTRADO, id));
+        var arquivo = Path.of(Objects.requireNonNull(operacao.resultado()));
+        try {
+            return new RelatorioVendas(id, json.readValue(operacao.parametros(), PeriodoDeVendas.class), arquivo,
+                    Files.size(arquivo), operacao.atualizadaEm());
+        }
+        catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     /**
