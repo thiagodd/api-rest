@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 65 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 64 · **rascunho:** 0 · **revisão:** 1 · **pronta:** 78
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -201,7 +201,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 20.01 | Cache HTTP (RFC 9111) | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-01-cache-http-rfc-9111.mdx` | esqueleto |
+| 20.01 | Cache HTTP (RFC 9111) | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-01-cache-http-rfc-9111.mdx` | revisao |
 | 20.02 | ETag e requisições condicionais | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-02-etag-e-requisicoes-condicionais.mdx` | esqueleto |
 | 20.03 | Concorrência otimista com If-Match (412 e 428) | avancado | essencial | `src/content/09-padroes-avancados-de-http/20-03-concorrencia-otimista-com-if-match-412-e-428.mdx` | esqueleto |
 
@@ -357,4 +357,4 @@ Comportamentos mostrados em páginas já prontas que devem ser conferidos contra
 | 06.03 | ✅ Conferido: `SORT_PROPERTIES_ALPHABETICALLY=true` e `SORT_CREATOR_PROPERTIES_FIRST=true`; classes saem em ordem alfabética, records na ordem dos componentes. O Bazar desliga a ordem alfabética | 06.03 |
 | 07.01 | ✅ Resolvido com `@NotNull @Positive` (teste `rejeitaUmProdutoSemPreco`): `CriarProdutoRequest` sem `precoEmCentavos` hoje causa `NullPointerException` (500) em `Dinheiro.deCentavos`; a validação deve transformar em 400 | 07.01 |
 | 08.02 | ✅ Feito (testes com `UNPROCESSABLE_CONTENT`). Trocar o status de validação de `400` (padrão do Spring, visto em 07.01/07.02) para `422`, como decidido em 02.03; atualizar os testes `BAD_REQUEST` de validação | 08.02 |
-| 20.01 | Listagens respondem JSON ou CSV pela mesma URI (09.03), mas o Spring MVC não envia `Vary: Accept`; acrescentar junto com o cache HTTP | 20.01 |
+| 20.01 | ✅ Feito no `PoliticaDeCachePadrao` (teste `listasQueSaemEmJsonOuCsvAvisamOCacheComVaryAccept`). Listagens respondem JSON ou CSV pela mesma URI (09.03), mas o Spring MVC não envia `Vary: Accept`; acrescentar junto com o cache HTTP | 20.01 |

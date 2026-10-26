@@ -1,5 +1,6 @@
 package com.bazar.catalogo.api;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.CategoriaRepository;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +48,12 @@ public class CategoriaController {
         this.servico = servico;
     }
 
+    // As categorias quase não mudam, e são iguais para todos os clientes (20.01): qualquer cache pode guardá-las por
+    // 10 minutos. Vencido o prazo, um cache pode entregar a cópia antiga por mais 1 minuto enquanto busca a nova, ou
+    // por 1 dia se a API estiver fora do ar.
+    static final CacheControl CACHE = CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic()
+            .staleWhileRevalidate(Duration.ofMinutes(1)).staleIfError(Duration.ofDays(1));
+
     // Paginada por offset (13.03): ?page=1&limit=20, com os totais no corpo e first/prev/next/last no header Link.
     @GetMapping
     public ResponseEntity<Pagina<CategoriaResponse>> listar(
@@ -54,14 +62,15 @@ public class CategoriaController {
             @Valid @ModelAttribute PaginaPedida pagina) {
         var categorias = servico.listar(q, apenasRaizes, pagina.ordenadaPor(POR_NOME));
         return ResponseEntity.ok()
+                .cacheControl(CACHE)
                 .headers(LinksDePaginacao.de(categorias))
                 .body(Pagina.de(categorias, CategoriaResponse::de));
     }
 
     @GetMapping("/{id}")
-    public CategoriaResponse detalhar(@PathVariable UUID id) {
+    public ResponseEntity<CategoriaResponse> detalhar(@PathVariable UUID id) {
         return repository.findById(id)
-                .map(CategoriaResponse::de)
+                .map(categoria -> ResponseEntity.ok().cacheControl(CACHE).body(CategoriaResponse.de(categoria)))
                 .orElseThrow(() -> naoEncontrada(id));
     }
 

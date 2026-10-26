@@ -1,5 +1,6 @@
 package com.bazar.catalogo.api;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -31,6 +32,7 @@ import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -165,20 +167,28 @@ public class ProdutoController {
         return ResponseEntity.created(location).body(mapper.paraResponse(produto));
     }
 
+    // O produto é igual para todos os clientes, mas o preço muda (20.01). O navegador pode reusar a cópia por 30 s; um
+    // cache compartilhado (CDN), que protege a API de todos os clientes ao mesmo tempo, por 60 s. Vencido o prazo, o
+    // cache pode entregar a cópia antiga por mais 30 s enquanto busca a nova em segundo plano.
+    static final CacheControl CACHE_DO_DETALHE = CacheControl.maxAge(Duration.ofSeconds(30))
+            .sMaxAge(Duration.ofSeconds(60)).cachePublic().staleWhileRevalidate(Duration.ofSeconds(30));
+
     // ?embed=categoria traz a categoria dentro do produto, em vez de só o categoriaId (13.05).
     @GetMapping("/{id}")
     @Operation(operationId = "detalharProduto", summary = "Detalha um produto")
     @ApiResponse(responseCode = "200", description = "O produto")
     @ApiResponse(responseCode = "404", ref = NAO_ENCONTRADO)
-    public ProdutoResponse detalhar(@PathVariable UUID id,
+    public ResponseEntity<ProdutoResponse> detalhar(@PathVariable UUID id,
             @Parameter(description = "`categoria` traz a categoria dentro do produto.", example = "categoria")
             @RequestParam(required = false) @Nullable String embed) {
         var incorporar = ValoresDeParametro.ler("embed", embed, INCORPORAVEIS);
         var produto = servico.detalhar(id);
         var resposta = mapper.paraResponse(produto);
-        return incorporar.contains("categoria")
-                ? resposta.comCategoria(CategoriaResponse.de(servico.categoriaDe(produto)))
-                : resposta;
+        return ResponseEntity.ok()
+                .cacheControl(CACHE_DO_DETALHE)
+                .body(incorporar.contains("categoria")
+                        ? resposta.comCategoria(CategoriaResponse.de(servico.categoriaDe(produto)))
+                        : resposta);
     }
 
     // PUT substitui a parte editável inteira: um campo ausente vira null ou vazio (14.02).

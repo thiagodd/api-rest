@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +36,10 @@ public class ProdutoV2Controller {
     @Operation(operationId = "detalharProdutoV2", summary = "Detalha um produto (v2)")
     @ApiResponse(responseCode = "200", description = "O produto")
     @ApiResponse(responseCode = "404", ref = NAO_ENCONTRADO)
-    public ProdutoV2Response detalhar(@PathVariable UUID id) {
-        return mapper.paraResponse(servico.detalhar(id));
+    // A mesma política de cache da v1 (20.01): a versão está no caminho, então cada uma tem a sua entrada no cache.
+    public ResponseEntity<ProdutoV2Response> detalhar(@PathVariable UUID id) {
+        return ResponseEntity.ok()
+                .cacheControl(ProdutoController.CACHE_DO_DETALHE)
+                .body(mapper.paraResponse(servico.detalhar(id)));
     }
 }

@@ -64,6 +64,7 @@ Legenda da coluna "Fonte":
 | ShedLock (`shedlock-spring`) | 7.10.1 | A linha 7.x suporta Spring 7 e Boot 4. Citado na 19.03; o Bazar usa `SKIP LOCKED` | Maven Central / README |
 | Micrometer Context Propagation (`io.micrometer:context-propagation`) | 1.2.1 | Gerenciada pelo BOM do Micrometer; exigida por `spring.task.execution.propagate-context` (19.03) | BOM |
 | Reactor Core / R2DBC PostgreSQL (`r2dbc-postgresql`) | 3.8.8 / 1.1.3.RELEASE | Gerenciados pelo Boot 4.1.2; só no exemplo `exemplos/catalogo-reativo` (19.05), fora do Bazar | BOM |
+| Varnish (imagem `varnish`) | 9.0.4 | Só no laboratório de cache `exemplos/cache-compartilhado` (20.01), como CDN de laboratório | Docker Hub |
 | Caffeine | Gerenciada pelo BOM | | BOM |
 
 ## Testes
