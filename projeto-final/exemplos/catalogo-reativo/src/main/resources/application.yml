@@ -1,0 +1,16 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: catalogo-reativo
+  r2dbc:
+    # O mesmo banco do Bazar. O compose publica o PostgreSQL numa porta aleatória:
+    # BAZAR_PG_PORTA=$(docker port projeto-final-postgres-1 5432 | cut -d: -f2)
+    url: r2dbc:postgresql://localhost:${BAZAR_PG_PORTA:5432}/bazar
+    username: bazar
+    password: bazar
+  webflux:
+    # Como no Bazar MVC: erros em Problem Details (RFC 9457), inclusive as ErrorResponseException.
+    problemdetails:
+      enabled: true
