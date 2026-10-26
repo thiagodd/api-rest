@@ -24,7 +24,9 @@ import org.springframework.context.annotation.Import;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
         properties = { "spring.jpa.properties.hibernate.generate_statistics=true",
                 // Os testes de webhook (21.03) entregam num servidor em localhost.
-                "bazar.webhooks.aceitar-enderecos-locais=true" })
+                "bazar.webhooks.aceitar-enderecos-locais=true",
+                // Todos os testes vêm de 127.0.0.1: com o limite de produção (23.01), a suíte se bloquearia sozinha.
+                "bazar.limites.geral.capacidade=1000000" })
 @AutoConfigureMockMvc
 @AutoConfigureRestTestClient
 @Import(TestcontainersConfiguration.class)

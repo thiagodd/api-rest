@@ -13,5 +13,11 @@ services:
       # No PostgreSQL 18, os dados ficam em /var/lib/postgresql/18/docker; monta-se o diretório pai.
       - bazar-postgres:/var/lib/postgresql
 
+  redis:
+    # Os baldes do rate limiting (23.01). Sem volume: perder os contadores num restart não faz mal.
+    image: redis:8
+    ports:
+      - "6379"
+
 volumes:
   bazar-postgres:

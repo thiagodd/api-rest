@@ -26,6 +26,8 @@
         <!-- Testes de contrato (18.05). O Spring Cloud Contract saiu do train na 2025.1 e tem BOM próprio. -->
         <spring-cloud-contract.version>5.0.3</spring-cloud-contract.version>
         <pact.version>4.7.5</pact.version>
+        <!-- Rate limiting distribuído (23.01). O Spring Boot não gerencia a versão. -->
+        <bucket4j.version>8.21.0</bucket4j.version>
         <!-- Vazio por padrão; o Surefire acrescenta o agente do Mockito (11.02). -->
         <argLine></argLine>
     </properties>
@@ -91,6 +93,21 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <!-- Redis (23.01): os baldes do rate limiting, compartilhados entre as instâncias. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-lettuce</artifactId>
+            <version>${bucket4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>

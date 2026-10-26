@@ -80,6 +80,9 @@ public enum TipoProblema {
     // recurso da operação (21.02). O GET da operação em si responde 200.
     OPERACAO_FALHOU(HttpStatus.INTERNAL_SERVER_ERROR, AGUARDAR_E_REPETIR),
 
+    // 429: o cliente passou do limite de uma política de rate limiting (23.01). O Retry-After diz quando há ficha.
+    LIMITE_DE_REQUISICOES(HttpStatus.TOO_MANY_REQUESTS, AGUARDAR_E_REPETIR),
+
     // 503: o servidor está sem vaga para esta requisição agora (22.02). Não é um defeito; o Retry-After diz quando
     // tentar de novo.
     CAPACIDADE_ESGOTADA(HttpStatus.SERVICE_UNAVAILABLE, AGUARDAR_E_REPETIR),

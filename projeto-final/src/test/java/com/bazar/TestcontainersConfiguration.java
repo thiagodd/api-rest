@@ -1,5 +1,6 @@
 package com.bazar;
 
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import org.springframework.boot.devtools.restart.RestartScope;
@@ -20,5 +21,13 @@ public class TestcontainersConfiguration {
     @ServiceConnection
     PostgreSQLContainer postgres() {
         return new PostgreSQLContainer("postgres:18");
+    }
+
+    // O Redis dos baldes do rate limiting (23.01). O name diz ao @ServiceConnection que tipo de serviço é.
+    @Bean
+    @RestartScope
+    @ServiceConnection(name = "redis")
+    GenericContainer<?> redis() {
+        return new GenericContainer<>("redis:8").withExposedPorts(6379);
     }
 }

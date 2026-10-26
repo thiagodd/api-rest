@@ -83,6 +83,14 @@ springdoc:
     operations-sorter: method
 
 bazar:
+  limites:
+    # Rate limiting por cliente (23.01): um token bucket por política, guardado no Redis.
+    geral:
+      capacidade: 100
+      janela: 1m
+    exportacao:
+      capacidade: 10
+      janela: 1h
   requisicoes:
     # O maior corpo aceito depois de descomprimir uma requisição com Content-Encoding: gzip (22.03).
     limite-descomprimido: 10MB
