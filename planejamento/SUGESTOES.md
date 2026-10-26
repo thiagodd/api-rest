@@ -25,6 +25,7 @@
 | 15.01 | Só o pedido usa o `Clock` injetado; `Produto`, `Cliente` e `Endereco` ainda chamam `Instant.now()`. Migrar na consolidação (31.x) se algum teste precisar controlar essas datas. | Escopo mínimo da página. |
 | 15.04 | Um valor fora do enum no **corpo** agora dá `422` (`validacao`, com os valores aceitos); num **parâmetro de URL** (`status=ESGOTADO`, 13.01) continua `400` (`requisicao-invalida`, com `parametros`). A diferença é defensável (binding de query × campo de corpo), mas a página 16.01 (catálogo de erros) pode harmonizar ou registrar a regra. **Resolvido na 16.01**: tipo certo com valor fora da lista é `422` também na URL; a 13.01 ganhou um aviso. | Decisão da 15.04. |
 | 16.01 | As páginas 08.02 e 13.01 mostram trechos do tratador anterior ao `TipoProblema` (um `@ExceptionHandler` por exceção, tipos como strings). Ficaram como registro das suas tags; a 13.01 tem um aviso sobre o 422. Revisar na consolidação (31.x) se convém um aviso também na 08.02. | Decisão da 16.01. |
+| 19.01 | Um pool do banco esgotado (`CannotGetJdbcConnectionException`) sai como `500` genérico. Um `503 Service Unavailable` com `Retry-After` diria ao cliente que tentar de novo pode funcionar. Sugestão: mapear no `TratadorGlobalDeErros` junto com a proteção contra sobrecarga (23.01 ou 25.03). | Visto no experimento 4 da 19.01 (`/experimentos/banco`). |
 
 ## Revisão da Parte 7 (18.05)
 

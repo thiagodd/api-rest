@@ -1,0 +1,20 @@
+# Profile dos experimentos de concorrência (19.01): pools pequenos, para a saturação aparecer com pouca carga.
+# Rode com: ./mvnw spring-boot:run -Dspring-boot.run.profiles=experimentos
+server:
+  tomcat:
+    threads:
+      max: 10          # padrão: 200
+      min-spare: 10    # padrão: 10
+    max-connections: 8192   # padrão: 8192
+    accept-count: 100       # padrão: 100
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 5     # padrão: 10
+      connection-timeout: 2000   # em ms, sem unidade (é um long do HikariConfig); padrão: 30000
+
+logging:
+  level:
+    # O log de cada requisição (TempoDeRespostaFilter) atrapalharia a leitura durante a carga.
+    com.bazar.compartilhado.web.TempoDeRespostaFilter: warn
