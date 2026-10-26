@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 
+import static com.bazar.compartilhado.erros.TipoProblema.Acao.AGUARDAR_E_REPETIR;
 import static com.bazar.compartilhado.erros.TipoProblema.Acao.CORRIGIR_A_REQUISICAO;
 import static com.bazar.compartilhado.erros.TipoProblema.Acao.MOSTRAR_AO_USUARIO;
 import static com.bazar.compartilhado.erros.TipoProblema.Acao.RELER_E_REPETIR;
@@ -29,6 +30,7 @@ public enum TipoProblema {
     CURSOR_INVALIDO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     PATCH_INVALIDO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     VERSAO_NAO_SUPORTADA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
+    CHAVE_DE_IDEMPOTENCIA_INVALIDA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
 
     // 404: o recurso não existe (ou o cliente não pode saber que existe).
     PRODUTO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
@@ -53,6 +55,8 @@ public enum TipoProblema {
     TRANSICAO_INVALIDA(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     ESTOQUE_INSUFICIENTE(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     TESTE_DO_PATCH_FALHOU(HttpStatus.CONFLICT, RELER_E_REPETIR),
+    // A primeira requisição com esta Idempotency-Key ainda está em andamento (21.01).
+    REQUISICAO_EM_ANDAMENTO(HttpStatus.CONFLICT, AGUARDAR_E_REPETIR),
     CONFLITO_DE_VERSAO(HttpStatus.CONFLICT, RELER_E_REPETIR),
 
     // 412 e 428: requisições condicionais (20.03). O If-Match não bate com a versão atual, ou a escrita veio sem
@@ -61,7 +65,9 @@ public enum TipoProblema {
     PRECONDICAO_OBRIGATORIA(HttpStatus.PRECONDITION_REQUIRED, CORRIGIR_A_REQUISICAO),
 
     // 422: a requisição tem a forma certa, mas um ou mais campos violam as regras (a lista vem em erros).
-    VALIDACAO(HttpStatus.UNPROCESSABLE_CONTENT, CORRIGIR_A_REQUISICAO);
+    VALIDACAO(HttpStatus.UNPROCESSABLE_CONTENT, CORRIGIR_A_REQUISICAO),
+    // A mesma Idempotency-Key com outro corpo (21.01): uma chave identifica uma requisição só.
+    CHAVE_DE_IDEMPOTENCIA_REUTILIZADA(HttpStatus.UNPROCESSABLE_CONTENT, CORRIGIR_A_REQUISICAO);
 
     // Os erros que são só o status HTTP (404 de rota inexistente, 405, 500) usam about:blank, como a RFC 9457
     // prevê, e o codigo é o nome do status. Eles estão no catálogo publicado, mas não aqui.

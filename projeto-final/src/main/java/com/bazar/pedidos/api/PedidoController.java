@@ -5,11 +5,15 @@ import java.util.UUID;
 import com.bazar.compartilhado.Lista;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.TipoProblema;
+import com.bazar.compartilhado.idempotencia.Idempotente;
+import com.bazar.compartilhado.idempotencia.IdempotenciaFilter;
 import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
 import com.bazar.compartilhado.web.RespostasDeErro;
 import com.bazar.pedidos.dominio.PedidoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,8 +47,15 @@ public class PedidoController {
     }
 
     @PostMapping
+    @Idempotente
     @Operation(operationId = "criarPedido", summary = "Cria um pedido e reserva o estoque",
             description = "Um cliente ou produto inexistente dá `422`; estoque insuficiente, `409` (10.03).")
+    @Parameter(in = ParameterIn.HEADER, name = IdempotenciaFilter.IDEMPOTENCY_KEY, schema = @Schema(type = "string"),
+            description = """
+                    Uma chave única por pedido (um UUID novo), entre aspas: `"8e03978e-40d5-43e8-bc93-6894a57f9324"`. \
+                    Repetir com a mesma chave e o mesmo corpo devolve a resposta original, com \
+                    `Idempotent-Replayed: true`, sem criar outro pedido. A chave vale por 24 horas. A mesma chave \
+                    com outro corpo dá `422`; enquanto a primeira ainda está em andamento, `409` (21.01).""")
     @ApiResponse(responseCode = "201", description = "O pedido foi criado", headers = @Header(name = "Location",
             description = "A URI do pedido", schema = @Schema(type = "string")))
     @ApiResponse(responseCode = "409", ref = RespostasDeErro.CONFLITO)

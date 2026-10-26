@@ -416,6 +416,16 @@ paths:
       description: "Um cliente ou produto inexistente dá `422`; estoque insuficiente,\
         \ `409` (10.03)."
       operationId: criarPedido
+      parameters:
+      - description: "Uma chave única por pedido (um UUID novo), entre aspas: `\"\
+          8e03978e-40d5-43e8-bc93-6894a57f9324\"`. Repetir com a mesma chave e o mesmo\
+          \ corpo devolve a resposta original, com `Idempotent-Replayed: true`, sem\
+          \ criar outro pedido. A chave vale por 24 horas. A mesma chave com outro\
+          \ corpo dá `422`; enquanto a primeira ainda está em andamento, `409` (21.01)."
+        in: header
+        name: Idempotency-Key
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
