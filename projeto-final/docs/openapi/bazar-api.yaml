@@ -31,6 +31,8 @@ tags:
   name: relatorios
 - description: Os clientes
   name: clientes
+- description: Avisos de eventos para os sistemas dos parceiros
+  name: webhooks
 paths:
   /v1/ajustes-estoque/lotes:
     post:
@@ -53,6 +55,77 @@ paths:
       summary: Define o estoque de vários produtos
       tags:
       - estoque
+  /v1/assinaturas-webhook:
+    post:
+      operationId: criarAssinaturaWebhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CriarAssinaturaRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssinaturaResponse"
+          description: "A assinatura foi criada; o corpo traz o segredo, uma única\
+            \ vez"
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "422":
+          $ref: "#/components/responses/Validacao"
+      tags:
+      - webhooks
+  /v1/assinaturas-webhook/{id}:
+    get:
+      operationId: detalharAssinaturaWebhook
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssinaturaResponse"
+          description: "A assinatura, sem o segredo"
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      tags:
+      - webhooks
+  /v1/assinaturas-webhook/{id}/entregas:
+    get:
+      operationId: entregasAssinaturaWebhook
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EntregaWebhook"
+          description: As 50 entregas mais recentes
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      tags:
+      - webhooks
   /v1/categorias:
     get:
       operationId: listarCategoria
@@ -1295,6 +1368,45 @@ components:
       required:
       - produtoId
       - quantidadeDisponivel
+    AssinaturaResponse:
+      type: object
+      properties:
+        ativa:
+          type: boolean
+        criadaEm:
+          type: string
+          format: date-time
+        desativadaEm:
+          type:
+          - string
+          - "null"
+          format: date-time
+        eventos:
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+          format: uuid
+        parceiro:
+          type: string
+        segredo:
+          type:
+          - string
+          - "null"
+          description: "Só na criação. Guarde-o: é com ele que se verifica a assinatura\
+            \ de cada entrega."
+        url:
+          type: string
+          format: uri
+      required:
+      - ativa
+      - criadaEm
+      - desativadaEm
+      - eventos
+      - id
+      - parceiro
+      - url
     AtualizarProdutoRequest:
       type: object
       properties:
@@ -1495,6 +1607,26 @@ components:
       - id
       - nome
       - telefone
+    CriarAssinaturaRequest:
+      type: object
+      properties:
+        eventos:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+        parceiro:
+          type: string
+          maxLength: 100
+          minLength: 0
+        url:
+          type: string
+          format: uri
+      required:
+      - eventos
+      - parceiro
+      - url
     CriarClienteRequest:
       type: object
       properties:
@@ -1730,6 +1862,53 @@ components:
       - valorFrete
       - valorItens
       - valorTotal
+    EntregaWebhook:
+      type: object
+      properties:
+        criadaEm:
+          type: string
+          format: date-time
+        entregueEm:
+          type:
+          - string
+          - "null"
+          format: date-time
+        eventoId:
+          type: string
+          format: uuid
+        id:
+          type: string
+          format: uuid
+        proximaTentativaEm:
+          type: string
+          format: date-time
+        status:
+          type: string
+        tentativas:
+          type: integer
+          format: int32
+        tipoEvento:
+          type: string
+        ultimoErro:
+          type:
+          - string
+          - "null"
+        ultimoStatusHttp:
+          type:
+          - integer
+          - "null"
+          format: int32
+      required:
+      - criadaEm
+      - entregueEm
+      - eventoId
+      - id
+      - proximaTentativaEm
+      - status
+      - tentativas
+      - tipoEvento
+      - ultimoErro
+      - ultimoStatusHttp
     EstoqueResponse:
       type: object
       properties:

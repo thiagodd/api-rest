@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 60 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 59 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 78
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -211,7 +211,7 @@
 |---|---|---|---|---|---|
 | 21.01 | Idempotency keys | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-01-idempotency-keys.mdx` | revisao |
 | 21.02 | Operações assíncronas e de longa duração (202 + polling) | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-02-operacoes-assincronas-e-de-longa-duracao-202-polling.mdx` | revisao |
-| 21.03 | Webhooks: enviando e recebendo | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-03-webhooks-enviando-e-recebendo.mdx` | esqueleto |
+| 21.03 | Webhooks: enviando e recebendo | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-03-webhooks-enviando-e-recebendo.mdx` | revisao |
 
 ### M22: Conteúdo e transferência
 

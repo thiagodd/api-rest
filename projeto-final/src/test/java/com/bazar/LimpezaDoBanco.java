@@ -13,6 +13,9 @@ public final class LimpezaDoBanco {
 
     public static void limpar(JdbcClient jdbc) {
         jdbc.sql("delete from chave_idempotencia").update();
+        jdbc.sql("delete from entrega_webhook").update();
+        jdbc.sql("delete from assinatura_webhook").update();
+        jdbc.sql("delete from notificacao_recebida").update();
         jdbc.sql("delete from operacao").update();
         jdbc.sql("delete from historico_pedido").update();
         jdbc.sql("delete from item_pedido").update();

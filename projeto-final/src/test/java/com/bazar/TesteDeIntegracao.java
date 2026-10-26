@@ -22,7 +22,9 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-        properties = "spring.jpa.properties.hibernate.generate_statistics=true")
+        properties = { "spring.jpa.properties.hibernate.generate_statistics=true",
+                // Os testes de webhook (21.03) entregam num servidor em localhost.
+                "bazar.webhooks.aceitar-enderecos-locais=true" })
 @AutoConfigureMockMvc
 @AutoConfigureRestTestClient
 @Import(TestcontainersConfiguration.class)

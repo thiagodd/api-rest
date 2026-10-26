@@ -72,3 +72,12 @@ bazar:
     intervalo: 10s
   relatorios:
     diretorio: ${java.io.tmpdir}/bazar/relatorios
+  webhooks:
+    # A cada quanto tempo o entregador procura entregas vencidas (21.03).
+    intervalo: 1s
+    # A espera antes de cada nova tentativa: 8 tentativas em cerca de 12 horas.
+    esperas: 5s, 30s, 2m, 10m, 1h, 3h, 8h
+    aceitar-enderecos-locais: ${BAZAR_WEBHOOKS_LOCAIS:false}
+  pagafacil:
+    # O segredo das notificações da PagaFácil. Este valor é só para desenvolvimento: em produção, vem do cofre.
+    segredo-webhook: ${BAZAR_PAGAFACIL_SEGREDO:whsec_GDOOH95AvlrTwiZlI5GeQ0v9OR2ZNA5xS7cWATcPC+Y=}

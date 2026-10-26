@@ -31,6 +31,9 @@ public enum TipoProblema {
     PATCH_INVALIDO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     VERSAO_NAO_SUPORTADA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
     CHAVE_DE_IDEMPOTENCIA_INVALIDA(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
+    // A assinatura HMAC ou o timestamp de um webhook recebido não conferem (21.03). 400, e não 401: um 401 exige o
+    // header WWW-Authenticate com um esquema de autenticação, e o Standard Webhooks não define um.
+    WEBHOOK_NAO_VERIFICADO(HttpStatus.BAD_REQUEST, CORRIGIR_A_REQUISICAO),
 
     // 404: o recurso não existe (ou o cliente não pode saber que existe).
     PRODUTO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
@@ -40,6 +43,7 @@ public enum TipoProblema {
     PEDIDO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
     OPERACAO_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
     RELATORIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
+    ASSINATURA_WEBHOOK_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
 
     // 410: a versão do recurso existiu, mas foi desligada depois do sunset (18.04).
     VERSAO_DESLIGADA(HttpStatus.GONE, CORRIGIR_A_REQUISICAO),
