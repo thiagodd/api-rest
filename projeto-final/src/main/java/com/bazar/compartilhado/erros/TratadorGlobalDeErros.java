@@ -2,6 +2,7 @@ package com.bazar.compartilhado.erros;
 
 import java.net.URI;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -73,6 +75,8 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
 
     // O Clock vem da ConfiguracaoDoRelogio (15.01). Nos testes de fatia (@WebMvcTest), que não a carregam, vale o
     // relógio do sistema.
+    private static final Duration ESPERA_SEM_CAPACIDADE = Duration.ofSeconds(10);
+
     private DataSize tamanhoMaximoDoArquivo = DataSize.ofMegabytes(1);
 
     @Autowired
@@ -126,6 +130,17 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> deDominio(ExcecaoDeDominio ex, WebRequest request) {
         var problema = Problemas.de(ex, getMessageSource(), LocaleContextHolder.getLocale());
         return handleExceptionInternal(ex, problema, new HttpHeaders(), ex.getTipo().status(), request);
+    }
+
+    // O executor das respostas assíncronas (StreamingResponseBody) está no limite (22.02). Não é um defeito: é falta de
+    // vaga agora. 503 com Retry-After, e o cliente tenta de novo.
+    @ExceptionHandler(TaskRejectedException.class)
+    ResponseEntity<Object> semCapacidade(TaskRejectedException ex, WebRequest request) {
+        var excecao = new RegraDeNegocioException(TipoProblema.CAPACIDADE_ESGOTADA, Map.of());
+        var problema = Problemas.de(excecao, getMessageSource(), LocaleContextHolder.getLocale());
+        var cabecalhos = new HttpHeaders();
+        cabecalhos.set(HttpHeaders.RETRY_AFTER, String.valueOf(ESPERA_SEM_CAPACIDADE.toSeconds()));
+        return handleExceptionInternal(ex, problema, cabecalhos, HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
     // Lançada no commit, quando o UPDATE com "where versao=?" não encontra a linha: outra transação
@@ -336,7 +351,11 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         problema.setInstance(URI.create(caminho(request)));   // o Spring 7.1 deixa de preencher sozinho
         var traceId = novoTraceId();
         problema.setProperty("traceId", traceId);
-        if (status.is5xxServerError()) {
+        // 503 é falta de capacidade agora, não um defeito: sem stack trace (22.02).
+        if (status.value() == HttpStatus.SERVICE_UNAVAILABLE.value()) {
+            log.warn("Sem capacidade [traceId={}]: {}", traceId, ex.getMessage());
+        }
+        else if (status.is5xxServerError()) {
             log.error("Erro inesperado [traceId={}]", traceId, ex);
         }
         else {

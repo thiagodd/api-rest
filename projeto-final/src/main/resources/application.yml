@@ -12,6 +12,11 @@ spring:
       # deixa folga para a parte dos metadados e os delimitadores.
       max-file-size: 5MB
       max-request-size: 6MB
+  mvc:
+    async:
+      # Quanto tempo uma resposta assíncrona (StreamingResponseBody, 22.02) pode levar até terminar. O padrão do
+      # Tomcat, 30 s, corta a exportação de um catálogo grande no meio. Os SseEmitter definem o próprio prazo (19.04).
+      request-timeout: 10m
   task:
     execution:
       # Leva o contexto (o MDC, registrado na ConfiguracaoDeTarefas) para as threads do @Async (19.03).

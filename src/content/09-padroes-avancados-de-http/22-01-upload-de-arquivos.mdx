@@ -39,7 +39,7 @@ Cada uma dessas três escolhas é uma porta aberta:
 Um formulário HTML com `<input type="file">` envia o corpo em `multipart/form-data` (RFC 7578): várias **partes**, separadas por um delimitador (*boundary*) que o cliente escolhe. Cada parte tem os seus próprios headers:
 
 ```http
-POST /v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens HTTP/1.1
+POST /v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens HTTP/1.1
 Content-Type: multipart/form-data; boundary=----bazar7MA4YWxk
 Content-Length: 3412
 
@@ -88,7 +88,7 @@ Os primeiros bytes ainda não bastam. Um arquivo pode começar como PNG e não s
 
 ### O nome: guardar, nunca usar
 
-O nome que o cliente mandou é **dado para exibição**, e nada além disso. O arquivo é gravado com uma **chave gerada pelo servidor**: um UUID e a extensão do **formato reconhecido**. `../../capa.jpg` com conteúdo PNG vira `01a1789a-972c-7e45-b214-337e2ca7f47f.png`. Não há *path traversal* possível, não há dois arquivos com o mesmo nome, e a extensão sempre corresponde ao conteúdo.
+O nome que o cliente mandou é **dado para exibição**, e nada além disso. O arquivo é gravado com uma **chave gerada pelo servidor**: um UUID e a extensão do **formato reconhecido**. `../../capa.jpg` com conteúdo PNG vira `01a178c1-44aa-78ad-bb11-048775526d75.png`. Não há *path traversal* possível, não há dois arquivos com o mesmo nome, e a extensão sempre corresponde ao conteúdo.
 
 O nome original é guardado no banco, sem caminho e sem caracteres de controle, para mostrar ao lojista ("capa.jpg") e para o `Content-Disposition` do download ([22.02](/padroes-avancados-de-http/download-streaming-e-range)).
 
@@ -102,7 +102,7 @@ No multipart, o Tomcat já faz a parte dele: grava cada parte num arquivo tempor
 
 Passar o arquivo pela API faz sentido para imagens de alguns megabytes. Para vídeos de 2 GB, cada byte atravessa a API só para ir para o armazenamento (S3, GCS, Azure Blob), ocupando uma conexão por minutos. A alternativa é o cliente enviar **direto para o armazenamento**:
 
-1. O cliente pede à API um lugar para enviar: `POST /v1/produtos/{id}/videos` com o nome e o tamanho.
+1. O cliente pede à API um lugar para enviar: `POST /v2/produtos/{id}/videos` com o nome e o tamanho.
 2. A API confere permissão, tamanho e tipo declarados, e gera uma **URL pré-assinada**: uma URL do S3 que permite um `PUT` de um objeto específico, com tamanho e tipo fixos, válida por 15 minutos. Ela é assinada com a credencial da API, mas não a contém.
 3. O cliente faz o `PUT` do arquivo direto no S3.
 4. O S3 avisa a API (um evento), ou o cliente confirma (`POST .../confirmacao`). Só então a API confere o conteúdo de verdade (os primeiros bytes, o antivírus) e o publica.
@@ -177,7 +177,7 @@ bazar:
 ### O controller: duas formas, um endpoint
 
 ```java title="src/main/java/com/bazar/catalogo/api/ImagemProdutoController.java (trecho)"
-@PostMapping(path = "/v1/produtos/{id}/imagens", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+@PostMapping(path = "/v{versao}/produtos/{id}/imagens", version = "2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 public ResponseEntity<ImagemProdutoResponse> adicionar(@PathVariable UUID id,
         @RequestPart("arquivo") MultipartFile arquivo,
         @RequestPart(name = "metadados", required = false) @Valid @Nullable MetadadosDaImagem metadados)
@@ -192,7 +192,8 @@ public ResponseEntity<ImagemProdutoResponse> adicionar(@PathVariable UUID id,
 }
 
 // O arquivo é o corpo, sem multipart: o cliente manda os bytes como estão, e o servidor os lê direto do socket.
-@PostMapping(path = "/v1/produtos/{id}/imagens", consumes = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE })
+@PostMapping(path = "/v{versao}/produtos/{id}/imagens", version = "2",
+        consumes = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE })
 @Operation(hidden = true)
 public ResponseEntity<ImagemProdutoResponse> adicionarBinaria(@PathVariable UUID id,
         @RequestHeader(name = HttpHeaders.CONTENT_DISPOSITION, required = false) @Nullable String disposicao,
@@ -201,6 +202,8 @@ public ResponseEntity<ImagemProdutoResponse> adicionarBinaria(@PathVariable UUID
     return criada(imagens.adicionar(id, nome != null ? nome : "imagem", null, conteudo));
 }
 ```
+
+As imagens só existem na **v2** de produtos. A v1 está em depreciação desde a [18.04](/contratos-documentacao-e-ciclo-de-vida/depreciacao-e-desligamento-de-apis): um recurso novo nasce na versão atual, e um `POST /v1/produtos/{id}/imagens` é um `404`.
 
 O `@RequestPart("metadados")` com um record faz o Spring desserializar aquela parte como JSON (pelo `Content-Type: application/json` dela), e o `@Valid` valida como num `@RequestBody`. Um parâmetro `InputStream` recebe o corpo cru, sem conversor nenhum.
 
@@ -358,32 +361,32 @@ protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
 
 <HttpExchange
   title="Upload multipart, com metadados"
-  request={{ method: 'POST', url: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=------------------------OLbsKQTuWdyBu9z6' }, body: '--------------------------OLbsKQTuWdyBu9z6\nContent-Disposition: form-data; name="arquivo"; filename="capa.png"\nContent-Type: image/png\n\n(3089 bytes)\n--------------------------OLbsKQTuWdyBu9z6\nContent-Disposition: form-data; name="metadados"; filename="meta.json"\nContent-Type: application/json\n\n{ "textoAlternativo": "Capa do livro Clean Code" }\n--------------------------OLbsKQTuWdyBu9z6--' }}
-  response={{ status: 201, headers: { 'Location': 'http://localhost:8080/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens/01a1789a-972c-7e45-b214-337e2ca7f47f', 'Content-Type': 'application/json' }, body: { id: '01a1789a-972c-7e45-b214-337e2ca7f47f', nomeOriginal: 'capa.png', tipoConteudo: 'image/png', tamanhoBytes: 3089, largura: 600, altura: 800, textoAlternativo: 'Capa do livro Clean Code', ordem: 1, criadaEm: '2026-10-26T14:25:59.620506495Z' } }}
+  request={{ method: 'POST', url: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=------------------------OLbsKQTuWdyBu9z6' }, body: '--------------------------OLbsKQTuWdyBu9z6\nContent-Disposition: form-data; name="arquivo"; filename="capa.png"\nContent-Type: image/png\n\n(3089 bytes)\n--------------------------OLbsKQTuWdyBu9z6\nContent-Disposition: form-data; name="metadados"; filename="meta.json"\nContent-Type: application/json\n\n{ "textoAlternativo": "Capa do livro Clean Code" }\n--------------------------OLbsKQTuWdyBu9z6--' }}
+  response={{ status: 201, headers: { 'Location': 'http://localhost:8080/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens/01a178c1-44aa-78ad-bb11-048775526d75', 'Content-Type': 'application/json' }, body: { id: '01a178c1-44aa-78ad-bb11-048775526d75', nomeOriginal: 'capa.png', tipoConteudo: 'image/png', tamanhoBytes: 3089, largura: 600, altura: 800, textoAlternativo: 'Capa do livro Clean Code', ordem: 1, criadaEm: '2026-10-26T15:08:14.393375229Z' } }}
 >
 Com `curl -F "arquivo=@capa.png;type=image/png" -F "metadados=@meta.json;type=application/json"`. O `GET` do `Location` chega na 22.02. A resposta não traz a chave do armazenamento nem o caminho no disco: são detalhes de onde o arquivo está, que mudam se ele for para um S3.
 </HttpExchange>
 
 <HttpExchange
   title="Um script com a etiqueta de JPEG"
-  request={{ method: 'POST', url: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=...', 'Accept-Language': 'pt-BR' }, body: 'Content-Disposition: form-data; name="arquivo"; filename="foto.jpg"\nContent-Type: image/jpeg\n\n<?php system($_GET[\'c\']); ?>' }}
-  response={{ status: 415, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/imagem-nao-aceita', title: 'Imagem não aceita', status: 415, detail: 'O arquivo não é uma imagem JPEG ou PNG válida.', instance: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', codigo: 'IMAGEM_NAO_ACEITA', traceId: 'c0eb079546af41637ffe6a7a49aecdf0' } }}
+  request={{ method: 'POST', url: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=...', 'Accept-Language': 'pt-BR' }, body: 'Content-Disposition: form-data; name="arquivo"; filename="foto.jpg"\nContent-Type: image/jpeg\n\n<?php system($_GET[\'c\']); ?>' }}
+  response={{ status: 415, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/imagem-nao-aceita', title: 'Imagem não aceita', status: 415, detail: 'O arquivo não é uma imagem JPEG ou PNG válida.', instance: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', codigo: 'IMAGEM_NAO_ACEITA', traceId: '2b6c2ff0766785e442f27d7a378a0caf' } }}
 >
 O nome diz `.jpg` e a parte diz `image/jpeg`, mas os primeiros bytes são `<?ph`. `415` porque o problema é o formato do conteúdo enviado.
 </HttpExchange>
 
 <HttpExchange
   title="Uma bomba de pixels: 75 bytes, 50000 × 50000"
-  request={{ method: 'POST', url: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=...', 'Accept-Language': 'pt-BR' }, body: 'Content-Disposition: form-data; name="arquivo"; filename="bomba.png"\nContent-Type: image/png\n\n(75 bytes: um PNG de 10 × 10 com o cabeçalho reescrito)' }}
-  response={{ status: 422, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/validacao', title: 'Dados inválidos', status: 422, detail: 'A requisição tem 1 campo inválido.', instance: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', erros: [ { campo: 'arquivo', mensagem: 'A imagem tem pixels demais: no máximo 8000 por 8000.' } ], codigo: 'VALIDACAO', traceId: 'cbb257aa81e3ca352ea34e065d2270db' } }}
+  request={{ method: 'POST', url: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'multipart/form-data; boundary=...', 'Accept-Language': 'pt-BR' }, body: 'Content-Disposition: form-data; name="arquivo"; filename="bomba.png"\nContent-Type: image/png\n\n(75 bytes: um PNG de 10 × 10 com o cabeçalho reescrito)' }}
+  response={{ status: 422, headers: { 'Content-Type': 'application/problem+json' }, body: { type: 'https://api.bazar.example/problemas/validacao', title: 'Dados inválidos', status: 422, detail: 'A requisição tem 1 campo inválido.', instance: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', erros: [ { campo: 'arquivo', mensagem: 'A imagem tem pixels demais: no máximo 8000 por 8000.' } ], codigo: 'VALIDACAO', traceId: 'f88956ac5b7837c0afed911329adfd9c' } }}
 >
 É um PNG de verdade, e por isso não é um `415`: o formato é aceito, o valor é que está fora da regra. O arquivo gravado é apagado antes da resposta.
 </HttpExchange>
 
 <HttpExchange
   title="O arquivo como corpo"
-  request={{ method: 'POST', url: '/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'image/png', 'Content-Disposition': 'attachment; filename="capa-verso.png"' }, body: '(3089 bytes)' }}
-  response={{ status: 201, headers: { 'Location': 'http://localhost:8080/v1/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens/01a1789a-9796-7573-8035-c52b427bab03', 'Content-Type': 'application/json' }, body: { id: '01a1789a-9796-7573-8035-c52b427bab03', nomeOriginal: 'capa-verso.png', tipoConteudo: 'image/png', tamanhoBytes: 3089, largura: 600, altura: 800, textoAlternativo: null, ordem: 2, criadaEm: '2026-10-26T14:25:59.703944621Z' } }}
+  request={{ method: 'POST', url: '/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens', headers: { 'Content-Type': 'image/png', 'Content-Disposition': 'attachment; filename="capa-verso.png"' }, body: '(3089 bytes)' }}
+  response={{ status: 201, headers: { 'Location': 'http://localhost:8080/v2/produtos/bcd399f5-d6d1-4032-9c80-10ca4c363d31/imagens/01a178c1-4504-741b-99fb-f94fe47b9510', 'Content-Type': 'application/json' }, body: { id: '01a178c1-4504-741b-99fb-f94fe47b9510', nomeOriginal: 'capa-verso.png', tipoConteudo: 'image/png', tamanhoBytes: 3089, largura: 600, altura: 800, textoAlternativo: null, ordem: 2, criadaEm: '2026-10-26T15:08:14.469468986Z' } }}
 >
 Com `curl --data-binary @capa.png`. Sem delimitadores nem partes; o nome, opcional, vem no `Content-Disposition`.
 </HttpExchange>
@@ -419,7 +422,7 @@ void umPngComMetadadosEhGravadoPeloQueEle() throws Exception {
     var metadados = new MockMultipartFile("metadados", "", "application/json",
             "{ \"textoAlternativo\": \"Capa do livro\" }".getBytes(StandardCharsets.UTF_8));
 
-    var resposta = mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).multipart().file(arquivo).file(metadados)
+    var resposta = mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).multipart().file(arquivo).file(metadados)
             .exchange();
 
     assertThat(resposta).hasStatus(HttpStatus.CREATED).bodyJson().isLenientlyEqualTo("""
@@ -527,7 +530,7 @@ O `MultipartFile` que chega ao controller é um embrulho do arquivo temporário.
   { path: 'src/main/resources/application.yml', change: 'alterado' },
   { path: 'src/test/java/com/bazar/catalogo/ImagensDeProdutoTest.java', change: 'novo' },
 ]}>
-`POST /v1/produtos/{id}/imagens` aceita multipart (parte `arquivo` e parte `metadados` em JSON) ou o arquivo como corpo (`image/jpeg`, `image/png`). JPEG e PNG, até 5 MB, 8000 × 8000 pixels e 10 imagens por produto. O formato é reconhecido pelos primeiros bytes, as dimensões pelo cabeçalho; o arquivo é gravado em blocos, sob uma chave gerada pelo Bazar, e apagado se não for aceito. Tipos novos no catálogo: `IMAGEM_NAO_ACEITA` (415), `ARQUIVO_GRANDE_DEMAIS` (413) e `LIMITE_DE_IMAGENS` (409). O download da imagem chega na 22.02.
+`POST /v2/produtos/{id}/imagens` aceita multipart (parte `arquivo` e parte `metadados` em JSON) ou o arquivo como corpo (`image/jpeg`, `image/png`). JPEG e PNG, até 5 MB, 8000 × 8000 pixels e 10 imagens por produto. O formato é reconhecido pelos primeiros bytes, as dimensões pelo cabeçalho; o arquivo é gravado em blocos, sob uma chave gerada pelo Bazar, e apagado se não for aceito. Tipos novos no catálogo: `IMAGEM_NAO_ACEITA` (415), `ARQUIVO_GRANDE_DEMAIS` (413) e `LIMITE_DE_IMAGENS` (409). O download da imagem chega na 22.02.
 </ProjectStep>
 
 ## Resumo

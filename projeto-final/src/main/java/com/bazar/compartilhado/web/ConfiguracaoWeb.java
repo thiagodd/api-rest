@@ -9,6 +9,8 @@ import tools.jackson.databind.ser.std.SimpleFilterProvider;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
@@ -19,6 +21,7 @@ import org.springframework.web.accept.StandardApiVersionDeprecationHandler;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -27,6 +30,9 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
 
     // Todo primeiro segmento que começa com v é a versão, válida ou não: com /v\d+/, um /v1.5/produtos ficaria sem
     // versão e o {versao} do mapeamento aceitaria qualquer valor (200 em vez de 400).
+    // Cada exportação ocupa uma conexão do banco durante todo o download: o limite protege o pool (28.02).
+    static final int RESPOSTAS_ASSINCRONAS_SIMULTANEAS = 8;
+
     private static final Pattern VERSAO_NO_CAMINHO = Pattern.compile("/v[^/]*/");
 
     // No fim da lista: com Accept */* (ou sem Accept), o primeiro conversor capaz vence, e ele deve ser o JSON.
@@ -43,6 +49,20 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
         registry.addInterceptor(new AuditoriaInterceptor()).addPathPatterns("/v*/**");
         registry.addInterceptor(new ParametrosDeConsultaInterceptor()).addPathPatterns("/v*/**");
         registry.addInterceptor(new UsoDeVersaoDepreciadaInterceptor()).addPathPatterns("/v*/**");
+    }
+
+    // As respostas assíncronas do MVC (StreamingResponseBody, 22.02) num executor só delas. Sem isso, usariam o
+    // executor do @Async (19.03), limitado a 4 e com recusa: a quinta exportação simultânea seria um 500, e quatro
+    // exportações tomariam todas as vagas dos relatórios. Acima do limite, a recusa vira 503 com Retry-After.
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        var executor = new SimpleAsyncTaskExecutor("resposta-");
+        executor.setVirtualThreads(true);
+        executor.setConcurrencyLimit(RESPOSTAS_ASSINCRONAS_SIMULTANEAS);
+        executor.setRejectTasksWhenLimitReached(true);
+        // O MDC (traceId) da requisição vai junto para a thread que escreve a resposta.
+        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
+        configurer.setTaskExecutor(executor);
     }
 
     // A versão é o primeiro segmento do caminho (/v1, /v2), conforme o ADR-0003 (18.03). O predicado separa as rotas

@@ -1142,71 +1142,6 @@ paths:
       tags:
       - produtos
       x-sunset: 2027-04-30
-  /v1/produtos/{id}/imagens:
-    post:
-      description: "JPEG ou PNG, até 5 MB e 8000 x 8000 pixels, até 10 imagens por\
-        \ produto. O formato é reconhecido pelo conteúdo; o Content-Type declarado\
-        \ é ignorado. Em `multipart/form-data`, a parte `arquivo` e, opcional, a parte\
-        \ `metadados` (JSON). Como corpo binário (`image/jpeg` ou `image/png`), o\
-        \ nome vai em `Content-Disposition: attachment; filename=...`."
-      operationId: adicionarImagem
-      parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        content:
-          image/jpeg:
-            schema:
-              type: string
-              format: binary
-          image/png:
-            schema:
-              type: string
-              format: binary
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/ImagemMultipartRequest"
-        required: true
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImagemProdutoResponse"
-          description: A imagem foi gravada.
-          headers:
-            Location:
-              description: A URI da imagem
-              schema:
-                type: string
-              style: simple
-        "400":
-          $ref: "#/components/responses/RequisicaoInvalida"
-        "404":
-          $ref: "#/components/responses/NaoEncontrado"
-        "409":
-          $ref: "#/components/responses/Conflito"
-        "413":
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problema"
-          description: O arquivo passa de 5 MB.
-        "415":
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problema"
-          description: O conteúdo não é um JPEG nem um PNG válido.
-        "422":
-          $ref: "#/components/responses/Validacao"
-      summary: Adiciona uma imagem ao produto
-      tags:
-      - Produtos
   /v1/produtos/{produtoId}/estoque:
     get:
       operationId: detalharEstoque
@@ -1345,6 +1280,64 @@ paths:
           $ref: "#/components/responses/NaoEncontrado"
       tags:
       - relatorios
+  /v1/relatorios/{id}/arquivo:
+    get:
+      description: "CSV em UTF-8. Aceita `Range: bytes=...` (`206 Partial Content`),\
+        \ para continuar um download interrompido; com `If-Range`, só se o arquivo\
+        \ não mudou."
+      operationId: baixarRelatorio
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: O arquivo inteiro
+        "206":
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: O trecho pedido no Range
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "416":
+          description: O Range pedido está fora do arquivo
+      summary: Baixa o arquivo do relatório
+      tags:
+      - relatorios
+  /v2/produtos/exportacao:
+    get:
+      description: "Todos os produtos, em ordem de SKU, sem paginação: `text/csv`\
+        \ (com cabeçalho) ou `application/x-ndjson` (um objeto JSON por linha). A\
+        \ resposta chega aos poucos, sem `Content-Length`."
+      operationId: exportarProdutos
+      responses:
+        "200":
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: "#/components/schemas/LinhaDeProduto"
+            text/csv:
+              schema:
+                type: string
+          description: O catálogo
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+      summary: Exporta o catálogo inteiro
+      tags:
+      - Produtos
   /v2/produtos/{id}:
     get:
       operationId: detalharProdutoV2
@@ -1369,6 +1362,108 @@ paths:
       summary: Detalha um produto (v2)
       tags:
       - produtos
+  /v2/produtos/{id}/imagens:
+    post:
+      description: "JPEG ou PNG, até 5 MB e 8000 x 8000 pixels, até 10 imagens por\
+        \ produto. O formato é reconhecido pelo conteúdo; o Content-Type declarado\
+        \ é ignorado. Em `multipart/form-data`, a parte `arquivo` e, opcional, a parte\
+        \ `metadados` (JSON). Como corpo binário (`image/jpeg` ou `image/png`), o\
+        \ nome vai em `Content-Disposition: attachment; filename=...`."
+      operationId: adicionarImagem
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ImagemMultipartRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImagemProdutoResponse"
+          description: A imagem foi gravada.
+          headers:
+            Location:
+              description: A URI da imagem
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflito"
+        "413":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problema"
+          description: O arquivo passa de 5 MB.
+        "415":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problema"
+          description: O conteúdo não é um JPEG nem um PNG válido.
+        "422":
+          $ref: "#/components/responses/Validacao"
+      summary: Adiciona uma imagem ao produto
+      tags:
+      - Produtos
+  /v2/produtos/{id}/imagens/{imagemId}:
+    get:
+      description: "JPEG ou PNG, com cache de um ano: o conteúdo de uma imagem nunca\
+        \ muda."
+      operationId: baixarImagem
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: imagemId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: A imagem
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      summary: Baixa uma imagem do produto
+      tags:
+      - Produtos
 components:
   responses:
     Conflito:
@@ -2090,6 +2185,37 @@ components:
       - quantidade
       - sku
       - subtotal
+    LinhaDeProduto:
+      type: object
+      properties:
+        categoriaId:
+          type: string
+          format: uuid
+        criadoEm:
+          type: string
+          format: date-time
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        precoMoeda:
+          type: string
+        precoValor:
+          type: number
+        sku:
+          type: string
+        status:
+          type: string
+      required:
+      - categoriaId
+      - criadoEm
+      - id
+      - nome
+      - precoMoeda
+      - precoValor
+      - sku
+      - status
     Link:
       type: object
       properties:
@@ -2490,6 +2616,9 @@ components:
     RelatorioResponse:
       type: object
       properties:
+        arquivo:
+          type: string
+          description: Onde baixar o arquivo
         formato:
           type: string
         geradoEm:
@@ -2504,6 +2633,7 @@ components:
           type: integer
           format: int64
       required:
+      - arquivo
       - formato
       - geradoEm
       - id

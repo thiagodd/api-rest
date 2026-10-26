@@ -2,10 +2,13 @@ package com.bazar.catalogo.api;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ImagemProduto;
 import com.bazar.catalogo.dominio.ImagemService;
+import com.bazar.compartilhado.web.DownloadDeArquivo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,11 +19,16 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.ETag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -35,7 +43,9 @@ import static com.bazar.compartilhado.web.RespostasDeErro.VALIDACAO;
 
 /**
  * Upload das imagens de um produto (22.01), de dois jeitos: multipart, com o arquivo e os metadados juntos, ou o
- * arquivo como corpo da requisição.
+ * arquivo como corpo da requisição. E o download de cada uma (22.02).
+ * <p>
+ * Só na v2: a v1 de produtos está em depreciação desde a 18.04, e um recurso novo nasce na versão atual.
  */
 @RestController
 @Tag(name = "Produtos")
@@ -61,7 +71,7 @@ public class ImagemProdutoController {
 
     // O OpenAPI tem uma operação por caminho e método: as duas formas do upload são uma operação só, com três tipos de
     // corpo. Sem isso, o springdoc juntaria os dois métodos e ficaria com um corpo só.
-    @PostMapping(path = "/v1/produtos/{id}/imagens", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/v{versao}/produtos/{id}/imagens", version = "2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(operationId = "adicionarImagem", summary = "Adiciona uma imagem ao produto",
             description = "JPEG ou PNG, até 5 MB e 8000 x 8000 pixels, até 10 imagens por produto. O formato é "
                     + "reconhecido pelo conteúdo; o Content-Type declarado é ignorado. Em `multipart/form-data`, a "
@@ -98,13 +108,38 @@ public class ImagemProdutoController {
     }
 
     // O arquivo é o corpo, sem multipart: o cliente manda os bytes como estão, e o servidor os lê direto do socket.
-    @PostMapping(path = "/v1/produtos/{id}/imagens", consumes = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE })
+    @PostMapping(path = "/v{versao}/produtos/{id}/imagens", version = "2",
+            consumes = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE })
     @Operation(hidden = true)
     public ResponseEntity<ImagemProdutoResponse> adicionarBinaria(@PathVariable UUID id,
             @RequestHeader(name = HttpHeaders.CONTENT_DISPOSITION, required = false) @Nullable String disposicao,
             InputStream conteudo) {
         var nome = disposicao != null ? ContentDisposition.parse(disposicao).getFilename() : null;
         return criada(imagens.adicionar(id, nome != null ? nome : "imagem", null, conteudo));
+    }
+
+    // Os bytes como foram aceitos no upload, com o tipo reconhecido na época, nunca o que o cliente declarou (22.01).
+    // O conteúdo de uma imagem nunca muda (uma imagem nova é outro id): cache de um ano, imutável.
+    @GetMapping(path = "/v{versao}/produtos/{id}/imagens/{imagemId}", version = "2")
+    @Operation(operationId = "baixarImagem", summary = "Baixa uma imagem do produto",
+            description = "JPEG ou PNG, com cache de um ano: o conteúdo de uma imagem nunca muda.")
+    @ApiResponse(responseCode = "200", description = "A imagem", content = {
+        @Content(mediaType = MediaType.IMAGE_JPEG_VALUE, schema = @Schema(type = "string", format = "binary")),
+        @Content(mediaType = MediaType.IMAGE_PNG_VALUE, schema = @Schema(type = "string", format = "binary")) })
+    @ApiResponse(responseCode = "404", ref = NAO_ENCONTRADO)
+    public ResponseEntity<Resource> baixar(@PathVariable UUID id, @PathVariable UUID imagemId,
+            @RequestHeader HttpHeaders requisicao) {
+        var imagem = imagens.buscar(id, imagemId);
+        return DownloadDeArquivo.de(requisicao, new FileSystemResource(imagens.arquivo(imagem)),
+                ETag.create("\"" + imagem.id() + "\""), imagem.criadaEm(), ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(imagem.tipoConteudo()))
+                        // inline: o navegador mostra, em vez de baixar. O filename* leva o nome em UTF-8 (RFC 6266).
+                        .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                                .filename(imagem.nomeOriginal(), StandardCharsets.UTF_8).build().toString())
+                        // Sem nosniff, um navegador pode "farejar" o conteúdo e tratar como HTML o que foi servido como
+                        // imagem.
+                        .header("X-Content-Type-Options", "nosniff")
+                        .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable()));
     }
 
     private static ResponseEntity<ImagemProdutoResponse> criada(ImagemProduto imagem) {

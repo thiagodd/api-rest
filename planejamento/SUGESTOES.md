@@ -34,3 +34,9 @@
 - **Plugin do SCC 5.0.3:** sem `clean`, com os contratos inalterados, ele não registra a pasta dos testes gerados, que deixam de rodar sem aviso. O Bazar contorna com o `build-helper-maven-plugin`. Vale reconferir em versões futuras do plugin.
 - **Páginas sem diagrama:** 14.03, 15.02, 15.05, 17.02 e 17.05 tinham "Diagramas: nenhum" no currículo e ficaram sem diagrama, contra a regra da Fase 3 ("toda página tem pelo menos um diagrama"). As cinco ganharam um diagrama nesta revisão. O currículo das partes seguintes pode ter o mesmo "nenhum": escrever um diagrama assim mesmo.
 - **15.02 corrigida:** a página dizia que o `HALF_UP` em cada parte do rateio de R$ 15,00 somaria R$ 15,01, e que 10,2715 arredondaria para 10,28. Os dois estavam errados (o `HALF_UP` dá R$ 15,00 nesse caso). Os contraexemplos agora são R$ 10,00 em 3 (R$ 9,99) e em 6 partes (R$ 10,02).
+
+## Da 22.02 (download, streaming e Range)
+
+- **Spring MVC e `If-Range`**: o `AbstractMessageConverterMethodProcessor` aplica `Range` a qualquer `Resource` com status 200, sem conferir `If-Range`, e num `416` escreve o arquivo inteiro no corpo (Spring 7.0.9). O Bazar contorna com `DownloadDeArquivo`. Vale acompanhar o issue tracker do Spring e, se corrigido, simplificar a classe e a página.
+- **`Link` duplicado no 503 assíncrono em caminho depreciado**: quando o executor recusa um `StreamingResponseBody` num caminho com depreciação (18.04), os headers `Link` de `deprecation`/`sunset` saem duas vezes. Hoje não afeta nenhuma rota (a exportação está na v2), mas vale investigar se surgir uma resposta assíncrona em rota depreciada.
+- **Arquivos órfãos no armazenamento**: imagens e relatórios ficam no diretório temporário e não são apagados quando o registro some (testes, produto descontinuado). Uma tarefa de limpeza (como a `ExpiracaoDasChaves` da 21.01) caberia na 31.03 ou na 31.08.

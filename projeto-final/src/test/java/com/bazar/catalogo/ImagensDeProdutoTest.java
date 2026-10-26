@@ -77,7 +77,7 @@ class ImagensDeProdutoTest {
         var metadados = new MockMultipartFile("metadados", "", "application/json",
                 "{ \"textoAlternativo\": \"Capa do livro\" }".getBytes(StandardCharsets.UTF_8));
 
-        var resposta = mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).multipart().file(arquivo).file(metadados)
+        var resposta = mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).multipart().file(arquivo).file(metadados)
                 .exchange();
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED).bodyJson().isLenientlyEqualTo("""
@@ -85,10 +85,39 @@ class ImagensDeProdutoTest {
                   "textoAlternativo": "Capa do livro", "ordem": 1 }
                 """);
         assertThat(resposta.getResponse().getHeader("Location"))
-                .matches("http://localhost/v1/produtos/" + cleanCode + "/imagens/[0-9a-f-]{36}");
+                .matches("http://localhost/v2/produtos/" + cleanCode + "/imagens/[0-9a-f-]{36}");
         var chave = jdbc.sql("select chave from imagem_produto").query(String.class).single();
         assertThat(chave).endsWith(".png");
         assertThat(Files.size(armazenamento.caminho(chave))).isEqualTo(arquivo.getSize());
+    }
+
+    @Test
+    void aImagemEhServidaComOTipoReconhecidoECacheLongo() throws Exception {
+        var png = imagem("png", 32, 32);
+        var criada = mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).multipart()
+                .file(new MockMultipartFile("arquivo", "capa é.jpg", "image/jpeg", png)).exchange();
+        var location = criada.getResponse().getHeader("Location");
+
+        var resposta = mvc.get().uri(location).exchange();
+
+        assertThat(resposta).hasStatusOk()
+                .hasContentType(MediaType.IMAGE_PNG)
+                .hasHeader("X-Content-Type-Options", "nosniff")
+                .hasHeader("Cache-Control", "max-age=31536000, public, immutable")
+                // Um filename em ASCII, para clientes antigos, e o filename* com o nome em UTF-8 (RFC 6266).
+                .hasHeader("Content-Disposition", "inline; filename=\"capa e.jpg\"; filename*=UTF-8''capa%20%C3%A9.jpg");
+        assertThat(resposta.getResponse().getContentAsByteArray()).isEqualTo(png);
+    }
+
+    @Test
+    void aImagemDeOutroProdutoEh404() throws Exception {
+        var criada = mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_PNG)
+                .content(imagem("png", 8, 8)).exchange();
+        var imagemId = criada.getResponse().getHeader("Location").replaceAll(".*/", "");
+
+        assertThat(mvc.get().uri("/v2/produtos/{id}/imagens/{imagem}", UUID.randomUUID(), imagemId))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyJson().extractingPath("$.codigo").isEqualTo("IMAGEM_NAO_ENCONTRADA");
     }
 
     @Test
@@ -96,7 +125,7 @@ class ImagensDeProdutoTest {
         var script = new MockMultipartFile("arquivo", "foto.jpg", "image/jpeg",
                 "<?php system($_GET['c']); ?>".getBytes(StandardCharsets.UTF_8));
 
-        assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).multipart().file(script))
+        assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).multipart().file(script))
                 .hasStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .bodyJson().extractingPath("$.codigo").isEqualTo("IMAGEM_NAO_ACEITA");
         assertThat(jdbc.sql("select count(*) from imagem_produto").query(Long.class).single()).isZero();
@@ -106,7 +135,7 @@ class ImagensDeProdutoTest {
     void umPngQueDeclaraDimensoesEnormesEh422ENaoDeixaArquivo() throws Exception {
         var bomba = comDimensoes(imagem("png", 10, 10), 50_000, 50_000);
 
-        assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).multipart()
+        assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).multipart()
                 .file(new MockMultipartFile("arquivo", "bomba.png", "image/png", bomba)))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
                 .bodyJson().extractingPath("$.erros[0].campo").isEqualTo("arquivo");
@@ -117,7 +146,7 @@ class ImagensDeProdutoTest {
 
     @Test
     void oArquivoTambemPodeSerOCorpoDaRequisicao() throws Exception {
-        assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_JPEG)
+        assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_JPEG)
                 .header("Content-Disposition", "attachment; filename=\"capa.jpg\"")
                 .content(imagem("jpg", 300, 400)))
                 .hasStatus(HttpStatus.CREATED).bodyJson().isLenientlyEqualTo("""
@@ -130,7 +159,7 @@ class ImagensDeProdutoTest {
         var grande = new byte[6 * 1024 * 1024];
         System.arraycopy(new byte[] { (byte) 0xff, (byte) 0xd8, (byte) 0xff }, 0, grande, 0, 3);
 
-        assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_JPEG)
+        assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_JPEG)
                 .content(grande))
                 .hasStatus(HttpStatus.CONTENT_TOO_LARGE)
                 .bodyJson().extractingPath("$.codigo").isEqualTo("ARQUIVO_GRANDE_DEMAIS");
@@ -150,7 +179,7 @@ class ImagensDeProdutoTest {
             Thread.ofVirtual().start(() -> {
                 try {
                     var saida = socket.getOutputStream();
-                    saida.write(("POST /v1/produtos/" + cleanCode + "/imagens HTTP/1.1\r\nHost: localhost\r\n"
+                    saida.write(("POST /v2/produtos/" + cleanCode + "/imagens HTTP/1.1\r\nHost: localhost\r\n"
                             + "Accept-Language: en\r\nContent-Type: multipart/form-data; boundary=" + delimitador
                             + "\r\nContent-Length: " + (inicio.length + arquivo.length + fim.length) + "\r\n\r\n")
                             .getBytes(StandardCharsets.US_ASCII));
@@ -174,10 +203,10 @@ class ImagensDeProdutoTest {
     void umProdutoTemNoMaximoDezImagens() throws Exception {
         var png = imagem("png", 8, 8);
         for (int i = 0; i < 10; i++) {
-            assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_PNG)
+            assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_PNG)
                     .content(png)).hasStatus(HttpStatus.CREATED);
         }
-        assertThat(mvc.post().uri("/v1/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_PNG)
+        assertThat(mvc.post().uri("/v2/produtos/{id}/imagens", cleanCode).contentType(MediaType.IMAGE_PNG)
                 .content(png)).hasStatus(HttpStatus.CONFLICT)
                 .bodyJson().extractingPath("$.codigo").isEqualTo("LIMITE_DE_IMAGENS");
     }

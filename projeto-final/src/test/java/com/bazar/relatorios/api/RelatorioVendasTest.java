@@ -69,6 +69,56 @@ class RelatorioVendasTest {
     }
 
     @Test
+    void oArquivoEhBaixadoInteiroOuAPartirDeUmPonto() throws Exception {
+        var id = gerarRelatorio();
+        var inteiro = mvc.get().uri("/v1/relatorios/{id}/arquivo", id).exchange();
+        assertThat(inteiro).hasStatusOk()
+                .hasHeader("Content-Disposition", "attachment; filename=\"vendas-2026-10-01-a-2026-11-01.csv\"")
+                .hasHeader("Accept-Ranges", "bytes")
+                .hasHeader("ETag", "\"" + id + "\"");
+        assertThat(inteiro.getResponse().getContentType()).isEqualTo("text/csv;charset=UTF-8");
+        var conteudo = inteiro.getResponse().getContentAsByteArray();
+
+        // O download caiu depois de 10 bytes: o cliente pede o resto, se o arquivo ainda for o mesmo (If-Range).
+        var resto = mvc.get().uri("/v1/relatorios/{id}/arquivo", id)
+                .header("Range", "bytes=10-").header("If-Range", "\"" + id + "\"").exchange();
+        assertThat(resto).hasStatus(HttpStatus.PARTIAL_CONTENT)
+                .hasHeader("Content-Range", "bytes 10-%d/%d".formatted(conteudo.length - 1, conteudo.length));
+        assertThat(resto.getResponse().getContentAsByteArray())
+                .isEqualTo(java.util.Arrays.copyOfRange(conteudo, 10, conteudo.length));
+
+        // O arquivo que o cliente tem pela metade é outro: o Range é ignorado, e vem o arquivo inteiro.
+        var outro = mvc.get().uri("/v1/relatorios/{id}/arquivo", id)
+                .header("Range", "bytes=10-").header("If-Range", "\"outro\"").exchange();
+        assertThat(outro).hasStatusOk().hasHeader("Content-Length", String.valueOf(conteudo.length));
+        assertThat(outro.getResponse().getContentAsByteArray()).isEqualTo(conteudo);
+
+        var fora = mvc.get().uri("/v1/relatorios/{id}/arquivo", id).header("Range", "bytes=100000-").exchange();
+        assertThat(fora).hasStatus(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
+                .hasHeader("Content-Range", "bytes */" + conteudo.length);
+        assertThat(fora.getResponse().getContentAsByteArray()).isEmpty();
+    }
+
+    @Test
+    void oRelatorioAntesDeFicarProntoNaoTemArquivo() {
+        assertThat(mvc.get().uri("/v1/relatorios/{id}/arquivo", UUID.randomUUID()))
+                .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    private UUID gerarRelatorio() throws Exception {
+        var resposta = mvc.post().uri("/v1/relatorios/vendas")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "criadoApos": "2026-10-01T00:00:00Z", "criadoAntes": "2026-11-01T00:00:00Z" }
+                        """)
+                .exchange();
+        var id = UUID.fromString(JsonPath.read(resposta.getResponse().getContentAsString(), "$.operacaoId"));
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> assertThat(fila.buscar(id)).get()
+                .extracting(Operacao::status).isEqualTo(StatusOperacao.CONCLUIDA));
+        return id;
+    }
+
+    @Test
     void periodoInvertidoEh422() {
         assertThat(mvc.post().uri("/v1/relatorios/vendas")
                 .contentType(MediaType.APPLICATION_JSON)

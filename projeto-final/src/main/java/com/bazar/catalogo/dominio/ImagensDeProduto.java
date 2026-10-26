@@ -1,6 +1,8 @@
 package com.bazar.catalogo.dominio;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -13,6 +15,18 @@ public class ImagensDeProduto {
 
     public ImagensDeProduto(JdbcClient jdbc) {
         this.jdbc = jdbc;
+    }
+
+    Optional<ImagemProduto> buscar(UUID produtoId, UUID id) {
+        return jdbc.sql("select * from imagem_produto where id = :id and produto_id = :produto")
+                .param("id", id).param("produto", produtoId)
+                .query((linha, n) -> new ImagemProduto(linha.getObject("id", UUID.class),
+                        linha.getObject("produto_id", UUID.class), linha.getString("chave"),
+                        linha.getString("nome_original"), linha.getString("tipo_conteudo"),
+                        linha.getLong("tamanho_bytes"), linha.getInt("largura"), linha.getInt("altura"),
+                        linha.getString("texto_alternativo"), linha.getInt("ordem"),
+                        linha.getObject("criada_em", OffsetDateTime.class).toInstant()))
+                .optional();
     }
 
     int proximaOrdem(UUID produtoId) {

@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import com.bazar.compartilhado.Ids;
 import com.bazar.compartilhado.erros.CampoInvalidoException;
+import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
 import com.bazar.compartilhado.erros.RegraDeNegocioException;
 import com.bazar.compartilhado.erros.TipoProblema;
 import org.jspecify.annotations.Nullable;
@@ -72,6 +73,16 @@ public class ImagemService {
             armazenamento.apagar(chave);
             throw ex;
         }
+    }
+
+    /** Uma imagem do produto (22.02). A de outro produto não existe para este: 404, como uma que não existe. */
+    public ImagemProduto buscar(UUID produtoId, UUID id) {
+        return imagens.buscar(produtoId, id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.IMAGEM_NAO_ENCONTRADA, id));
+    }
+
+    public Path arquivo(ImagemProduto imagem) {
+        return armazenamento.caminho(imagem.chave());
     }
 
     private static TipoDeImagem reconhecer(BufferedInputStream entrada) {

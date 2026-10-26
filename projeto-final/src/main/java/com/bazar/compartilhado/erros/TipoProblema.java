@@ -44,6 +44,7 @@ public enum TipoProblema {
     OPERACAO_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
     RELATORIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
     ASSINATURA_WEBHOOK_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, CORRIGIR_A_REQUISICAO),
+    IMAGEM_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, MOSTRAR_AO_USUARIO),
 
     // 410: a versão do recurso existiu, mas foi desligada depois do sunset (18.04).
     VERSAO_DESLIGADA(HttpStatus.GONE, CORRIGIR_A_REQUISICAO),
@@ -74,6 +75,10 @@ public enum TipoProblema {
     // 500: não é a resposta de uma requisição, e sim o erro de uma operação assíncrona que falhou, no campo erro do
     // recurso da operação (21.02). O GET da operação em si responde 200.
     OPERACAO_FALHOU(HttpStatus.INTERNAL_SERVER_ERROR, AGUARDAR_E_REPETIR),
+
+    // 503: o servidor está sem vaga para esta requisição agora (22.02). Não é um defeito; o Retry-After diz quando
+    // tentar de novo.
+    CAPACIDADE_ESGOTADA(HttpStatus.SERVICE_UNAVAILABLE, AGUARDAR_E_REPETIR),
 
     // 412 e 428: requisições condicionais (20.03). O If-Match não bate com a versão atual, ou a escrita veio sem
     // nenhuma precondição.
