@@ -2,7 +2,7 @@
 id: "17.05"
 titulo: "Documentação além da referência"
 descricao: "A referência OpenAPI diz o que existe; guias dizem como usar. A falta de guias é a principal queixa de quem integra APIs."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Diátaxis: um framework para documentação técnica"
     url: "https://diataxis.fr/"
@@ -59,7 +59,7 @@ Para uma API, alguns guias são quase obrigatórios, porque respondem às pergun
 
 Um guia vive de exemplos: a requisição, a resposta, o erro. E exemplos escritos à mão envelhecem. O campo renomeado na versão 1.3 continua com o nome velho no guia de primeiros passos, que ninguém relê, e o integrador copia um exemplo que não funciona. O guia passa a ensinar uma API que não existe mais.
 
-O [Spring REST Docs](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/) resolve isso invertendo a origem dos exemplos: eles saem dos testes. Cada teste faz uma requisição real (com `MockMvc`, `WebTestClient` ou RestAssured) e grava trechos de documentação, os *snippets*: a requisição em HTTP, o mesmo em `curl` e em HTTPie, a resposta, e tabelas com os parâmetros e os campos. Os guias, escritos à mão em Asciidoctor (ou Markdown), incluem esses trechos.
+O [Spring REST Docs](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/) resolve isso invertendo a origem dos exemplos: eles saem dos testes. Cada teste faz uma requisição real (com `MockMvc`, `WebTestClient` ou RestAssured) e grava trechos de documentação, os <Term id="snippet">*snippets*</Term>: a requisição em HTTP, o mesmo em `curl` e em HTTPie, a resposta, e tabelas com os parâmetros e os campos. Os guias, escritos à mão em Asciidoctor (ou Markdown), incluem esses trechos.
 
 Há um segundo efeito, mais importante. O REST Docs exige que **todo** campo da resposta esteja descrito no teste. Um campo novo sem descrição, ou uma descrição de um campo que sumiu, faz o teste falhar. A documentação deixa de poder ficar para trás do código.
 
@@ -88,7 +88,31 @@ Três outras formas de documentação completam o que um integrador usa no dia a
 
 - **Coleções** do [Bruno](https://www.usebruno.com/) ou do Postman: as requisições prontas, com variáveis de ambiente, para o integrador explorar a API sem escrever código. As duas ferramentas importam um contrato OpenAPI. O Bruno guarda cada requisição como um arquivo de texto, que pode morar no repositório da API e passar por revisão junto com ela.
 - **SDKs gerados**: o openapi-generator da [17.03](/contratos-documentacao-e-ciclo-de-vida/api-first-o-contrato-como-fonte-da-verdade) também gera clientes. Para Java, o gerador `java` tem bibliotecas como `restclient` (o `RestClient` do Spring), `webclient` e `native` (o `HttpClient` do JDK); há geradores para TypeScript, Kotlin, Python, Go e dezenas de outras linguagens. Um SDK é documentação executável, e a qualidade dele depende da qualidade do contrato: `operationId` estáveis, esquemas com nome, enums extensíveis.
-- **Portal do desenvolvedor**: o lugar que junta tudo, com referência, guias, changelog, status da API e o cadastro para obter credenciais. Pode ser um site estático gerado de Markdown, um produto pronto ou um catálogo interno como o Backstage (17.04).
+- **<Term id="portal-do-desenvolvedor">Portal do desenvolvedor</Term>**: o lugar que junta tudo, com referência, guias, changelog, status da API e o cadastro para obter credenciais. Pode ser um site estático gerado de Markdown, um produto pronto ou um catálogo interno como o Backstage (17.04).
+
+## Diagrama
+
+```mermaid
+---
+title: De onde vem cada parte da documentação do Bazar
+---
+flowchart LR
+    subgraph Testes
+        T["Teste com MockMvc<br/>+ REST Docs"] --> SN["Snippets<br/>curl, requisição, resposta,<br/>tabela de campos"]
+    end
+    subgraph Código
+        C["Controllers e DTOs"] --> SD["springdoc"] --> OA["Contrato OpenAPI"]
+    end
+    SN --> G["Guias escritos à mão<br/>(tutorial, how-to, explicação)"]
+    OA --> R["Referência<br/>Swagger UI"]
+    OA --> SDK["SDKs gerados"]
+    OA --> COL["Coleções<br/>Bruno, Postman"]
+    G --> P["Portal do desenvolvedor"]
+    R --> P
+    SDK --> P
+    COL --> P
+    CH["oasdiff changelog"] --> P
+```
 
 ## Na prática
 

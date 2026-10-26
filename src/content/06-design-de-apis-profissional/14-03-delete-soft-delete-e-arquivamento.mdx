@@ -164,6 +164,25 @@ O Google pede que a API documente quando os recursos removidos são **apagados d
 
 A **LGPD** dá ao titular o direito de pedir a **eliminação** dos dados pessoais tratados com o seu consentimento (art. 18, VI). A mesma lei permite **guardar** dados para cumprir obrigação legal ou regulatória (art. 16, I): uma nota fiscal precisa ser mantida pelo prazo fiscal, com o nome e o CPF do comprador. O *soft delete* de um cliente, que só marca a linha e mantém tudo, **não** atende a um pedido de eliminação. O caminho comum é **anonimizar**: apagar ou substituir os dados pessoais que não são exigidos por lei, e manter o resto (o pedido, os valores, a data) desvinculado da pessoa. É um tema jurídico, que cada empresa decide com o seu jurídico; para a API, importa saber que "remover um cliente" quase nunca é um `DELETE` simples.
 
+## Diagrama
+
+```mermaid
+---
+title: O que um DELETE faz no Bazar
+---
+flowchart TD
+    D["DELETE /v1/{recurso}/{id}"] --> E{"O recurso existe?"}
+    E -- não --> N404["404 Not Found"]
+    E -- sim --> DEP{"Tem dependentes?<br/>(categoria com produtos)"}
+    DEP -- sim --> C409["409 Conflict<br/>quantos e o que fazer"]
+    DEP -- não --> H{"Tem histórico ou<br/>é referenciado?"}
+    H -- não --> FIS["Exclusão física<br/>204; o GET passa a dar 404"]
+    H -- sim --> SOFT["Soft delete: status DESCONTINUADO<br/>204; o GET continua dando 200"]
+    SOFT --> LIST["Listagem: aparece,<br/>o cliente filtra por status"]
+    SOFT --> UND["Undelete: uma transição<br/>de estado, não uma recriação"]
+    SOFT -. "dados pessoais" .-> LGPD["Pedido de eliminação (LGPD):<br/>anonimizar o que a lei não exige guardar"]
+```
+
 ## Na prática
 
 ### O produto descontinua

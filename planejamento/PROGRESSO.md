@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 71 · **rascunho:** 0 · **revisão:** 10 · **pronta:** 62
+**Total:** 143 páginas · **esqueleto:** 71 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 72
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -166,21 +166,21 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 17.01 | A especificação OpenAPI | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-01-a-especificacao-openapi.mdx` | revisao |
-| 17.02 | springdoc-openapi: documentação a partir do código | basico | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-02-springdoc-openapi-documentacao-a-partir-do-codigo.mdx` | revisao |
-| 17.03 | API-first: o contrato como fonte da verdade | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-03-api-first-o-contrato-como-fonte-da-verdade.mdx` | revisao |
-| 17.04 | Governança: linting e detecção de breaking changes | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-04-governanca-linting-e-deteccao-de-breaking-changes.mdx` | revisao |
-| 17.05 | Documentação além da referência | intermediario | complementar | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-05-documentacao-alem-da-referencia.mdx` | revisao |
+| 17.01 | A especificação OpenAPI | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-01-a-especificacao-openapi.mdx` | pronta |
+| 17.02 | springdoc-openapi: documentação a partir do código | basico | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-02-springdoc-openapi-documentacao-a-partir-do-codigo.mdx` | pronta |
+| 17.03 | API-first: o contrato como fonte da verdade | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-03-api-first-o-contrato-como-fonte-da-verdade.mdx` | pronta |
+| 17.04 | Governança: linting e detecção de breaking changes | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-04-governanca-linting-e-deteccao-de-breaking-changes.mdx` | pronta |
+| 17.05 | Documentação além da referência | intermediario | complementar | `src/content/07-contratos-documentacao-e-ciclo-de-vida/17-05-documentacao-alem-da-referencia.mdx` | pronta |
 
 ### M18: Evolução e versionamento
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 18.01 | Compatibilidade retroativa: o que quebra um cliente | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-01-compatibilidade-retroativa-o-que-quebra-um-cliente.mdx` | revisao |
-| 18.02 | Estratégias de versionamento | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-02-estrategias-de-versionamento.mdx` | revisao |
-| 18.03 | Versionamento nativo no Spring Framework 7 | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-03-versionamento-nativo-no-spring-framework-7.mdx` | revisao |
-| 18.04 | Depreciação e desligamento de APIs | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-04-depreciacao-e-desligamento-de-apis.mdx` | revisao |
-| 18.05 | Testes de contrato | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-05-testes-de-contrato.mdx` | revisao |
+| 18.01 | Compatibilidade retroativa: o que quebra um cliente | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-01-compatibilidade-retroativa-o-que-quebra-um-cliente.mdx` | pronta |
+| 18.02 | Estratégias de versionamento | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-02-estrategias-de-versionamento.mdx` | pronta |
+| 18.03 | Versionamento nativo no Spring Framework 7 | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-03-versionamento-nativo-no-spring-framework-7.mdx` | pronta |
+| 18.04 | Depreciação e desligamento de APIs | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-04-depreciacao-e-desligamento-de-apis.mdx` | pronta |
+| 18.05 | Testes de contrato | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-05-testes-de-contrato.mdx` | pronta |
 
 ## Parte 8: Concorrência e execução assíncrona
 

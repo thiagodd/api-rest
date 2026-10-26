@@ -25,3 +25,10 @@
 | 15.01 | Só o pedido usa o `Clock` injetado; `Produto`, `Cliente` e `Endereco` ainda chamam `Instant.now()`. Migrar na consolidação (31.x) se algum teste precisar controlar essas datas. | Escopo mínimo da página. |
 | 15.04 | Um valor fora do enum no **corpo** agora dá `422` (`validacao`, com os valores aceitos); num **parâmetro de URL** (`status=ESGOTADO`, 13.01) continua `400` (`requisicao-invalida`, com `parametros`). A diferença é defensável (binding de query × campo de corpo), mas a página 16.01 (catálogo de erros) pode harmonizar ou registrar a regra. **Resolvido na 16.01**: tipo certo com valor fora da lista é `422` também na URL; a 13.01 ganhou um aviso. | Decisão da 15.04. |
 | 16.01 | As páginas 08.02 e 13.01 mostram trechos do tratador anterior ao `TipoProblema` (um `@ExceptionHandler` por exceção, tipos como strings). Ficaram como registro das suas tags; a 13.01 tem um aviso sobre o 422. Revisar na consolidação (31.x) se convém um aviso também na 08.02. | Decisão da 16.01. |
+
+## Revisão da Parte 7 (18.05)
+
+- **VERSOES.md corrigido:** o Spring Cloud Contract 5.0.3 não faz mais parte do *train* 2025.1 (o BOM `spring-cloud-dependencies` 2025.1.x não o gerencia). O Bazar importa o BOM `spring-cloud-contract-dependencies`.
+- **Plugin do SCC 5.0.3:** sem `clean`, com os contratos inalterados, ele não registra a pasta dos testes gerados, que deixam de rodar sem aviso. O Bazar contorna com o `build-helper-maven-plugin`. Vale reconferir em versões futuras do plugin.
+- **Páginas sem diagrama:** 14.03, 15.02, 15.05, 17.02 e 17.05 tinham "Diagramas: nenhum" no currículo e ficaram sem diagrama, contra a regra da Fase 3 ("toda página tem pelo menos um diagrama"). As cinco ganharam um diagrama nesta revisão. O currículo das partes seguintes pode ter o mesmo "nenhum": escrever um diagrama assim mesmo.
+- **15.02 corrigida:** a página dizia que o `HALF_UP` em cada parte do rateio de R$ 15,00 somaria R$ 15,01, e que 10,2715 arredondaria para 10,28. Os dois estavam errados (o `HALF_UP` dá R$ 15,00 nesse caso). Os contraexemplos agora são R$ 10,00 em 3 (R$ 9,99) e em 6 partes (R$ 10,02).

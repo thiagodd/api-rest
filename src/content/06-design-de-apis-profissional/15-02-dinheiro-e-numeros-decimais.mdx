@@ -165,6 +165,22 @@ O resultado sempre soma o total, e nenhum item recebe mais do que um centavo de 
 
 O Java tem uma especificação para dinheiro, a **JSR 354** (*Money and Currency API*), com a implementação de referência **Moneta** (`org.javamoney.moneta:moneta-core`, versão 1.4.5). Ela traz `MonetaryAmount`, conversão de moedas, formatação por *locale* e arredondamentos por moeda. A JSR 354 nunca entrou no JDK. Para uma API que precisa de um valor, uma moeda, somas e rateio, um *value object* de 80 linhas é mais simples e não traz dependência. Para um sistema financeiro com câmbio, vale avaliar a Moneta (e o módulo `jackson-datatype-money` da Zalando, que a serializa no formato da regra 173).
 
+## Diagrama
+
+```mermaid
+---
+title: Rateio de um frete de R$ 15,00 pelo método do maior resto
+---
+flowchart TD
+    T["Frete: 1500 centavos<br/>pesos: 12990, 4990 e 990"] --> EX["1. Partes exatas<br/>1027,15 · 394,57 · 78,28"]
+    EX --> BAIXO["2. Todas para baixo<br/>1027 · 394 · 78 = 1499"]
+    BAIXO --> SOBRA["Sobra 1 centavo"]
+    SOBRA --> RESTO["3. Um centavo por item, do maior resto ao menor<br/>restos: 0,15 · 0,57 · 0,28"]
+    RESTO --> FIM["R$ 10,27 · R$ 3,95 · R$ 0,78<br/>soma: R$ 15,00"]
+    T2["R$ 10,00 em 6 partes iguais"] -. "HALF_UP em cada parte" .-> ERRO["R$ 1,67 × 6 = R$ 10,02<br/>dois centavos a mais"]
+```
+
+
 ## Na prática
 
 ### O `Dinheiro`
@@ -250,7 +266,7 @@ void rateiaProporcionalmenteAoPeso() {
 }
 ```
 
-O primeiro item fica com R$ 10,27, e não R$ 10,28, que seria o arredondamento "da escola" de 10,2715. Com o `HALF_UP` em cada parte, os três somariam R$ 15,01.
+Neste exemplo, arredondar cada parte com `HALF_UP` daria o mesmo resultado, por sorte: o único resto acima de meio centavo é o do segundo item, que é também o maior. A sorte acaba em outros valores. R$ 10,00 em três partes iguais dá R$ 3,33 em cada uma, e as três somam R$ 9,99. Em seis partes, dá R$ 1,67 em cada uma, e as seis somam R$ 10,02. O maior resto fecha o total em todos os casos, e o teste `naoPerdeNemCriaCentavos` cobre o das três partes.
 
 ### O JSON
 

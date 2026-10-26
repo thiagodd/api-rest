@@ -2,7 +2,7 @@
 id: "18.05"
 titulo: "Testes de contrato"
 descricao: "Garantem que produtor e consumidores continuam compatíveis sem precisar de ambientes integrados frágeis."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Spring Cloud Contract: documentação de referência"
     url: "https://docs.spring.io/spring-cloud-contract/reference/"
@@ -393,7 +393,15 @@ O teste gera `target/pacts/erp-do-lojista-bazar-api.json`. O trecho que importa:
 }
 ```
 
-O pact cita três campos dos dez que o produto tem. O `preco`, o `id`, as datas e os atributos não aparecem, e o Bazar pode mudá-los à vontade, no que depender deste consumidor.
+Compare com o que o Bazar responde de fato à mesma requisição:
+
+<HttpExchange
+  title="A resposta inteira, da qual o ERP usa três campos"
+  request={{ method: 'GET', url: '/v1/produtos/01a1758e-1629-7c43-a941-ea46d53e86ab', headers: { 'Accept': 'application/json' } }}
+  response={{ status: 200, headers: { 'Deprecation': '@1792972800', 'Link': '<https://api.bazar.example/docs/migracao/produtos-v2>; rel="deprecation"; type="text/html", <https://api.bazar.example/docs/politica-de-versoes>; rel="sunset"; type="text/html"', 'Sunset': 'Fri, 30 Apr 2027 00:00:00 GMT', 'Content-Type': 'application/json' }, body: { id: '01a1758e-1629-7c43-a941-ea46d53e86ab', sku: 'LIV-0042', nome: 'Clean Code', descricao: null, precoEmCentavos: 12990, preco: { valor: '129.90', moeda: 'BRL' }, categoriaId: '0192f3a0-5555-7000-8000-000000000003', status: 'RASCUNHO', atributos: {}, criadoEm: '2026-10-26T00:13:28.489959Z', atualizadoEm: '2026-10-26T00:13:28.489959Z' } }}
+>
+A resposta do slice web do Bazar, com o dublê do serviço. O pact cita três campos dos onze. O `preco`, o `id`, as datas e os atributos não aparecem, e o Bazar pode mudá-los à vontade, no que depender deste consumidor. Os headers de depreciação também ficam de fora, porque o pact só confere os headers que declara. O ERP não lê o `Deprecation`, e é por isso que o `can-i-deploy` (mais abaixo) importa.
+</HttpExchange>
 
 ### Pact: a verificação no Bazar
 

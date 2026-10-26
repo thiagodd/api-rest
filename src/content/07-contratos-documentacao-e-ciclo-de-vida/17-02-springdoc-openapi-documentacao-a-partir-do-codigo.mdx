@@ -2,7 +2,7 @@
 id: "17.02"
 titulo: "springdoc-openapi: documentação a partir do código"
 descricao: "É o caminho mais rápido para ter um contrato e uma UI de testes. Ainda assim, o contrato gerado precisa de cuidado para ser útil."
-status: revisao
+status: pronta
 referencias:
   - titulo: "springdoc-openapi: documentação oficial"
     url: "https://springdoc.org/"
@@ -89,6 +89,26 @@ O springdoc oferece três níveis de correção, do mais local ao mais global:
 
 A regra prática: **anotação para o que é exceção, código para o que é convenção.** Anotar `@Schema(requiredMode = REQUIRED)` em cada um dos 120 campos de resposta do Bazar seria correto e insustentável: o campo 121 vai ser esquecido. Uma convenção ("toda resposta traz todos os campos") se escreve uma vez, em código, e vale para os campos que ainda não existem.
 
+## Diagrama
+
+```mermaid
+---
+title: Do código ao contrato com o springdoc
+---
+flowchart LR
+    HM["Handler mappings<br/>do Spring MVC"] --> OP["Operações<br/>caminho, método, parâmetros"]
+    CL["Classes Java<br/>DTOs, records, enums"] --> SC["swagger-core"]
+    SC --> ESQ["Esquemas"]
+    OP --> MOD["Modelo OpenAPI"]
+    ESQ --> MOD
+    AN["1. Anotações<br/>@Operation, @Schema..."] -.-> MOD
+    PR["2. Propriedades<br/>springdoc.*"] -.-> MOD
+    CO["3. Código<br/>customizers, ModelConverter"] -.-> MOD
+    MOD --> API["/v3/api-docs<br/>JSON e YAML"]
+    API --> UI["Swagger UI ou Scalar"]
+    INV["Invisível ao springdoc:<br/>serializadores, advice,<br/>resolvers, ResponseEntity"] -. "precisa ser corrigido" .-> CO
+```
+
 ## Na prática
 
 ### As propriedades
@@ -96,6 +116,7 @@ A regra prática: **anotação para o que é exceção, código para o que é co
 ```yaml title="src/main/resources/application.yml"
 springdoc:
   # Só a API pública: o /error do Spring e as páginas HTML de /problemas não entram no contrato.
+  # A 18.03 troca por /v*/**, quando chega a v2.
   paths-to-match: /v1/**
   # Sem isso, as respostas aparecem como */*: o springdoc não sabe o que o conversor de mensagens vai escolher.
   default-produces-media-type: application/json

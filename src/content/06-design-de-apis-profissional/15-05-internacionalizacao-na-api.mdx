@@ -123,6 +123,24 @@ Mensagens de erro são geradas pela API, e o `Accept-Language` escolhe a traduç
 
 Para dados, o Bazar recomenda o segundo desenho, um mapa com tags BCP 47 como chaves. O Zalando usa exatamente esse exemplo para ilustrar mapas no OpenAPI ([#216](https://opensource.zalando.com/restful-api-guidelines/#216)): uma propriedade `translations` cujas chaves são *"IETF BCP-47 language tags"*. O primeiro desenho é tentador para leitura, mas mistura negociação com dados, e é na escrita que ele cobra o preço. Hoje o catálogo do Bazar tem um idioma só, e a página fica no desenho.
 
+## Diagrama
+
+```mermaid
+---
+title: Do Accept-Language à resposta de erro no idioma certo
+---
+flowchart TD
+    REQ["Accept-Language:<br/>es, pt;q=0.8"] --> RES{"ResolvedorDeIdioma"}
+    RES -- "ausente, * ou inválido: o padrão" --> PT["pt-BR"]
+    RES -- "por peso, casa pelo idioma" --> ESC["es: não suportado<br/>pt: casa com pt-BR"]
+    ESC --> PT
+    PT --> CTX["LocaleContextHolder"]
+    CTX --> MS["MessageSource<br/>messages_pt_BR / messages_en"]
+    MS --> ERR["Erro: title e detail traduzidos<br/>Content-Language: pt-BR<br/>Vary: Accept-Language"]
+    CTX -. "sucesso" .-> OK["Produto em JSON:<br/>sem Content-Language"]
+```
+
+
 ## Na prática
 
 ### Os idiomas do Bazar

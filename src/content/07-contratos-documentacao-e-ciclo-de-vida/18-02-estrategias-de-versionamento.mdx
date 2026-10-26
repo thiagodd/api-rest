@@ -2,7 +2,7 @@
 id: "18.02"
 titulo: "Estratégias de versionamento"
 descricao: "Quando uma mudança incompatível é inevitável, a estratégia de versão define custo de operação, cache e experiência do cliente."
-status: revisao
+status: pronta
 referencias:
   - titulo: "Stripe: APIs as infrastructure, future-proofing Stripe with versioning"
     url: "https://stripe.com/blog/api-versioning"
@@ -50,7 +50,7 @@ Há quatro lugares para a versão numa requisição HTTP, mais uma variação qu
 
 **No media type.** `GET /produtos/42` com `Accept: application/json;v=2`, ou um tipo próprio, `application/vnd.bazar.produto.v2+json`. É a recomendação do Zalando (regra 114): a versão é da **representação**, e a negociação de conteúdo ([02.05](/comecando-e-fundamentos-de-http/content-negotiation-e-media-types)) é o mecanismo do HTTP para escolher representações. É a forma mais fiel ao HTTP e a menos visível: precisa de `Vary: Accept`, de ferramentas que mandem o `Accept` certo e de integradores que entendam negociação de conteúdo.
 
-**Por data.** É a variação da Stripe, e muda o que a versão significa. Cada versão é uma data (`2026-09-30`), e cada conta fica fixada na versão do dia em que começou a usar a API. Um header (`Stripe-Version`) troca a versão por requisição, para testar uma versão nova antes de mudar a da conta. Por dentro, o servidor tem uma só implementação, a mais recente, e uma pilha de transformações que convertem a resposta, passo a passo, até o formato de cada data antiga. Desde 2024, a Stripe lança versões mensais sem mudanças incompatíveis e duas versões maiores por ano, com nomes (a atual é a `2026-09-30.endive`).
+**<Term id="versionamento-por-data">Por data</Term>.** É a variação da Stripe, e muda o que a versão significa. Cada versão é uma data (`2026-09-30`), e cada conta fica fixada na versão do dia em que começou a usar a API. Um header (`Stripe-Version`) troca a versão por requisição, para testar uma versão nova antes de mudar a da conta. Por dentro, o servidor tem uma só implementação, a mais recente, e uma pilha de transformações que convertem a resposta, passo a passo, até o formato de cada data antiga. Desde 2024, a Stripe lança versões mensais sem mudanças incompatíveis e duas versões maiores por ano, com nomes (a atual é a `2026-09-30.endive`).
 
 **Sem versão.** O extremo oposto, e a recomendação geral do Zalando: a API evolui só de forma compatível, e o que não puder ser compatível vira um recurso novo ou uma API nova. Funciona quando o produtor controla os clientes ou tem disciplina para nunca quebrar.
 
@@ -74,7 +74,7 @@ O Spring Framework 7 resolve a versão em qualquer um desses lugares, com a mesm
 
 ### Só a maior, ou semântica?
 
-O número da versão pode ser só a versão maior (`v1`, `v2`) ou uma versão semântica completa (`1.4.2`). Na URL e nos headers, o cliente só precisa da maior: por definição, as versões menores são compatíveis, e um cliente da 1.2 funciona com a 1.4. Expor a menor no caminho (`/v1.4/produtos`) obriga o cliente a mudar a URL a cada mudança compatível, o contrário do objetivo. A versão completa tem lugar no contrato (`info.version: 1.4.0`) e no changelog, onde diz ao integrador o que mudou.
+O número da versão pode ser só a versão maior (`v1`, `v2`) ou uma <Term id="versionamento-semantico">versão semântica</Term> completa (`1.4.2`). Na URL e nos headers, o cliente só precisa da maior: por definição, as versões menores são compatíveis, e um cliente da 1.2 funciona com a 1.4. Expor a menor no caminho (`/v1.4/produtos`) obriga o cliente a mudar a URL a cada mudança compatível, o contrário do objetivo. A versão completa tem lugar no contrato (`info.version: 1.4.0`) e no changelog, onde diz ao integrador o que mudou.
 
 O Spring 7 aceita versões semânticas, e há um uso para elas: um endpoint que passou a existir na 1.2 pode ser declarado como `version = "1.2+"`. O Bazar não precisa disso, e a 18.03 mostra a diferença.
 
@@ -133,6 +133,16 @@ curl https://api.bazar.example/produtos/0192f3a0-1111-7000-8000-000000000042 \
 ```
 
 Repare no que cada linha exige de quem integra. A primeira funciona copiada da documentação, colada no navegador ou numa planilha. As do meio exigem que a ferramenta do integrador mande um header, e que ele se lembre de mandá-lo. A última depende de um estado que o integrador não vê (a versão fixada na conta) até mandar o header.
+
+E se o integrador esquecer a versão? Com o caminho, o erro aparece na primeira chamada:
+
+<HttpExchange
+  title="A versão esquecida no caminho"
+  request={{ method: 'GET', url: '/produtos/01a1758e-1629-7c43-a941-ea46d53e86ab', headers: { 'Accept': 'application/json' } }}
+  response={{ status: 404, headers: { 'Content-Type': 'application/problem+json', 'Content-Language': 'pt-BR', 'Vary': 'Accept-Language' }, body: { title: 'Não encontrado', status: 404, detail: "Não existe nada em 'produtos/01a1758e-1629-7c43-a941-ea46d53e86ab'.", instance: '/produtos/01a1758e-1629-7c43-a941-ea46d53e86ab', codigo: 'NOT_FOUND', traceId: '0976eb243866b0f51425ab1ab86878da' } }}
+>
+A resposta real do Bazar: sem o `/v1`, o caminho não existe. Com a versão num header, a mesma requisição sem header costuma receber uma versão padrão. Isso parece mais gentil, mas quando a versão padrão muda, o cliente que nunca mandou o header passa a receber outra representação, sem nenhum erro.
+</HttpExchange>
 
 ### O cache com a versão num header
 
