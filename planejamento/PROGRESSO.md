@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 66 · **rascunho:** 0 · **revisão:** 5 · **pronta:** 72
+**Total:** 143 páginas · **esqueleto:** 65 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 72
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -193,7 +193,7 @@
 | 19.03 | @Async, @Scheduled e tarefas em segundo plano | intermediario | essencial | `src/content/08-concorrencia-e-execucao-assincrona/19-03-async-scheduled-e-tarefas-em-segundo-plano.mdx` | revisao |
 | 19.04 | Server-Sent Events (e uma visão de WebSocket) | intermediario | importante | `src/content/08-concorrencia-e-execucao-assincrona/19-04-server-sent-events-e-uma-visao-de-websocket.mdx` | revisao |
 | 19.05 | WebFlux: visão geral e quando usar | avancado | complementar | `src/content/08-concorrencia-e-execucao-assincrona/19-05-webflux-visao-geral-e-quando-usar.mdx` | revisao |
-| 19.06 | Scoped values e concorrência estruturada | avancado | complementar | `src/content/08-concorrencia-e-execucao-assincrona/19-06-scoped-values-e-concorrencia-estruturada.mdx` | esqueleto |
+| 19.06 | Scoped values e concorrência estruturada | avancado | complementar | `src/content/08-concorrencia-e-execucao-assincrona/19-06-scoped-values-e-concorrencia-estruturada.mdx` | revisao |
 
 ## Parte 9: Padrões avançados de HTTP
 
