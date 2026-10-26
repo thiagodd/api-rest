@@ -2,7 +2,7 @@
 id: "23.02"
 titulo: "Limites de payload e proteção contra abuso"
 descricao: "JSON de 50 MB, arrays com 1 milhão de itens ou aninhamento profundo derrubam a API sem nenhum ataque sofisticado."
-status: revisao
+status: pronta
 referencias:
   - titulo: "github.com: FasterXML / jackson-core (StreamReadConstraints)"
     url: "https://github.com/FasterXML/jackson-core"
@@ -24,7 +24,7 @@ Agora alguém manda um lote de **um milhão** de itens, 78 MB de JSON. O Bazar r
 
 O `@Size` não protegeu nada. Ele roda **depois** que o Jackson leu o corpo inteiro e montou um milhão de objetos na memória. A validação diz que o lote é grande demais quando o estrago já está feito.
 
-O [rate limiting](/padroes-avancados-de-http/rate-limiting-e-quotas) da 23.01 não ajuda: são **duas** requisições. O problema não é a frequência, é o **tamanho** de cada uma. É a categoria que o OWASP chama de *Unrestricted Resource Consumption* (API4:2023). Não exige ataque sofisticado: um `curl` com um arquivo grande basta. E também acontece sem má intenção, com um cliente que serializa uma lista sem paginar.
+O [rate limiting](/padroes-avancados-de-http/rate-limiting-e-quotas) da 23.01 não ajuda: são **duas** requisições. O problema não é a frequência, é o **tamanho** de cada uma. É a categoria que o OWASP chama de *Unrestricted Resource Consumption* (API4:2023; veja também a [documentação de segurança](https://security-doc-beta.vercel.app/)). Não exige ataque sofisticado: um `curl` com um arquivo grande basta. E também acontece sem má intenção, com um cliente que serializa uma lista sem paginar.
 
 É como uma agência dos correios: a balança e a régua ficam no balcão, **antes** de o pacote entrar. Ninguém abre um contêiner no galpão para só então descobrir que ele não cabe no caminhão.
 

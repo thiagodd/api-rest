@@ -40,3 +40,12 @@
 - **Spring MVC e `If-Range`**: o `AbstractMessageConverterMethodProcessor` aplica `Range` a qualquer `Resource` com status 200, sem conferir `If-Range`, e num `416` escreve o arquivo inteiro no corpo (Spring 7.0.9). O Bazar contorna com `DownloadDeArquivo`. Vale acompanhar o issue tracker do Spring e, se corrigido, simplificar a classe e a página.
 - **`Link` duplicado no 503 assíncrono em caminho depreciado**: quando o executor recusa um `StreamingResponseBody` num caminho com depreciação (18.04), os headers `Link` de `deprecation`/`sunset` saem duas vezes. Hoje não afeta nenhuma rota (a exportação está na v2), mas vale investigar se surgir uma resposta assíncrona em rota depreciada.
 - **Arquivos órfãos no armazenamento**: imagens e relatórios ficam no diretório temporário e não são apagados quando o registro some (testes, produto descontinuado). Uma tarefa de limpeza (como a `ExpiracaoDasChaves` da 21.01) caberia na 31.03 ou na 31.08.
+
+## Revisão da Parte 9 (20.01–23.02)
+
+- **Contrato e rate limiting (23.01)**: o OpenAPI não descreve o `429`, nem os headers `RateLimit`/`RateLimit-Policy` e `Retry-After`. Sugestão: uma resposta `429` reutilizável e os headers declarados em todas as operações, junto com a revisão de contrato da Parte 7 ou na 31.x.
+- **Redis sem *circuit breaker* (23.01)**: com o Redis travado, cada requisição paga os 200 ms do *timeout* antes do *fail-open*. Um *circuit breaker* (25.03) em volta do `ProxyManager` evitaria isso; a página o menciona como próximo passo.
+- **Docker Compose e serviço novo (23.01)**: com o PostgreSQL já rodando, o `spring-boot-docker-compose` não executa `docker compose up`, e o Redis acrescentado ao `compose.yaml` não sobe; a aplicação cai no `localhost:6379` padrão. Vale um aviso na 29.x ou no README do projeto (`docker compose up -d` uma vez).
+- **Erros do Tomcat em HTML (23.02)**: um header acima de 8 KB recebe `400` com a página HTML do Tomcat, fora do Problem Details, porque o erro acontece antes do Spring. O `408` de corpo lento sai pelo `/error` do Spring Boot, com `title` em inglês e sem `type`. Sugestão: tratar os dois na revisão de erros (16.x) ou na 29.x, com um `ErrorReportValve` próprio.
+- **Política por rota no limite de JSON (23.02)**: o `LimiteDoCorpoJson` tem um único limite. O exercício da página propõe limites por rota; implementar se uma importação em lote (31.x) precisar.
+- **Mensagem de `CORPO_GRANDE_DEMAIS` mudou (23.02)**: deixou de dizer "descomprimido". A página 22.03 mantém a captura da sua tag e ganhou uma nota explicando o comportamento atual.

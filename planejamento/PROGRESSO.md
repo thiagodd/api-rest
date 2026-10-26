@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 54 · **rascunho:** 0 · **revisão:** 11 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 54 · **rascunho:** 0 · **revisão:** 0 · **pronta:** 89
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -201,32 +201,32 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 20.01 | Cache HTTP (RFC 9111) | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-01-cache-http-rfc-9111.mdx` | revisao |
-| 20.02 | ETag e requisições condicionais | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-02-etag-e-requisicoes-condicionais.mdx` | revisao |
-| 20.03 | Concorrência otimista com If-Match (412 e 428) | avancado | essencial | `src/content/09-padroes-avancados-de-http/20-03-concorrencia-otimista-com-if-match-412-e-428.mdx` | revisao |
+| 20.01 | Cache HTTP (RFC 9111) | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-01-cache-http-rfc-9111.mdx` | pronta |
+| 20.02 | ETag e requisições condicionais | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-02-etag-e-requisicoes-condicionais.mdx` | pronta |
+| 20.03 | Concorrência otimista com If-Match (412 e 428) | avancado | essencial | `src/content/09-padroes-avancados-de-http/20-03-concorrencia-otimista-com-if-match-412-e-428.mdx` | pronta |
 
 ### M21: Confiabilidade nas escritas
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 21.01 | Idempotency keys | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-01-idempotency-keys.mdx` | revisao |
-| 21.02 | Operações assíncronas e de longa duração (202 + polling) | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-02-operacoes-assincronas-e-de-longa-duracao-202-polling.mdx` | revisao |
-| 21.03 | Webhooks: enviando e recebendo | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-03-webhooks-enviando-e-recebendo.mdx` | revisao |
+| 21.01 | Idempotency keys | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-01-idempotency-keys.mdx` | pronta |
+| 21.02 | Operações assíncronas e de longa duração (202 + polling) | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-02-operacoes-assincronas-e-de-longa-duracao-202-polling.mdx` | pronta |
+| 21.03 | Webhooks: enviando e recebendo | avancado | essencial | `src/content/09-padroes-avancados-de-http/21-03-webhooks-enviando-e-recebendo.mdx` | pronta |
 
 ### M22: Conteúdo e transferência
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 22.01 | Upload de arquivos | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-01-upload-de-arquivos.mdx` | revisao |
-| 22.02 | Download, streaming e Range | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-02-download-streaming-e-range.mdx` | revisao |
-| 22.03 | Compressão | intermediario | complementar | `src/content/09-padroes-avancados-de-http/22-03-compressao.mdx` | revisao |
+| 22.01 | Upload de arquivos | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-01-upload-de-arquivos.mdx` | pronta |
+| 22.02 | Download, streaming e Range | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-02-download-streaming-e-range.mdx` | pronta |
+| 22.03 | Compressão | intermediario | complementar | `src/content/09-padroes-avancados-de-http/22-03-compressao.mdx` | pronta |
 
 ### M23: Proteção da API
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 23.01 | Rate limiting e quotas | avancado | essencial | `src/content/09-padroes-avancados-de-http/23-01-rate-limiting-e-quotas.mdx` | revisao |
-| 23.02 | Limites de payload e proteção contra abuso | intermediario | importante | `src/content/09-padroes-avancados-de-http/23-02-limites-de-payload-e-protecao-contra-abuso.mdx` | revisao |
+| 23.01 | Rate limiting e quotas | avancado | essencial | `src/content/09-padroes-avancados-de-http/23-01-rate-limiting-e-quotas.mdx` | pronta |
+| 23.02 | Limites de payload e proteção contra abuso | intermediario | importante | `src/content/09-padroes-avancados-de-http/23-02-limites-de-payload-e-protecao-contra-abuso.mdx` | pronta |
 
 ## Parte 10: Consumindo outras APIs
 

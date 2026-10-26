@@ -2,7 +2,7 @@
 id: "23.01"
 titulo: "Rate limiting e quotas"
 descricao: "Protege a API contra abuso e clientes descontrolados e garante uso justo entre parceiros. Também é contrato: o cliente precisa saber os limites."
-status: revisao
+status: pronta
 referencias:
   - titulo: "draft-ietf-httpapi-ratelimit-headers-11: RateLimit header fields for HTTP"
     url: "https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/"
@@ -20,7 +20,7 @@ referencias:
 
 Um parceiro do Bazar escreveu um sincronizador de catálogo. O código tem um *bug*: quando a lista de produtos volta vazia, ele tenta de novo, sem esperar, num laço. Numa madrugada, esse cliente faz 4 mil requisições por segundo. O pool de conexões do banco esgota ([28.02](/performance/pool-de-conexoes-hikaricp)), a lista dos outros lojistas passa a levar 10 segundos, e o painel de alertas acende. Ninguém fez nada de malicioso: um único cliente descontrolado derrubou a API para todos.
 
-Há também os casos maliciosos: alguém testando senhas, alguém raspando o catálogo inteiro, alguém disparando a exportação de 15 MB da [22.02](/padroes-avancados-de-http/download-streaming-e-range) cem vezes por minuto. E há o caso comercial: o plano gratuito da API dá 10 mil chamadas por mês, o plano pago, um milhão.
+Há também os casos maliciosos: alguém testando senhas, alguém raspando o catálogo inteiro, alguém disparando a exportação de 15 MB da [22.02](/padroes-avancados-de-http/download-streaming-e-range) cem vezes por minuto (a [documentação de segurança](https://security-doc-beta.vercel.app/) trata desses ataques do lado de quem defende). E há o caso comercial: o plano gratuito da API dá 10 mil chamadas por mês, o plano pago, um milhão.
 
 Os três casos pedem a mesma coisa: **contar** o que cada cliente faz e **recusar** o que passa do combinado. E o cliente precisa saber qual é o combinado, quanto ainda resta e quando pode tentar de novo. Sem isso, ele não tem como se comportar bem.
 
