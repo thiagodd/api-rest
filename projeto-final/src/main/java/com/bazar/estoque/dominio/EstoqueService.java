@@ -1,6 +1,7 @@
 package com.bazar.estoque.dominio;
 
 import java.util.UUID;
+import java.util.function.LongPredicate;
 
 import com.bazar.compartilhado.erros.ConflitoDeVersaoException;
 import com.bazar.compartilhado.erros.RecursoNaoEncontradoException;
@@ -24,12 +25,13 @@ public class EstoqueService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, produtoId));
     }
 
-    // Locking otimista em duas camadas: a versão que o cliente leu é conferida aqui; a corrida entre esta
-    // conferência e o commit é pega pelo @Version no UPDATE (OptimisticLockingFailureException → 409).
+    // Locking otimista em duas camadas: a versão que o cliente leu é conferida aqui (no corpo, 10.06, ou no
+    // If-Match, 20.03: quem chama diz qual versão aceita); a corrida entre esta conferência e o commit é pega pelo
+    // @Version no UPDATE (OptimisticLockingFailureException).
     @Transactional
-    public Estoque definirDisponivel(UUID produtoId, int quantidade, long versaoLida) {
+    public Estoque definirDisponivel(UUID produtoId, int quantidade, LongPredicate versaoAceita) {
         var estoque = buscar(produtoId);
-        if (estoque.getVersao() != versaoLida) {
+        if (!versaoAceita.test(estoque.getVersao())) {
             throw new ConflitoDeVersaoException(estoque.getVersao());
         }
         estoque.definirDisponivel(quantidade);

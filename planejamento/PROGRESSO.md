@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 63 · **rascunho:** 0 · **revisão:** 2 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 62 · **rascunho:** 0 · **revisão:** 3 · **pronta:** 78
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -203,7 +203,7 @@
 |---|---|---|---|---|---|
 | 20.01 | Cache HTTP (RFC 9111) | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-01-cache-http-rfc-9111.mdx` | revisao |
 | 20.02 | ETag e requisições condicionais | intermediario | essencial | `src/content/09-padroes-avancados-de-http/20-02-etag-e-requisicoes-condicionais.mdx` | revisao |
-| 20.03 | Concorrência otimista com If-Match (412 e 428) | avancado | essencial | `src/content/09-padroes-avancados-de-http/20-03-concorrencia-otimista-com-if-match-412-e-428.mdx` | esqueleto |
+| 20.03 | Concorrência otimista com If-Match (412 e 428) | avancado | essencial | `src/content/09-padroes-avancados-de-http/20-03-concorrencia-otimista-com-if-match-412-e-428.mdx` | revisao |
 
 ### M21: Confiabilidade nas escritas
 

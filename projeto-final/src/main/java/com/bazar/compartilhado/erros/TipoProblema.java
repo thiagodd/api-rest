@@ -55,6 +55,11 @@ public enum TipoProblema {
     TESTE_DO_PATCH_FALHOU(HttpStatus.CONFLICT, RELER_E_REPETIR),
     CONFLITO_DE_VERSAO(HttpStatus.CONFLICT, RELER_E_REPETIR),
 
+    // 412 e 428: requisições condicionais (20.03). O If-Match não bate com a versão atual, ou a escrita veio sem
+    // nenhuma precondição.
+    PRECONDICAO_FALHOU(HttpStatus.PRECONDITION_FAILED, RELER_E_REPETIR),
+    PRECONDICAO_OBRIGATORIA(HttpStatus.PRECONDITION_REQUIRED, CORRIGIR_A_REQUISICAO),
+
     // 422: a requisição tem a forma certa, mas um ou mais campos violam as regras (a lista vem em erros).
     VALIDACAO(HttpStatus.UNPROCESSABLE_CONTENT, CORRIGIR_A_REQUISICAO);
 

@@ -18,6 +18,7 @@ import com.bazar.compartilhado.web.JanelaPedida;
 import com.bazar.compartilhado.web.LinksDeCursor;
 import com.bazar.compartilhado.web.PreferenciaDeRetorno;
 import com.bazar.compartilhado.web.ValoresDeParametro;
+import com.bazar.compartilhado.web.VersaoDaRepresentacao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.bazar.estoque.dominio.Estoque;
 
 /**
- * O saldo de um produto. A versão vai no corpo por enquanto; em 20.03, passa para o ETag.
+ * O saldo de um produto. A versão também vai no ETag (20.03); no corpo, fica pelos clientes da 10.06.
  */
 public record EstoqueResponse(UUID produtoId, int quantidadeDisponivel, int quantidadeReservada, long versao) {
 

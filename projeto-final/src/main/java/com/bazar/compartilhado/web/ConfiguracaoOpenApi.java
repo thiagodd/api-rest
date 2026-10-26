@@ -98,6 +98,8 @@ public class ConfiguracaoOpenApi {
             componentes.addResponses("NaoEncontrado", erro("O recurso não existe"));
             componentes.addResponses("Conflito", erro("A requisição conflita com o estado atual do recurso"));
             componentes.addResponses("Validacao", erro("Um ou mais valores violam as regras; veja `erros`"));
+            componentes.addResponses("PrecondicaoFalhou", erro("O If-Match não bate com o ETag atual: leia de novo (20.03)"));
+            componentes.addResponses("PrecondicaoObrigatoria", erro("A alteração exige o header If-Match (20.03)"));
             openApi.setComponents(componentes);
             if (openApi.getPaths() != null) {
                 openApi.getPaths().values().forEach(caminho -> caminho.readOperations().forEach(operacao ->

@@ -117,7 +117,83 @@ class EstoqueControllerTest {
                         """))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
                 .bodyJson().extractingPath("$.erros[*].campo").asArray()
-                .containsExactlyInAnyOrder("quantidadeDisponivel", "versao");
+                .containsExactly("quantidadeDisponivel");
+    }
+
+    @Test
+    void oGetDaOETagEOPutComIfMatchDevolveOETagNovo() {
+        assertThat(mvc.get().uri("/v1/produtos/{id}/estoque", produtoId)).hasStatusOk()
+                .hasHeader("ETag", "\"0\"");
+
+        assertThat(definirComIfMatch(10, "\"0\"")).hasStatusOk()
+                .hasHeader("ETag", "\"1\"")
+                .bodyJson().extractingPath("$.quantidadeDisponivel").isEqualTo(10);
+    }
+
+    @Test
+    void umIfMatchDesatualizadoRecebe412ENadaMuda() {
+        assertThat(definirComIfMatch(10, "\"0\"")).hasStatusOk();
+
+        // Outro cliente ainda tem o ETag "0".
+        assertThat(definirComIfMatch(3, "\"0\""))
+                .hasStatus(HttpStatus.PRECONDITION_FAILED)
+                .bodyJson().isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/precondicao-falhou",
+                          "status": 412, "codigo": "PRECONDICAO_FALHOU" }
+                        """);
+        assertThat(mvc.get().uri("/v1/produtos/{id}/estoque", produtoId))
+                .bodyJson().extractingPath("$.quantidadeDisponivel").isEqualTo(10);
+    }
+
+    @Test
+    void umEtagFracoNuncaPassaNoIfMatch() {
+        // A comparação do If-Match é forte: W/"0" não bate nem com o "0" atual.
+        assertThat(definirComIfMatch(10, "W/\"0\"")).hasStatus(HttpStatus.PRECONDITION_FAILED);
+    }
+
+    @Test
+    void oIfMatchAceitaUmaListaEOAsterisco() {
+        assertThat(definirComIfMatch(10, "\"7\", \"0\"")).hasStatusOk();
+        // * : "qualquer versão, desde que o estoque exista".
+        assertThat(definirComIfMatch(20, "*")).hasStatusOk().hasHeader("ETag", "\"2\"");
+    }
+
+    @Test
+    void semIfMatchNemVersaoNoCorpoRecebe428() {
+        assertThat(mvc.put().uri("/v1/produtos/{id}/estoque", produtoId).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        { "quantidadeDisponivel": 10 }
+                        """))
+                .hasStatus(HttpStatus.PRECONDITION_REQUIRED)
+                .bodyJson().isLenientlyEqualTo("""
+                        { "type": "https://api.bazar.example/problemas/precondicao-obrigatoria",
+                          "status": 428, "codigo": "PRECONDICAO_OBRIGATORIA" }
+                        """);
+    }
+
+    @Test
+    void deDuasAlteracoesSimultaneasComOMesmoIfMatchSoUmaVence() throws Exception {
+        for (int rodada = 0; rodada < 10; rodada++) {
+            var versao = jdbc.sql("select versao from estoque where produto_id = ?").param(produtoId).query(Long.class).single();
+            var largada = new CountDownLatch(1);
+            var respostas = new ArrayList<Future<Integer>>();
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                for (int i = 0; i < 2; i++) {
+                    var quantidade = 100 + rodada * 2 + i;
+                    respostas.add(executor.submit(() -> {
+                        largada.await();
+                        return definirComIfMatch(quantidade, "\"" + versao + "\"").getResponse().getStatus();
+                    }));
+                }
+                largada.countDown();
+                var status = new ArrayList<Integer>();
+                for (var resposta : respostas) {
+                    status.add(resposta.get());
+                }
+                // Pela conferência no serviço ou pelo @Version no commit, o perdedor recebe 412.
+                assertThat(status).containsExactlyInAnyOrder(200, 412);
+            }
+        }
     }
 
     @Test
@@ -130,6 +206,15 @@ class EstoqueControllerTest {
                 .content("""
                         { "quantidadeDisponivel": %d, "versao": %d }
                         """.formatted(quantidade, versao))
+                .exchange();
+    }
+
+    private org.springframework.test.web.servlet.assertj.MvcTestResult definirComIfMatch(int quantidade, String ifMatch) {
+        return mvc.put().uri("/v1/produtos/{id}/estoque", produtoId).contentType(MediaType.APPLICATION_JSON)
+                .header("If-Match", ifMatch)
+                .content("""
+                        { "quantidadeDisponivel": %d }
+                        """.formatted(quantidade))
                 .exchange();
     }
 }

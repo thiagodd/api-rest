@@ -3,6 +3,7 @@ package com.bazar.catalogo.api;
 import java.util.UUID;
 
 import com.bazar.catalogo.dominio.ProdutoService;
+import com.bazar.compartilhado.web.VersaoDaRepresentacao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

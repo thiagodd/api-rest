@@ -1031,9 +1031,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EstoqueResponse"
-          description: OK
+          description: "O saldo, com a versão no ETag"
+          headers:
+            ETag:
+              description: A versão do estoque; devolva no If-Match do PUT
+              schema:
+                type: string
+              style: simple
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
       tags:
       - estoque
     put:
@@ -1045,6 +1053,14 @@ paths:
         schema:
           type: string
           format: uuid
+      - description: O ETag lido no GET (comparação forte; * aceita qualquer versão)
+        in: header
+        name: If-Match
+        required: false
+        schema:
+          type:
+          - string
+          - "null"
       requestBody:
         content:
           application/json:
@@ -1057,9 +1073,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EstoqueResponse"
-          description: OK
+          description: "O saldo novo, com o ETag novo"
+          headers:
+            ETag:
+              description: A nova versão do estoque
+              schema:
+                type: string
+              style: simple
         "400":
           $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflito"
+        "412":
+          $ref: "#/components/responses/PrecondicaoFalhou"
+        "422":
+          $ref: "#/components/responses/Validacao"
+        "428":
+          $ref: "#/components/responses/PrecondicaoObrigatoria"
       tags:
       - estoque
   /v1/relatorios/vendas:
@@ -1125,6 +1157,18 @@ components:
           schema:
             $ref: "#/components/schemas/Problema"
       description: O recurso não existe
+    PrecondicaoFalhou:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: "O If-Match não bate com o ETag atual: leia de novo (20.03)"
+    PrecondicaoObrigatoria:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problema"
+      description: A alteração exige o header If-Match (20.03)
     RequisicaoInvalida:
       content:
         application/problem+json:
@@ -1444,11 +1488,14 @@ components:
           maximum: 1000000
           minimum: 0
         versao:
-          type: integer
+          type:
+          - integer
+          - "null"
           format: int64
+          deprecated: true
+          description: Use o header If-Match com o ETag do GET.
       required:
       - quantidadeDisponivel
-      - versao
     Dinheiro:
       type: object
       description: "Um valor monetário exato, com a moeda (15.02)."

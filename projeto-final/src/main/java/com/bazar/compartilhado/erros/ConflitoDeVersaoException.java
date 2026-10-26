@@ -3,8 +3,8 @@ package com.bazar.compartilhado.erros;
 import java.util.Map;
 
 /**
- * O cliente alterou um recurso a partir de uma versão que já não é a atual (10.06). Em 20.03, a versão
- * passa a viajar no ETag e no If-Match.
+ * O cliente alterou um recurso a partir de uma versão que já não é a atual (10.06). Com a versão no If-Match (20.03),
+ * a camada web traduz este conflito em 412 (PrecondicaoFalhouException).
  */
 public class ConflitoDeVersaoException extends RegraDeNegocioException {
 
