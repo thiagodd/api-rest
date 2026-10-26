@@ -23,6 +23,9 @@
         <springdoc.version>3.2.0</springdoc.version>
         <!-- O Spring Boot não gerencia a versão do RestAssured (11.05). -->
         <rest-assured.version>6.3.0</rest-assured.version>
+        <!-- Testes de contrato (18.05). O Spring Cloud Contract saiu do train na 2025.1 e tem BOM próprio. -->
+        <spring-cloud-contract.version>5.0.3</spring-cloud-contract.version>
+        <pact.version>4.7.5</pact.version>
         <!-- Vazio por padrão; o Surefire acrescenta o agente do Mockito (11.02). -->
         <argLine></argLine>
     </properties>
@@ -154,7 +157,56 @@
             <version>3.0.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- Testes de contrato (18.05). O Spring Cloud Contract gera testes a partir dos contratos do produtor; o Pact
+             verifica os contratos que os consumidores publicam. -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit5</artifactId>
+            <version>${pact.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.provider</groupId>
+            <artifactId>junit5spring</artifactId>
+            <version>${pact.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.provider</groupId>
+            <artifactId>spring7</artifactId>
+            <version>${pact.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-dependencies</artifactId>
+                <version>${spring-cloud-contract.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- O Spring Cloud Contract traz o módulo MockMvc do RestAssured na 5.5; o resto do RestAssured do projeto
+                 está na 6.3. -->
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>spring-mock-mvc</artifactId>
+                <version>${rest-assured.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>spring-commons</artifactId>
+                <version>${rest-assured.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -189,7 +241,43 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <systemPropertyVariables>
+                        <!-- O Pact JVM envia estatísticas de uso anônimas por padrão (18.05). -->
+                        <pact_do_not_track>true</pact_do_not_track>
+                    </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <!-- Gera um teste JUnit por contrato de src/test/resources/contracts e os stubs do WireMock para os
+                 consumidores (18.05). Os testes gerados herdam da classe base. -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <version>${spring-cloud-contract.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <testFramework>JUNIT5</testFramework>
+                    <baseClassForTests>com.bazar.catalogo.api.ContratosDoCatalogoBase</baseClassForTests>
+                </configuration>
+            </plugin>
+            <!-- Quando os contratos não mudam, o plugin acima não registra a pasta dos testes gerados, e um build sem
+                 clean os deixa de fora sem aviso. Registrar a pasta aqui garante que eles rodem sempre. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>testes-de-contrato</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-test-sources/contracts</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

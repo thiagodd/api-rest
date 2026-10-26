@@ -1,0 +1,13 @@
+# Um produto que não existe: 404 com o Problem Details do catálogo de erros (16.01).
+description: O detalhe de um produto inexistente, na v1
+request:
+  method: GET
+  url: /v1/produtos/01a17566-0000-7000-8000-000000000000
+response:
+  status: 404
+  headers:
+    Content-Type: application/problem+json
+  body:
+    type: "https://api.bazar.example/problemas/produto-nao-encontrado"
+    status: 404
+    codigo: "PRODUTO_NAO_ENCONTRADO"

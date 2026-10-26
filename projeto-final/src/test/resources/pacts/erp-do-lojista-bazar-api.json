@@ -1,0 +1,121 @@
+{
+  "consumer": {
+    "name": "erp-do-lojista"
+  },
+  "interactions": [
+    {
+      "comments": {
+        "testname": "com.lojista.erp.CatalogoDoBazarPactTest.importaSkuNomeEPreco(MockServer)",
+        "text": [
+
+        ]
+      },
+      "description": "o detalhe de um produto pela v1",
+      "key": "b0f6662d",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "existe o produto LIV-0042"
+        }
+      ],
+      "request": {
+        "headers": {
+          "Accept": [
+            "application/json"
+          ]
+        },
+        "method": "GET",
+        "path": "/v1/produtos/01a17566-c2c2-750b-a6fd-e44a3e704746"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "nome": "Clean Code",
+            "precoEmCentavos": 12990,
+            "sku": "LIV-0042"
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.nome": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.precoEmCentavos": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.sku": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "[A-Z]{3}-\\d{4}"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    },
+    {
+      "comments": {
+        "testname": "com.lojista.erp.CatalogoDoBazarPactTest.umProdutoQueNaoExisteMaisFicaVazio(MockServer)",
+        "text": [
+
+        ]
+      },
+      "description": "o detalhe de um produto que n\u00E3o existe",
+      "key": "92334867",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "n\u00E3o existe o produto"
+        }
+      ],
+      "request": {
+        "headers": {
+          "Accept": [
+            "application/json"
+          ]
+        },
+        "method": "GET",
+        "path": "/v1/produtos/01a17566-0000-7000-8000-000000000000"
+      },
+      "response": {
+        "status": 404
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    }
+  ],
+  "metadata": {
+    "pact-jvm": {
+      "version": "4.7.5"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "bazar-api"
+  }
+}

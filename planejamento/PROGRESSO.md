@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 72 · **rascunho:** 0 · **revisão:** 9 · **pronta:** 62
+**Total:** 143 páginas · **esqueleto:** 71 · **rascunho:** 0 · **revisão:** 10 · **pronta:** 62
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -180,7 +180,7 @@
 | 18.02 | Estratégias de versionamento | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-02-estrategias-de-versionamento.mdx` | revisao |
 | 18.03 | Versionamento nativo no Spring Framework 7 | intermediario | essencial | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-03-versionamento-nativo-no-spring-framework-7.mdx` | revisao |
 | 18.04 | Depreciação e desligamento de APIs | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-04-depreciacao-e-desligamento-de-apis.mdx` | revisao |
-| 18.05 | Testes de contrato | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-05-testes-de-contrato.mdx` | esqueleto |
+| 18.05 | Testes de contrato | avancado | importante | `src/content/07-contratos-documentacao-e-ciclo-de-vida/18-05-testes-de-contrato.mdx` | revisao |
 
 ## Parte 8: Concorrência e execução assíncrona
 

@@ -36,7 +36,7 @@ Legenda da coluna "Fonte":
 | Spring Modulith | **2.1.2** | Compilado contra o Spring Boot 4.1.2 (POM do `spring-modulith-core`). A 2.2.0-RC1 está em andamento. | Maven Central |
 | Spring Cloud | **2025.1.4** (Oakwood) | Compatível com Boot 4.0.x e 4.1.x (4.1 a partir da 2025.1.2). Correção da versão anterior deste arquivo. | oficial (spring.io/projects/spring-cloud) |
 | Spring Cloud Gateway | 5.0.x (`spring-cloud-gateway-server-webmvc` 5.0.4) | Do *train* 2025.1 | Maven Central |
-| Spring Cloud Contract | 5.0.3 | Do *train* 2025.1 | Maven Central |
+| Spring Cloud Contract | 5.0.3 | **Fora** do *train* 2025.1 (o BOM `spring-cloud-dependencies` 2025.1.x não o gerencia; até a 2025.0 gerenciava). Use o BOM `spring-cloud-contract-dependencies` 5.0.3. Verificado na 18.05. | Maven Central |
 
 ## Bibliotecas principais
 

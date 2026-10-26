@@ -1,0 +1,37 @@
+# O detalhe de um produto na v1 (18.05). O contrato fixa o que o Bazar promete: os campos, os tipos e o formato do
+# preço. Os valores que variam (id, datas) são conferidos por expressão regular.
+description: O detalhe de um produto existente, na v1
+request:
+  method: GET
+  url: /v1/produtos/01a17566-c2c2-750b-a6fd-e44a3e704746
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    id: "01a17566-c2c2-750b-a6fd-e44a3e704746"
+    sku: "LIV-0042"
+    nome: "Clean Code"
+    precoEmCentavos: 12990
+    preco:
+      valor: "129.90"
+      moeda: "BRL"
+    status: "RASCUNHO"
+  matchers:
+    body:
+      - path: $.id
+        type: by_regex
+        predefined: uuid
+      - path: $.sku
+        type: by_regex
+        value: "[A-Z]{3}-\\d{4}"
+      - path: $.nome
+        type: by_type
+      - path: $.precoEmCentavos
+        type: by_type
+      - path: $.preco.valor
+        type: by_regex
+        value: "\\d+\\.\\d{2}"
+      - path: $.status
+        type: by_regex
+        value: "RASCUNHO|ATIVO|DESCONTINUADO"
