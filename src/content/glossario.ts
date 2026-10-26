@@ -156,4 +156,7 @@ export const glossario: TermoGlossario[] = [
   { id: 'vazao', termo: 'Vazão', ingles: 'throughput', definicao: 'Quantidade de requisições concluídas por unidade de tempo, em geral por segundo.', pagina: '19.01' },
   { id: 'percentil', termo: 'Percentil de latência', ingles: 'latency percentile', definicao: 'O p95 é a latência abaixo da qual ficam 95% das requisições. Os percentis altos (p95, p99) mostram a experiência dos clientes mais prejudicados, que a média esconde.', pagina: '19.01' },
   { id: 'io-bloqueante', termo: 'I/O bloqueante', ingles: 'blocking I/O', definicao: 'Leitura ou escrita (rede, disco, banco) em que a thread que chamou fica parada até a operação terminar.', pagina: '19.01' },
+  { id: 'virtual-thread', termo: 'Virtual thread', definicao: 'Thread do Java (JEP 444, JDK 21) gerenciada pela JVM, e não pelo sistema operacional. Custa poucos KB, e ao bloquear em I/O libera a thread do sistema que a executava. Permite uma thread por requisição sem limite de pool.', pagina: '19.02' },
+  { id: 'carrier-thread', termo: 'Carrier thread', definicao: 'Thread de plataforma que executa uma virtual thread montada sobre ela. Por padrão, há uma por núcleo, num ForkJoinPool da JVM.', pagina: '19.02' },
+  { id: 'pinning', termo: 'Pinning', definicao: 'Situação em que uma virtual thread bloqueada não consegue se desmontar e prende a sua carrier thread. Desde o JDK 24 (JEP 491), o synchronized não causa mais pinning; código nativo e inicialização de classes ainda causam.', pagina: '19.02' },
 ]

@@ -1,6 +1,14 @@
 spring:
   application:
     name: bazar
+  threads:
+    virtual:
+      # Uma virtual thread por requisição no Tomcat, e virtual threads no @Async, no agendador e no cliente HTTP do
+      # JDK (19.02). O server.tomcat.threads.* deixa de valer: o limite passa a ser os pools das dependências.
+      enabled: true
+  main:
+    # Virtual threads são daemon: sem isto, uma aplicação que só tivesse tarefas agendadas terminaria sozinha.
+    keep-alive: true
   jackson:
     mapper:
       # A ordem dos campos no JSON segue a declaração (records e classes), não o alfabeto.

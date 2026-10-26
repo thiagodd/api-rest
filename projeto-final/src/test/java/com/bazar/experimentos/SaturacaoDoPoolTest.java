@@ -22,11 +22,12 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * O pool de threads do Tomcat como gargalo (19.01). Com 4 threads e um endpoint de 200 ms, 20 requisições simultâneas
+ * O pool de threads do Tomcat como gargalo (19.01), com threads de plataforma: o Bazar usa virtual threads desde a
+ * 19.02, e o teste as desliga para medir o modelo anterior. Com 4 threads e um endpoint de 200 ms, 20 requisições simultâneas
  * precisam de 5 rodadas: pelo menos 1 s no total, por mais rápida que seja a máquina. Os testes só conferem limites
  * inferiores, que não dependem da máquina.
  */
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = "server.tomcat.threads.max=4")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = { "spring.threads.virtual.enabled=false", "server.tomcat.threads.max=4" })
 @ActiveProfiles("experimentos")
 @Import(TestcontainersConfiguration.class)
 class SaturacaoDoPoolTest {
