@@ -184,11 +184,22 @@ public class ProdutoController {
         var incorporar = ValoresDeParametro.ler("embed", embed, INCORPORAVEIS);
         var produto = servico.detalhar(id);
         var resposta = mapper.paraResponse(produto);
+        if (!incorporar.contains("categoria")) {
+            // Com ETag e Last-Modified, o Spring responde 304 sozinho a um If-None-Match (ou If-Modified-Since) que
+            // ainda valha, sem corpo (20.02).
+            return ResponseEntity.ok()
+                    .cacheControl(CACHE_DO_DETALHE)
+                    .eTag(VersaoDaRepresentacao.etag(produto.getVersao()))
+                    .lastModified(produto.getAtualizadoEm())
+                    .body(resposta);
+        }
+        // Com a categoria dentro, o corpo muda quando qualquer um dos dois muda: o ETag leva as duas versões. O
+        // Last-Modified fica de fora, porque a categoria não guarda quando mudou.
+        var categoria = servico.categoriaDe(produto);
         return ResponseEntity.ok()
                 .cacheControl(CACHE_DO_DETALHE)
-                .body(incorporar.contains("categoria")
-                        ? resposta.comCategoria(CategoriaResponse.de(servico.categoriaDe(produto)))
-                        : resposta);
+                .eTag(VersaoDaRepresentacao.etag(produto.getVersao(), categoria.versao()))
+                .body(resposta.comCategoria(CategoriaResponse.de(categoria)));
     }
 
     // PUT substitui a parte editável inteira: um campo ausente vira null ou vazio (14.02).

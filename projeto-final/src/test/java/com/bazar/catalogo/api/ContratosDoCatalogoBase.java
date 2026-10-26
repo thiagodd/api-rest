@@ -40,7 +40,7 @@ public abstract class ContratosDoCatalogoBase {
     @BeforeEach
     void configurar() {
         RestAssuredMockMvc.mockMvc(mvc);
-        when(produtos.detalhar(EXISTENTE)).thenReturn(umProduto().comPreco(12990).build());
+        when(produtos.detalhar(EXISTENTE)).thenReturn(umProduto().comPreco(12990).comVersao(0).build());
         when(produtos.detalhar(INEXISTENTE))
                 .thenThrow(new RecursoNaoEncontradoException(TipoProblema.PRODUTO_NAO_ENCONTRADO, INEXISTENTE));
     }

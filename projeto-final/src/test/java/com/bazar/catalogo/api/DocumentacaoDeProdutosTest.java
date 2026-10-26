@@ -44,7 +44,7 @@ class DocumentacaoDeProdutosTest {
 
     @Test
     void detalharUmProduto() throws Exception {
-        var produto = umProduto().comAtributo("autor", "Robert C. Martin").build();
+        var produto = umProduto().comAtributo("autor", "Robert C. Martin").comVersao(0).build();
         when(produtos.detalhar(produto.getId())).thenReturn(produto);
 
         mvc.perform(get("/v1/produtos/{id}", produto.getId()))

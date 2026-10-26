@@ -38,8 +38,11 @@ public class ProdutoV2Controller {
     @ApiResponse(responseCode = "404", ref = NAO_ENCONTRADO)
     // A mesma política de cache da v1 (20.01): a versão está no caminho, então cada uma tem a sua entrada no cache.
     public ResponseEntity<ProdutoV2Response> detalhar(@PathVariable UUID id) {
+        var produto = servico.detalhar(id);
         return ResponseEntity.ok()
                 .cacheControl(ProdutoController.CACHE_DO_DETALHE)
-                .body(mapper.paraResponse(servico.detalhar(id)));
+                .eTag(VersaoDaRepresentacao.etag(produto.getVersao()))
+                .lastModified(produto.getAtualizadoEm())
+                .body(mapper.paraResponse(produto));
     }
 }

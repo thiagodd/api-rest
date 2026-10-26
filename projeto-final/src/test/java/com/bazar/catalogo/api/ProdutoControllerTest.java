@@ -36,6 +36,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.validation.FieldError;
@@ -178,7 +179,7 @@ class ProdutoControllerTest {
 
     @Test
     void responde406QuandoPedeCsvDeUmItem() {
-        var cleanCode = umProduto().build();
+        var cleanCode = umProduto().comVersao(0).build();
         when(produtos.detalhar(cleanCode.getId())).thenReturn(cleanCode);
 
         // O CSV só existe para listas: para um item, nenhum conversor escreve text/csv.
@@ -458,12 +459,15 @@ class ProdutoControllerTest {
 
         @Test
         void embedCategoriaTrazACategoriaDentroDoProduto() {
-            var cleanCode = umProduto().build();
+            var cleanCode = umProduto().comVersao(2).build();
+            var programacao = new Categoria(PROGRAMACAO, "Programação", "programacao", null);
+            // Como se viesse do banco: o ETag da resposta com embed leva a versão da categoria (20.02).
+            ReflectionTestUtils.setField(programacao, "versao", 5L);
             when(produtos.detalhar(cleanCode.getId())).thenReturn(cleanCode);
-            when(produtos.categoriaDe(cleanCode)).thenReturn(
-                    new Categoria(PROGRAMACAO, "Programação", "programacao", null));
+            when(produtos.categoriaDe(cleanCode)).thenReturn(programacao);
 
             assertThat(mvc.get().uri("/v1/produtos/{id}?embed=categoria", cleanCode.getId())).hasStatusOk()
+                    .hasHeader("ETag", "\"2-5\"")
                     .bodyJson().isLenientlyEqualTo("""
                             { "categoriaId": "0192f3a0-5555-7000-8000-000000000003",
                               "categoria": { "id": "0192f3a0-5555-7000-8000-000000000003", "nome": "Programação",

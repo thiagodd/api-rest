@@ -60,7 +60,7 @@ class ContratosDosConsumidoresTest {
     // Os estados que os consumidores pedem com given(...). Cada um prepara o dublê do serviço.
     @State("existe o produto LIV-0042")
     void existeOProduto() {
-        when(produtos.detalhar(any(UUID.class))).thenReturn(umProduto().comSku("LIV-0042").comPreco(12990).build());
+        when(produtos.detalhar(any(UUID.class))).thenReturn(umProduto().comSku("LIV-0042").comPreco(12990).comVersao(0).build());
     }
 
     @State("não existe o produto")

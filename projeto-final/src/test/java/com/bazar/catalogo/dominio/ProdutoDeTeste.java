@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.bazar.compartilhado.Dinheiro;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 /**
  * Cria produtos válidos para os testes. Cada teste muda só o que importa para ele:
  * {@code umProduto().comPreco(5000).build()}.
@@ -23,6 +25,7 @@ public final class ProdutoDeTeste {
     private long precoEmCentavos = 12990;
     private UUID categoriaId = PROGRAMACAO;
     private final Map<String, String> atributos = new HashMap<>();
+    private @Nullable Long versao = null;
 
     private ProdutoDeTeste() {
     }
@@ -56,7 +59,20 @@ public final class ProdutoDeTeste {
         return this;
     }
 
+    // Como se o produto tivesse vindo do banco. Sem versão, ele é "novo": é o que o Spring Data usa para decidir
+    // entre insert e update, então só os dublês de leitura (um service mockado) devem usar isto. O ETag sai da
+    // versão (20.02).
+    public ProdutoDeTeste comVersao(long versao) {
+        this.versao = versao;
+        return this;
+    }
+
     public Produto build() {
-        return new Produto(sku, nome, descricao, Dinheiro.deCentavos(precoEmCentavos, "BRL"), categoriaId, atributos);
+        var produto = new Produto(sku, nome, descricao, Dinheiro.deCentavos(precoEmCentavos, "BRL"), categoriaId,
+                atributos);
+        if (versao != null) {
+            ReflectionTestUtils.setField(produto, "versao", versao);
+        }
+        return produto;
     }
 }

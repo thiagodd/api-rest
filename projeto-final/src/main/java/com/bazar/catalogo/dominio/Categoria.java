@@ -66,4 +66,9 @@ public class Categoria {
     public @Nullable UUID categoriaPaiId() {
         return categoriaPaiId;
     }
+
+    // Muda a cada alteração: entra no ETag do produto com ?embed=categoria (20.02).
+    public @Nullable Long versao() {
+        return versao;
+    }
 }

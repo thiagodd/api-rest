@@ -38,7 +38,7 @@ class VersoesDoProdutoTest {
 
     @Test
     void aV1MantemOsCentavosEAV2SoTemODinheiro() {
-        var produto = umProduto().comPreco(12990).build();
+        var produto = umProduto().comPreco(12990).comVersao(0).build();
         when(produtos.detalhar(produto.getId())).thenReturn(produto);
 
         assertThat(mvc.get().uri("/v1/produtos/{id}", produto.getId())).hasStatusOk()
@@ -55,7 +55,7 @@ class VersoesDoProdutoTest {
 
     @Test
     void aV1AvisaQueEstaDepreciadaEAV2Nao() {
-        var produto = umProduto().build();
+        var produto = umProduto().comVersao(0).build();
         when(produtos.detalhar(produto.getId())).thenReturn(produto);
 
         var v1 = mvc.get().uri("/v1/produtos/{id}", produto.getId()).exchange();
@@ -98,7 +98,7 @@ class VersoesDoProdutoTest {
 
     @Test
     void oClienteDizAVersaoEOInserterMontaOCaminho() {
-        var produto = umProduto().build();
+        var produto = umProduto().comVersao(0).build();
         when(produtos.detalhar(produto.getId())).thenReturn(produto);
         var v2 = cliente.mutate()
                 .apiVersionInserter(ApiVersionInserter.builder()
