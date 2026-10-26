@@ -2,7 +2,7 @@
 id: "19.06"
 titulo: "Scoped values e concorrência estruturada"
 descricao: "São as novas ferramentas do Java para propagar contexto e paralelizar chamadas com segurança, substituindo ThreadLocal e CompletableFuture encadeados."
-status: revisao
+status: pronta
 referencias:
   - titulo: "JEP 506: Scoped Values (JDK 25, final)"
     url: "https://openjdk.org/jeps/506"
@@ -133,8 +133,8 @@ O `ScopedValue` é final no JDK 25 e pode ser usado como qualquer API. O `Struct
 Usar uma API em *preview* tem custos concretos:
 
 1. **`--enable-preview` em todo lugar**: no `javac` (o `maven-compiler-plugin`), nos testes (o `argLine` do Surefire), no `spring-boot:run` e no `java -jar` do contêiner.
-2. **O `.class` fica preso à versão exata do JDK.** Um arquivo compilado com *preview* no JDK 25 não carrega no JDK 26, nem com `--enable-preview`. Atualizar o JDK obriga a recompilar, e, como a API muda, a reescrever.
-3. **Todo o código compilado vira "preview"**, não só a classe que usa a API.
+2. **O `.class` fica preso à versão exata do JDK.** Uma classe que usa a API em *preview*, compilada no JDK 25, não carrega no JDK 26, nem com `--enable-preview`. Atualizar o JDK obriga a recompilar, e, como a API muda, a reescrever.
+3. **A JVM inteira roda com `--enable-preview`**, em todos os ambientes: a IDE, a CI, o contêiner. Esquecer em um deles é um `UnsupportedClassVersionError` na subida.
 
 Para uma API de produção, a recomendação é esperar a versão final, ou isolar o uso atrás de uma interface do próprio projeto, num único lugar, sabendo que ele vai mudar a cada atualização do JDK. Por isso, esta página usa um exemplo à parte, e o Bazar continua sem `--enable-preview`. Enquanto isso, a alternativa estável é a da 19.02: chamadas sequenciais em virtual threads, que custam a soma das latências, mas não têm nenhuma das armadilhas do `CompletableFuture`.
 
@@ -356,7 +356,7 @@ Outros tropeços frequentes:
 
 - **Engolir a `InterruptedException`.** A subtarefa não para quando é cancelada, e o `close` do escopo espera por ela.
 - **Chamar `subtask.get()` antes do `join()`**, de uma subtarefa que falhou, ou depois de um `join` que lançou `TimeoutException`. Lança `IllegalStateException`.
-- **Esquecer o `try`-with-resources.** Sem o `close`, o escopo não garante nada; a API exige o bloco.
+- **Abrir o escopo fora de um `try`-with-resources.** Sem o `close` garantido, uma exceção entre o `open` e o `join` deixa subtarefas soltas, exatamente o que a API existe para impedir.
 - **Chamar `fork` ou `join` de outra thread** que não a dona do escopo. A API recusa com `WrongThreadException`.
 - **Esperar que um `ScopedValue` chegue a um `@Async` ou a um executor.** Só as subtarefas de um `StructuredTaskScope` herdam.
 - **Usar `ScopedValue` para o que muda durante a requisição**, como um acumulador. Ele é imutável; para isso existe um objeto mutável guardado no valor, ou um parâmetro.
