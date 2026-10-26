@@ -67,14 +67,16 @@ class PoliticaDeCacheTest {
                 .expectHeader().valueEquals(HttpHeaders.CACHE_CONTROL, DETALHE_DO_PRODUTO);
     }
 
+    // Com a compressão do Tomcat ligada (22.03), ele acrescenta accept-encoding ao Vary, e reescreve a lista em
+    // minúsculas: nomes de header não diferenciam maiúsculas.
     @Test
     void listasQueSaemEmJsonOuCsvAvisamOCacheComVaryAccept() {
         cliente.get().uri("/v1/produtos").exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.VARY, "Accept");
+                .expectHeader().valueEquals(HttpHeaders.VARY, "accept,accept-encoding");
         cliente.get().uri("/v1/produtos").accept(MediaType.parseMediaType("text/csv")).exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.VARY, "Accept");
+                .expectHeader().valueEquals(HttpHeaders.VARY, "accept,accept-encoding");
     }
 
     @Test

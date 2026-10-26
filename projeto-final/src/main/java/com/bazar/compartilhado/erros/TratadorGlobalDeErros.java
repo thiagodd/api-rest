@@ -183,8 +183,10 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        if (ex.getMostSpecificCause() instanceof ParametroDesconhecidoException desconhecido) {
-            return deDominio(desconhecido, request);
+        // Um campo desconhecido numa busca (13.01), ou um limite estourado durante a leitura do corpo descomprimido
+        // (22.03): a exceção de domínio chega embrulhada pelo Jackson.
+        if (ex.getMostSpecificCause() instanceof ExcecaoDeDominio dominio) {
+            return deDominio(dominio, request);
         }
         // Um valor fora do enum ("motivo": "TALVEZ") é JSON bem formado com um valor inválido: 422 no campo, com a
         // lista de valores aceitos, como qualquer outra validação (15.04).

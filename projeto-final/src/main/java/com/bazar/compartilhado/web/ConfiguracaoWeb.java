@@ -7,6 +7,9 @@ import java.util.regex.Pattern;
 import tools.jackson.databind.ser.std.SimpleFilterProvider;
 
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -17,8 +20,10 @@ import org.springframework.hateoas.mediatype.hal.DefaultCurieProvider;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.RequestPath;
 import org.springframework.util.Assert;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.accept.StandardApiVersionDeprecationHandler;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
@@ -98,6 +103,17 @@ public class ConfiguracaoWeb implements WebMvcConfigurer {
     static boolean rotaDaApi(RequestPath caminho) {
         var valor = caminho.pathWithinApplication().value();
         return VERSAO_NO_CAMINHO.matcher(valor).lookingAt();
+    }
+
+    // Antes de todos os filtros que leem o corpo (a idempotência calcula o hash dele, 21.01), e depois do
+    // RequestContextFilter do Spring Boot (-105), que define o idioma das mensagens de erro.
+    @Bean
+    FilterRegistrationBean<DescompressaoDeRequisicoes> descompressaoDeRequisicoes(
+            @Value("${bazar.requisicoes.limite-descomprimido}") DataSize limite,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver erros) {
+        var registro = new FilterRegistrationBean<>(new DescompressaoDeRequisicoes(limite, erros));
+        registro.setOrder(-100);
+        return registro;
     }
 
     // O nome localeResolver substitui o LocaleResolver do Spring Boot (15.05).

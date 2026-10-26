@@ -52,11 +52,15 @@ public enum TipoProblema {
     // 406 e 415: negociação de formato (02.05).
     FORMATO_NAO_ACEITO(HttpStatus.NOT_ACCEPTABLE, CORRIGIR_A_REQUISICAO),
     FORMATO_NAO_SUPORTADO(HttpStatus.UNSUPPORTED_MEDIA_TYPE, CORRIGIR_A_REQUISICAO),
+    // A requisição veio com um Content-Encoding que o Bazar não descomprime (22.03).
+    CODIFICACAO_NAO_SUPORTADA(HttpStatus.UNSUPPORTED_MEDIA_TYPE, CORRIGIR_A_REQUISICAO),
     // O conteúdo do arquivo (os primeiros bytes, não o Content-Type declarado) não é de um formato aceito (22.01).
     IMAGEM_NAO_ACEITA(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MOSTRAR_AO_USUARIO),
 
     // 413: o arquivo ou a requisição passou do limite de tamanho (22.01).
     ARQUIVO_GRANDE_DEMAIS(HttpStatus.CONTENT_TOO_LARGE, MOSTRAR_AO_USUARIO),
+    // O corpo, depois de descomprimido, passou do limite (22.03).
+    CORPO_GRANDE_DEMAIS(HttpStatus.CONTENT_TOO_LARGE, CORRIGIR_A_REQUISICAO),
 
     // 409: a requisição é válida, mas conflita com o estado atual do recurso.
     SKU_DUPLICADO(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),

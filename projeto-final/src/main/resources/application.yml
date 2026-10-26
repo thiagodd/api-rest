@@ -53,6 +53,11 @@ spring:
 
 server:
   port: 8080
+  compression:
+    # Respostas em gzip para quem manda Accept-Encoding: gzip (22.03). O Tomcat só comprime as maiores que
+    # min-response-size (2 KB) e dos tipos listados; os da lista padrão não incluem os formatos abaixo.
+    enabled: true
+    additional-mime-types: application/problem+json, application/hal+json, application/x-ndjson, text/csv
 
 # O contrato OpenAPI gerado a partir do código (17.02): /v3/api-docs e /swagger-ui.html.
 springdoc:
@@ -78,6 +83,9 @@ springdoc:
     operations-sorter: method
 
 bazar:
+  requisicoes:
+    # O maior corpo aceito depois de descomprimir uma requisição com Content-Encoding: gzip (22.03).
+    limite-descomprimido: 10MB
   operacoes:
     # A cada quanto tempo o ProcessadorDeOperacoes procura operações pendentes ou abandonadas (19.03).
     intervalo: 10s
