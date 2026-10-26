@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Acompanhar pedido · Bazar</title>
+  <!-- Cliente de demonstração do acompanhamento em tempo real (19.04). Abra /acompanhar-pedido.html?id=<pedido>. -->
+</head>
+<body>
+  <h1>Pedido <span id="numero">…</span></h1>
+  <p>Status: <strong id="status">conectando…</strong></p>
+  <ol id="historico"></ol>
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    const fonte = new EventSource(`/v1/pedidos/${id}/eventos`);
+
+    // Cada mudança de status chega como um evento "status". Ao reconectar, o navegador manda sozinho o
+    // Last-Event-ID com o id do último evento recebido.
+    fonte.addEventListener('status', (evento) => {
+      const mudanca = JSON.parse(evento.data);
+      document.getElementById('numero').textContent = mudanca.numero;
+      document.getElementById('status').textContent = mudanca.status;
+      const item = document.createElement('li');
+      item.textContent = `${mudanca.status} em ${new Date(mudanca.ocorridoEm).toLocaleString('pt-BR')} (evento ${evento.lastEventId})`;
+      document.getElementById('historico').append(item);
+    });
+
+    // readyState CONNECTING: o EventSource vai tentar de novo sozinho, depois do retry. CLOSED: desistiu (o
+    // servidor respondeu 204, 404 ou outro tipo de conteúdo).
+    fonte.onerror = () => {
+      if (fonte.readyState === EventSource.CLOSED) {
+        document.getElementById('status').textContent += ' (acompanhamento encerrado)';
+      }
+    };
+  </script>
+</body>
+</html>

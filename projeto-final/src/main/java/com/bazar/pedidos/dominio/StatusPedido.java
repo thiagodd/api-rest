@@ -21,6 +21,11 @@ public enum StatusPedido {
         return destinosPermitidos().contains(destino);
     }
 
+    // Um pedido final não muda mais: o acompanhamento em tempo real (19.04) pode encerrar.
+    public boolean ehFinal() {
+        return destinosPermitidos().isEmpty();
+    }
+
     private Set<StatusPedido> destinosPermitidos() {
         return switch (this) {
             case CRIADO -> EnumSet.of(PAGAMENTO_PENDENTE, CANCELADO);

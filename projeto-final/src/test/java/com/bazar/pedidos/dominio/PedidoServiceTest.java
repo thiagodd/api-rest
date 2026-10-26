@@ -53,6 +53,9 @@ class PedidoServiceTest {
     @Mock
     ApplicationEventPublisher eventos;
 
+    @Mock
+    HistoricoDoPedido historico;
+
     // O repositório de clientes ainda guarda tudo num mapa: é um fake pronto, e o teste usa o real.
     ClienteRepository clientes = new ClienteRepository();
 
@@ -64,7 +67,7 @@ class PedidoServiceTest {
 
     @BeforeEach
     void montarOServico() {
-        service = new PedidoService(pedidos, produtos, estoques, clientes, eventos, RELOGIO);
+        service = new PedidoService(pedidos, produtos, estoques, clientes, eventos, historico, RELOGIO);
         maria = clientes.save(Cliente.novo("Maria Souza", "maria@example.com", "52998224725", null, Canal.WEB));
     }
 

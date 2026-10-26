@@ -502,6 +502,47 @@ paths:
       summary: Cancela um pedido
       tags:
       - pedidos
+  /v1/pedidos/{id}/eventos:
+    get:
+      description: "Cada mudança é um evento `status`, com o `id` crescente. Ao reconectar,\
+        \ o cliente manda o último id recebido em `Last-Event-ID` e recebe só os seguintes.\
+        \ Um pedido em estado final encerra o fluxo; a reconexão depois disso recebe\
+        \ `204`."
+      operationId: acompanharPedido
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: "O id do último evento recebido, enviado pelo EventSource ao\
+          \ reconectar."
+        in: header
+        name: Last-Event-ID
+        required: false
+        schema:
+          type:
+          - integer
+          - "null"
+          format: int64
+      responses:
+        "200":
+          content:
+            text/event-stream:
+              schema:
+                type: string
+          description: "O fluxo de eventos. O `data` de cada evento `status` é um\
+            \ objeto com `pedidoId`, `numero`, `status` e `ocorridoEm`."
+        "204":
+          description: "O pedido está num estado final, e não há eventos novos"
+        "400":
+          $ref: "#/components/responses/RequisicaoInvalida"
+        "404":
+          $ref: "#/components/responses/NaoEncontrado"
+      summary: Acompanha as mudanças de status do pedido (SSE)
+      tags:
+      - pedidos
   /v1/produtos:
     get:
       deprecated: true

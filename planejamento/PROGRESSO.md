@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 68 · **rascunho:** 0 · **revisão:** 3 · **pronta:** 72
+**Total:** 143 páginas · **esqueleto:** 67 · **rascunho:** 0 · **revisão:** 4 · **pronta:** 72
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -191,7 +191,7 @@
 | 19.01 | O modelo thread-per-request e seus limites | intermediario | essencial | `src/content/08-concorrencia-e-execucao-assincrona/19-01-o-modelo-thread-per-request-e-seus-limites.mdx` | revisao |
 | 19.02 | Virtual threads em APIs Spring | intermediario | essencial | `src/content/08-concorrencia-e-execucao-assincrona/19-02-virtual-threads-em-apis-spring.mdx` | revisao |
 | 19.03 | @Async, @Scheduled e tarefas em segundo plano | intermediario | essencial | `src/content/08-concorrencia-e-execucao-assincrona/19-03-async-scheduled-e-tarefas-em-segundo-plano.mdx` | revisao |
-| 19.04 | Server-Sent Events (e uma visão de WebSocket) | intermediario | importante | `src/content/08-concorrencia-e-execucao-assincrona/19-04-server-sent-events-e-uma-visao-de-websocket.mdx` | esqueleto |
+| 19.04 | Server-Sent Events (e uma visão de WebSocket) | intermediario | importante | `src/content/08-concorrencia-e-execucao-assincrona/19-04-server-sent-events-e-uma-visao-de-websocket.mdx` | revisao |
 | 19.05 | WebFlux: visão geral e quando usar | avancado | complementar | `src/content/08-concorrencia-e-execucao-assincrona/19-05-webflux-visao-geral-e-quando-usar.mdx` | esqueleto |
 | 19.06 | Scoped values e concorrência estruturada | avancado | complementar | `src/content/08-concorrencia-e-execucao-assincrona/19-06-scoped-values-e-concorrencia-estruturada.mdx` | esqueleto |
 

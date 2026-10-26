@@ -34,15 +34,18 @@ public class PedidoService {
     private final EstoqueService estoques;
     private final ClienteRepository clientes;
     private final ApplicationEventPublisher eventos;
+    private final HistoricoDoPedido historico;
     private final Clock relogio;
 
     public PedidoService(PedidoRepository pedidos, ProdutoRepository produtos, EstoqueService estoques,
-            ClienteRepository clientes, ApplicationEventPublisher eventos, Clock relogio) {
+            ClienteRepository clientes, ApplicationEventPublisher eventos, HistoricoDoPedido historico,
+            Clock relogio) {
         this.pedidos = pedidos;
         this.produtos = produtos;
         this.estoques = estoques;
         this.clientes = clientes;
         this.eventos = eventos;
+        this.historico = historico;
         this.relogio = relogio;
     }
 
@@ -67,8 +70,11 @@ public class PedidoService {
         }
         reservarEstoque(itens);
         pedidos.save(pedido);
+        // O insert do pedido precisa ir antes do histórico, que tem chave estrangeira para ele.
+        pedidos.flush();
         // Publicado agora, entregue aos ouvintes @TransactionalEventListener só depois do commit.
         eventos.publishEvent(new PedidoCriado(pedido.getId(), clienteId, pedido.getValorTotal()));
+        eventos.publishEvent(historico.registrar(pedido, agora));
         return pedido;
     }
 
@@ -77,13 +83,15 @@ public class PedidoService {
     public Pedido cancelar(UUID id, MotivoCancelamento motivo, @Nullable String observacao) {
         var pedido = pedidos.findComItensById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(TipoProblema.PEDIDO_NAO_ENCONTRADO, id));
-        pedido.cancelar(motivo, observacao, relogio.instant());
+        var agora = relogio.instant();
+        pedido.cancelar(motivo, observacao, agora);
         // Grava o novo status antes de mexer no estoque. Se outra requisição cancelou este pedido ao mesmo tempo,
         // o UPDATE com "where versao=?" falha aqui (409), e a reserva não é liberada duas vezes.
         pedidos.flush();
         var quantidades = new TreeMap<UUID, Integer>();
         pedido.getItens().forEach(item -> quantidades.merge(item.getProdutoId(), item.getQuantidade(), Integer::sum));
         quantidades.forEach(estoques::liberar);
+        eventos.publishEvent(historico.registrar(pedido, agora));
         return pedido;
     }
 
