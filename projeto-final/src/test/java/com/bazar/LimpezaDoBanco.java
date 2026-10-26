@@ -21,6 +21,7 @@ public final class LimpezaDoBanco {
         jdbc.sql("delete from item_pedido").update();
         jdbc.sql("delete from pedido").update();
         jdbc.sql("delete from estoque").update();
+        jdbc.sql("delete from imagem_produto").update();
         jdbc.sql("delete from produto").update();
         jdbc.sql("""
                 delete from categoria

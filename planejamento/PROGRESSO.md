@@ -4,7 +4,7 @@
 > Status possíveis: **esqueleto** (gerado na fase 2) · **rascunho** (escrita em andamento) · **revisão** (escrita, falta revisar) · **pronta**.
 > O status também fica no frontmatter de cada MDX (`status:`), e o site mostra um aviso nas páginas que ainda não estão prontas.
 
-**Total:** 143 páginas · **esqueleto:** 59 · **rascunho:** 0 · **revisão:** 6 · **pronta:** 78
+**Total:** 143 páginas · **esqueleto:** 58 · **rascunho:** 0 · **revisão:** 7 · **pronta:** 78
 
 ## Parte 1: Começando e fundamentos de HTTP
 
@@ -217,7 +217,7 @@
 
 | ID | Página | Nível | Prioridade | Arquivo | Status |
 |---|---|---|---|---|---|
-| 22.01 | Upload de arquivos | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-01-upload-de-arquivos.mdx` | esqueleto |
+| 22.01 | Upload de arquivos | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-01-upload-de-arquivos.mdx` | revisao |
 | 22.02 | Download, streaming e Range | intermediario | importante | `src/content/09-padroes-avancados-de-http/22-02-download-streaming-e-range.mdx` | esqueleto |
 | 22.03 | Compressão | intermediario | complementar | `src/content/09-padroes-avancados-de-http/22-03-compressao.mdx` | esqueleto |
 

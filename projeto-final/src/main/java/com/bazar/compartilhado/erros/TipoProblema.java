@@ -51,6 +51,11 @@ public enum TipoProblema {
     // 406 e 415: negociação de formato (02.05).
     FORMATO_NAO_ACEITO(HttpStatus.NOT_ACCEPTABLE, CORRIGIR_A_REQUISICAO),
     FORMATO_NAO_SUPORTADO(HttpStatus.UNSUPPORTED_MEDIA_TYPE, CORRIGIR_A_REQUISICAO),
+    // O conteúdo do arquivo (os primeiros bytes, não o Content-Type declarado) não é de um formato aceito (22.01).
+    IMAGEM_NAO_ACEITA(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MOSTRAR_AO_USUARIO),
+
+    // 413: o arquivo ou a requisição passou do limite de tamanho (22.01).
+    ARQUIVO_GRANDE_DEMAIS(HttpStatus.CONTENT_TOO_LARGE, MOSTRAR_AO_USUARIO),
 
     // 409: a requisição é válida, mas conflita com o estado atual do recurso.
     SKU_DUPLICADO(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
@@ -58,6 +63,7 @@ public enum TipoProblema {
     CATEGORIA_COM_SUBCATEGORIAS(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     ENDERECO_PRINCIPAL_OBRIGATORIO(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     LIMITE_DE_ENDERECOS(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
+    LIMITE_DE_IMAGENS(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     TRANSICAO_INVALIDA(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     ESTOQUE_INSUFICIENTE(HttpStatus.CONFLICT, MOSTRAR_AO_USUARIO),
     TESTE_DO_PATCH_FALHOU(HttpStatus.CONFLICT, RELER_E_REPETIR),

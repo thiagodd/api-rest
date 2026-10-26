@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -32,6 +33,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.unit.DataSize;
 import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -42,6 +44,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -70,6 +73,8 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
 
     // O Clock vem da ConfiguracaoDoRelogio (15.01). Nos testes de fatia (@WebMvcTest), que não a carregam, vale o
     // relógio do sistema.
+    private DataSize tamanhoMaximoDoArquivo = DataSize.ofMegabytes(1);
+
     @Autowired
     public TratadorGlobalDeErros(ObjectProvider<Clock> relogio) {
         this.relogio = relogio.getIfAvailable(Clock::systemUTC);
@@ -100,6 +105,20 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return Depreciacao.desligada(caminho(request), relogio.instant())
                 .map(depreciacao -> deDominio(new VersaoDesligadaException(depreciacao), request))
                 .orElse(null);
+    }
+
+    // O multipart passou de spring.servlet.multipart.max-file-size ou max-request-size (22.01). O Spring já responderia
+    // 413, mas com o type about:blank; aqui ele ganha o tipo do catálogo.
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return deDominio(new RegraDeNegocioException(TipoProblema.ARQUIVO_GRANDE_DEMAIS, Map.of(),
+                tamanhoMaximoDoArquivo.toMegabytes()), request);
+    }
+
+    @Value("${spring.servlet.multipart.max-file-size:1MB}")
+    void setTamanhoMaximoDoArquivo(DataSize tamanho) {
+        this.tamanhoMaximoDoArquivo = tamanho;
     }
 
     // Toda exceção de domínio aponta um tipo do catálogo (TipoProblema), e o tipo define o status (16.01).
